@@ -1,0 +1,64 @@
+// HIREMIND AI — Prisma schema (SQLite)
+// Entities support the core intelligence loop:
+//   Resume + Job -> Candidate Intelligence -> Match -> Gaps
+//   -> Adaptive Interview -> Evaluations -> Readiness -> Roadmap
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// A single end-to-end analysis session (one resume + one target job + interview + readiness + roadmap).
+model Session {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Snapshot of inputs
+  resumeText String
+  jobTitle   String
+  jobText    String
+
+  // Candidate intelligence (JSON)
+  candidateProfileJson String
+
+  // Job intelligence (JSON)
+  jobProfileJson String
+
+  // Match result (JSON) — Prototype Job Match Index + breakdown
+  matchJson String?
+
+  // Skill gaps (JSON) — prioritized
+  gapsJson String?
+
+  // Interview state machine (JSON)
+  interviewJson String?
+
+  // Readiness (JSON) — Prototype Job Readiness Index
+  readinessJson String?
+
+  // Roadmap (JSON)
+  roadmapJson String?
+
+  // Demo flag — never disguise demo data as production data
+  isDemo Boolean @default(false)
+
+  status String @default("created") // created | analyzed | interviewed | completed
+}
+
+// Audit events for observability (no PII, no API keys, no full resume text).
+model AuditEvent {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  sessionId String?
+  category  String // ai | db | security | system
+  action    String
+  level     String // info | warn | error
+  message   String
+  metaJson  String?
+}

@@ -1,0 +1,2002 @@
+     1→# HIREMIND AI — APPLE-INSPIRED PREMIUM UI/UX SYSTEM
+     2→
+     3→Redesign the entire HireMind AI frontend with a premium design philosophy inspired by the qualities of Apple's software design:
+     4→
+     5→**Clean. Sleek. Minimal. Intuitive. Premium. Human.**
+     6→
+     7→Do NOT copy Apple's proprietary interface, layouts, icons, branding, typography, or visual assets.
+     8→
+     9→Instead, adopt the underlying design principles:
+    10→
+    11→> "Complex technology should feel simple to the person using it."
+    12→
+    13→HireMind AI must look like a product designed by a world-class product design team, not a typical hackathon dashboard.
+    14→
+    15→==================================================
+    16→
+    17→## 1. DESIGN PHILOSOPHY
+    18→
+    19→==================================================
+    20→
+    21→The primary design principles are:
+    22→
+    23→### 01 — CLEAN
+    24→
+    25→Remove anything that does not help the user understand or complete the task.
+    26→
+    27→Every screen should have one primary purpose.
+    28→
+    29→Avoid:
+    30→
+    31→• unnecessary cards
+    32→• excessive borders
+    33→• excessive badges
+    34→• decorative charts
+    35→• redundant information
+    36→• unnecessary buttons
+    37→• visual clutter
+    38→
+    39→Use whitespace intentionally.
+    40→
+    41→---
+    42→
+    43→### 02 — SLEEK
+    44→
+    45→The interface should feel refined and precise.
+    46→
+    47→Use:
+    48→
+    49→• soft surfaces
+    50→• subtle depth
+    51→• precise spacing
+    52→• smooth transitions
+    53→• restrained shadows
+    54→• elegant typography
+    55→• carefully balanced layouts
+    56→
+    57→Nothing should feel visually heavy.
+    58→
+    59→---
+    60→
+    61→### 03 — PREMIUM
+    62→
+    63→The product should feel expensive and trustworthy.
+    64→
+    65→Premium does NOT mean adding more visual effects.
+    66→
+    67→Premium means:
+    68→
+    69→• excellent spacing
+    70→• excellent typography
+    71→• consistent components
+    72→• meaningful animation
+    73→• visual hierarchy
+    74→• predictable interaction
+    75→• attention to small details
+    76→
+    77→---
+    78→
+    79→### 04 — SIMPLE
+    80→
+    81→A first-time user should understand the product without documentation.
+    82→
+    83→The user should immediately understand:
+    84→
+    85→"What do I do?"
+    86→
+    87→"What did HireMind discover?"
+    88→
+    89→"What should I do next?"
+    90→
+    91→---
+    92→
+    93→### 05 — HUMAN
+    94→
+    95→AI should feel like an intelligent assistant, not a machine control panel.
+    96→
+    97→Use natural language.
+    98→
+    99→Instead of:
+   100→
+   101→"SEMANTIC_SCORE = 0.82"
+   102→
+   103→Show:
+   104→
+   105→"Strong alignment with the target role."
+   106→
+   107→Instead of:
+   108→
+   109→"GAP_VECTOR: 0.41"
+   110→
+   111→Show:
+   112→
+   113→"System Design is your biggest current gap."
+   114→
+   115→Instead of:
+   116→
+   117→"MODEL_OUTPUT"
+   118→
+   119→Show:
+   120→
+   121→"Why we recommend this question"
+   122→
+   123→==================================================
+   124→
+   125→## 2. OVERALL VISUAL LANGUAGE
+   126→
+   127→==================================================
+   128→
+   129→Use a refined light-first interface.
+   130→
+   131→Primary background:
+   132→
+   133→Very light warm neutral / soft white.
+   134→
+   135→Avoid pure #FFFFFF everywhere.
+   136→
+   137→Use subtle off-white surfaces.
+   138→
+   139→Primary text:
+   140→
+   141→Deep charcoal / near-black.
+   142→
+   143→Secondary text:
+   144→
+   145→Muted gray.
+   146→
+   147→Accent:
+   148→
+   149→A restrained blue/indigo used only for important interactive elements.
+   150→
+   151→Success:
+   152→
+   153→Soft green.
+   154→
+   155→Warning:
+   156→
+   157→Soft amber.
+   158→
+   159→Critical:
+   160→
+   161→Soft red.
+   162→
+   163→Do not make the entire interface colorful.
+   164→
+   165→Color should communicate meaning.
+   166→
+   167→==================================================
+   168→
+   169→## 3. DARK MODE
+   170→
+   171→==================================================
+   172→
+   173→Support an optional dark mode.
+   174→
+   175→Dark mode should feel equally premium.
+   176→
+   177→Do not simply invert colors.
+   178→
+   179→Use:
+   180→
+   181→• deep charcoal background
+   182→• slightly lighter elevated surfaces
+   183→• soft white typography
+   184→• restrained blue accent
+   185→• subtle borders
+   186→
+   187→Maintain the same information hierarchy.
+   188→
+   189→==================================================
+   190→
+   191→## 4. TYPOGRAPHY
+   192→
+   193→==================================================
+   194→
+   195→Typography is one of the most important parts of the design.
+   196→
+   197→Use a modern highly readable system sans-serif.
+   198→
+   199→Prefer:
+   200→
+   201→Inter
+   202→SF-like system typography
+   203→or another clean contemporary sans-serif.
+   204→
+   205→Do not use decorative fonts.
+   206→
+   207→Typography hierarchy:
+   208→
+   209→HERO
+   210→
+   211→Large
+   212→Bold
+   213→Short
+   214→
+   215→PAGE TITLE
+   216→
+   217→Large
+   218→Strong
+   219→Clear
+   220→
+   221→SECTION TITLE
+   222→
+   223→Medium
+   224→Semibold
+   225→
+   226→BODY
+   227→
+   228→Comfortable
+   229→Readable
+   230→Relaxed line-height
+   231→
+   232→METADATA
+   233→
+   234→Small
+   235→Muted
+   236→
+   237→Avoid excessive bold text.
+   238→
+   239→Do not use all-caps except for tiny labels when necessary.
+   240→
+   241→==================================================
+   242→
+   243→## 5. SPACING
+   244→
+   245→==================================================
+   246→
+   247→Use generous whitespace.
+   248→
+   249→The interface should breathe.
+   250→
+   251→Prefer:
+   252→
+   253→8px base spacing system.
+   254→
+   255→Large sections:
+   256→
+   257→32–64px spacing.
+   258→
+   259→Cards:
+   260→
+   261→20–32px internal padding.
+   262→
+   263→Do not compress everything into dense dashboard cards.
+   264→
+   265→The product should feel calm.
+   266→
+   267→==================================================
+   268→
+   269→## 6. ROUNDED CORNERS
+   270→
+   271→==================================================
+   272→
+   273→Use subtle rounded corners.
+   274→
+   275→Avoid extreme pill-shaped UI everywhere.
+   276→
+   277→Suggested:
+   278→
+   279→Buttons:
+   280→10–14px
+   281→
+   282→Cards:
+   283→16–20px
+   284→
+   285→Large hero surfaces:
+   286→24–32px
+   287→
+   288→Do not make every element look like a floating rounded rectangle.
+   289→
+   290→==================================================
+   291→
+   292→## 7. DEPTH
+   293→
+   294→==================================================
+   295→
+   296→Use depth very carefully.
+   297→
+   298→Prefer:
+   299→
+   300→• subtle shadows
+   301→• translucent surfaces
+   302→• slight elevation
+   303→• thin borders
+   304→
+   305→Avoid:
+   306→
+   307→• strong shadows
+   308→• neon glow
+   309→• excessive glassmorphism
+   310→• 3D effects
+   311→
+   312→The product should feel flat and sophisticated with subtle depth.
+   313→
+   314→==================================================
+   315→
+   316→## 8. NAVIGATION
+   317→
+   318→==================================================
+   319→
+   320→Simplify navigation dramatically.
+   321→
+   322→Instead of a large enterprise sidebar, create a clean navigation system.
+   323→
+   324→Primary navigation:
+   325→
+   326→Overview
+   327→Candidate
+   328→Job Match
+   329→Skill Gaps
+   330→Interview
+   331→Readiness
+   332→
+   333→Secondary:
+   334→
+   335→Roadmap
+   336→Settings
+   337→
+   338→The active section should be extremely clear.
+   339→
+   340→Use simple icons.
+   341→
+   342→Do not use icons for decoration.
+   343→
+   344→Every icon must communicate meaning.
+   345→
+   346→==================================================
+   347→
+   348→## 9. HOME / COMMAND CENTER
+   349→
+   350→==================================================
+   351→
+   352→This screen should feel like an Apple-style product launch experience.
+   353→
+   354→Large centered heading:
+   355→
+   356→"Know your job readiness."
+   357→
+   358→Supporting sentence:
+   359→
+   360→"Upload your resume and choose a target role. HireMind will identify your strongest evidence, critical gaps, and interview readiness."
+   361→
+   362→Then create a simple two-input experience.
+   363→
+   364→RESUME
+   365→
+   366→Large clean upload zone.
+   367→
+   368→"Drop your resume here"
+   369→
+   370→or
+   371→
+   372→"Choose a file"
+   373→
+   374→Then:
+   375→
+   376→TARGET ROLE
+   377→
+   378→"AI/ML Software Engineer"
+   379→
+   380→Primary button:
+   381→
+   382→"Analyze readiness"
+   383→
+   384→Keep the screen extremely simple.
+   385→
+   386→Do not show ten analytics cards immediately.
+   387→
+   388→The user should have one obvious action.
+   389→
+   390→==================================================
+   391→
+   392→## 10. CANDIDATE INTELLIGENCE
+   393→
+   394→==================================================
+   395→
+   396→Avoid dashboard clutter.
+   397→
+   398→Start with:
+   399→
+   400→Candidate Intelligence
+   401→
+   402→"Here's what we found."
+   403→
+   404→Then create a clean profile summary.
+   405→
+   406→Candidate
+   407→
+   408→Skills
+   409→Experience
+   410→Projects
+   411→Education
+   412→
+   413→Use large typography and subtle grouping.
+   414→
+   415→For skills:
+   416→
+   417→Python
+   418→Machine Learning
+   419→SQL
+   420→FastAPI
+   421→
+   422→Use evidence quietly underneath.
+   423→
+   424→Example:
+   425→
+   426→Python
+   427→
+   428→"Found in 3 resume sections"
+   429→
+   430→Clicking the skill reveals evidence.
+   431→
+   432→Do not expose unnecessary technical metadata.
+   433→
+   434→==================================================
+   435→
+   436→## 11. JOB MATCH
+   437→
+   438→==================================================
+   439→
+   440→Make this screen visually elegant.
+   441→
+   442→Large centered score:
+   443→
+   444→82%
+   445→
+   446→Job Match
+   447→
+   448→Label:
+   449→
+   450→"Prototype Job Match Index"
+   451→
+   452→Under it:
+   453→
+   454→"Strong alignment with this role."
+   455→
+   456→Then show a simple comparison:
+   457→
+   458→YOUR PROFILE
+   459→
+   460→vs
+   461→
+   462→TARGET ROLE
+   463→
+   464→Use horizontal competency bars.
+   465→
+   466→Do not make it look like a spreadsheet.
+   467→
+   468→Matched skills should feel positive.
+   469→
+   470→Gaps should be visually obvious but not alarming.
+   471→
+   472→Primary CTA:
+   473→
+   474→"See your gaps"
+   475→
+   476→==================================================
+   477→
+   478→## 12. SKILL GAP EXPERIENCE
+   479→
+   480→==================================================
+   481→
+   482→This screen should answer one question:
+   483→
+   484→"What should I improve first?"
+   485→
+   486→Heading:
+   487→
+   488→"Your biggest opportunity"
+   489→
+   490→Large highlighted competency:
+   491→
+   492→System Design
+   493→
+   494→Supporting explanation:
+   495→
+   496→"This is currently the highest-impact gap for your target role."
+   497→
+   498→Then:
+   499→
+   500→Why it matters
+   501→
+   502→Evidence
+   503→
+   504→Recommended next step
+   505→
+   506→Primary CTA:
+   507→
+   508→"Test this skill"
+   509→
+   510→Avoid showing ten different charts.
+   511→
+   512→Focus attention on the most important gap.
+   513→
+   514→==================================================
+   515→
+   516→## 13. ADAPTIVE AI INTERVIEW
+   517→
+   518→==================================================
+   519→
+   520→THIS IS THE HERO EXPERIENCE.
+   521→
+   522→The interview interface should feel like a premium Apple-style conversation experience.
+   523→
+   524→Large clean question.
+   525→
+   526→Example:
+   527→
+   528→"How would you design a scalable REST API for 100,000 concurrent users?"
+   529→
+   530→Above it:
+   531→
+   532→SYSTEM DESIGN
+   533→Question 1 of 5
+   534→
+   535→Below:
+   536→
+   537→"Why we're asking"
+   538→
+   539→"System Design was identified as your highest-impact gap for this role."
+   540→
+   541→Answer area:
+   542→
+   543→Large comfortable text input.
+   544→
+   545→Primary action:
+   546→
+   547→"Submit answer"
+   548→
+   549→Secondary:
+   550→
+   551→"Skip"
+   552→
+   553→Do not create a chatbot-style interface with dozens of bubbles.
+   554→
+   555→The focus should be entirely on:
+   556→
+   557→QUESTION
+   558→→ THINK
+   559→→ ANSWER
+   560→
+   561→==================================================
+   562→
+   563→## 14. AI PROCESSING
+   564→
+   565→==================================================
+   566→
+   567→When the system processes an answer, do not show technical loading spinners everywhere.
+   568→
+   569→Use calm intelligent states.
+   570→
+   571→Example:
+   572→
+   573→"Understanding your answer..."
+   574→
+   575→Then:
+   576→
+   577→"Evaluating system-design depth..."
+   578→
+   579→Then:
+   580→
+   581→"Finding your next strongest assessment area..."
+   582→
+   583→Use subtle transitions.
+   584→
+   585→The animation should feel intelligent, not theatrical.
+   586→
+   587→==================================================
+   588→
+   589→## 15. ANSWER EVALUATION
+   590→
+   591→==================================================
+   592→
+   593→Do not dump raw AI output.
+   594→
+   595→Instead show:
+   596→
+   597→"Here's what we learned."
+   598→
+   599→Then:
+   600→
+   601→Technical Accuracy
+   602→72%
+   603→
+   604→Relevance
+   605→84%
+   606→
+   607→Depth
+   608→61%
+   609→
+   610→Communication
+   611→74%
+   612→
+   613→But present these as clean visual indicators.
+   614→
+   615→Then:
+   616→
+   617→### What you did well
+   618→
+   619→"Identified the main architectural components."
+   620→
+   621→### Where you can improve
+   622→
+   623→"Your answer needs more depth around scalability and fault tolerance."
+   624→
+   625→Then:
+   626→
+   627→### What happens next
+   628→
+   629→"Your next question will focus on scalability."
+   630→
+   631→This naturally leads into the WOW moment.
+   632→
+   633→==================================================
+   634→
+   635→## 16. THE WOW MOMENT
+   636→
+   637→==================================================
+   638→
+   639→Create an elegant transition.
+   640→
+   641→Show:
+   642→
+   643→YOUR ANSWER
+   644→
+   645→↓
+   646→
+   647→WE FOUND A GAP
+   648→
+   649→↓
+   650→
+   651→YOUR NEXT QUESTION
+   652→
+   653→Do not use complicated diagrams.
+   654→
+   655→Use simple progressive storytelling.
+   656→
+   657→Example:
+   658→
+   659→"Your answer showed good fundamentals."
+   660→
+   661→Then:
+   662→
+   663→"One area needs deeper reasoning: scalability."
+   664→
+   665→Then:
+   666→
+   667→"Let's test that."
+   668→
+   669→Next question:
+   670→
+   671→"How would you introduce caching and load balancing?"
+   672→
+   673→This should feel like the system is thinking WITH the user.
+   674→
+   675→==================================================
+   676→
+   677→## 17. JOB READINESS
+   678→
+   679→==================================================
+   680→
+   681→Avoid a giant analytics dashboard.
+   682→
+   683→Instead:
+   684→
+   685→Large:
+   686→
+   687→74%
+   688→
+   689→Job Readiness
+   690→
+   691→Then:
+   692→
+   693→"Your current evidence suggests you're close, but three areas need attention."
+   694→
+   695→Show only the most important competencies.
+   696→
+   697→System Design
+   698→Critical
+   699→
+   700→Docker
+   701→Critical
+   702→
+   703→AWS
+   704→High
+   705→
+   706→Then:
+   707→
+   708→"Your next best action"
+   709→
+   710→"Strengthen system-design reasoning before your next interview."
+   711→
+   712→CTA:
+   713→
+   714→"Open my roadmap"
+   715→
+   716→==================================================
+   717→
+   718→## 18. ROADMAP
+   719→
+   720→==================================================
+   721→
+   722→Make it feel like a calm personal plan.
+   723→
+   724→Heading:
+   725→
+   726→"Your improvement path"
+   727→
+   728→Timeline:
+   729→
+   730→TODAY
+   731→
+   732→System Design
+   733→
+   734→NEXT
+   735→
+   736→Scalability
+   737→
+   738→THEN
+   739→
+   740→Caching + Load Balancing
+   741→
+   742→REASSESS
+   743→
+   744→Adaptive Interview
+   745→
+   746→The user should understand exactly what to do next.
+   747→
+   748→Avoid complicated project-management UI.
+   749→
+   750→==================================================
+   751→
+   752→## 19. MICROINTERACTIONS
+   753→
+   754→==================================================
+   755→
+   756→Use animation with purpose.
+   757→
+   758→Examples:
+   759→
+   760→• smooth page transitions
+   761→• subtle score animation
+   762→• elegant progress indicators
+   763→• soft hover states
+   764→• smooth card expansion
+   765→• question transitions
+   766→• answer evaluation reveal
+   767→• roadmap progression
+   768→
+   769→Animation duration:
+   770→
+   771→Short and natural.
+   772→
+   773→Avoid:
+   774→
+   775→• bouncing
+   776→• spinning endlessly
+   777→• excessive particle effects
+   778→• flashy AI animations
+   779→• neon effects
+   780→
+   781→==================================================
+   782→
+   783→## 20. USER EXPERIENCE RULE
+   784→
+   785→==================================================
+   786→
+   787→Every screen must answer ONE question.
+   788→
+   789→Command Center:
+   790→
+   791→"What do I do?"
+   792→
+   793→Candidate:
+   794→
+   795→"What did HireMind understand about me?"
+   796→
+   797→Job Match:
+   798→
+   799→"How well do I align?"
+   800→
+   801→Skill Gaps:
+   802→
+   803→"What should I improve?"
+   804→
+   805→Interview:
+   806→
+   807→"Can I demonstrate it?"
+   808→
+   809→Evaluation:
+   810→
+   811→"What did my answer prove?"
+   812→
+   813→Readiness:
+   814→
+   815→"Where do I stand?"
+   816→
+   817→Roadmap:
+   818→
+   819→"What should I do next?"
+   820→
+   821→If an element does not help answer the screen's question, remove it.
+   822→
+   823→==================================================
+   824→
+   825→## 21. PRODUCT WRITING
+   826→
+   827→==================================================
+   828→
+   829→Use extremely simple language.
+   830→
+   831→Prefer:
+   832→
+   833→"Analyze my readiness"
+   834→
+   835→over:
+   836→
+   837→"Run Candidate Intelligence Pipeline"
+   838→
+   839→Prefer:
+   840→
+   841→"Your biggest gap"
+   842→
+   843→over:
+   844→
+   845→"Critical Competency Deficiency"
+   846→
+   847→Prefer:
+   848→
+   849→"Why we're asking"
+   850→
+   851→over:
+   852→
+   853→"Adaptive Question Selection Rationale"
+   854→
+   855→Prefer:
+   856→
+   857→"What we learned"
+   858→
+   859→over:
+   860→
+   861→"AI Evaluation Output"
+   862→
+   863→Prefer:
+   864→
+   865→"What to improve next"
+   866→
+   867→over:
+   868→
+   869→"Personalized Competency Optimization Roadmap"
+   870→
+   871→The product should feel intelligent without sounding complicated.
+   872→
+   873→==================================================
+   874→
+   875→## 22. TRUST
+   876→
+   877→==================================================
+   878→
+   879→AI recruitment is sensitive.
+   880→
+   881→The interface should communicate that HireMind provides assessment support, not an unquestionable hiring verdict.
+   882→
+   883→Use subtle labels:
+   884→
+   885→"Prototype Job Match Index"
+   886→
+   887→"Prototype Job Readiness Index"
+   888→
+   889→"AI-assisted assessment"
+   890→
+   891→Where appropriate.
+   892→
+   893→Do not use:
+   894→
+   895→"Guaranteed hire"
+   896→
+   897→"Perfect candidate"
+   898→
+   899→"100% accurate"
+   900→
+   901→"AI decision"
+   902→
+   903→==================================================
+   904→
+   905→## 23. RESPONSIVE DESIGN
+   906→
+   907→==================================================
+   908→
+   909→Desktop is the primary hackathon presentation experience.
+   910→
+   911→Optimize for:
+   912→
+   913→1440 × 900
+   914→1920 × 1080
+   915→
+   916→Also support:
+   917→
+   918→1280px
+   919→tablet
+   920→mobile
+   921→
+   922→On mobile:
+   923→
+   924→simplify navigation
+   925→
+   926→On desktop:
+   927→
+   928→use whitespace and large typography.
+   929→
+   930→Never allow horizontal scrolling.
+   931→
+   932→==================================================
+   933→
+   934→## 24. HACKATHON PRESENTATION MODE
+   935→
+   936→==================================================
+   937→
+   938→Create a clean presentation mode.
+   939→
+   940→The jury should be able to understand the system from the screen without reading tiny text.
+   941→
+   942→During presentation mode emphasize:
+   943→
+   944→JOB MATCH
+   945→↓
+   946→SKILL GAP
+   947→↓
+   948→ADAPTIVE INTERVIEW
+   949→↓
+   950→EVALUATION
+   951→↓
+   952→READINESS
+   953→
+   954→Use larger typography.
+   955→
+   956→Hide unnecessary controls.
+   957→
+   958→Do not hide important functionality.
+   959→
+   960→==================================================
+   961→
+   962→## 25. FINAL DESIGN STANDARD
+   963→
+   964→==================================================
+   965→
+   966→The final product should feel like:
+   967→
+   968→Apple-level product simplicity
+   969→+
+   970→premium AI SaaS
+   971→+
+   972→professional recruitment intelligence
+   973→
+   974→NOT:
+   975→
+   976→Apple clone
+   977→NOT:
+   978→
+   979→generic dashboard
+   980→NOT:
+   981→
+   982→AI chatbot
+   983→NOT:
+   984→
+   985→hackathon template
+   986→
+   987→The user should feel:
+   988→
+   989→"I immediately understand what this does."
+   990→
+   991→The jury should feel:
+   992→
+   993→"This team understands product design."
+   994→
+   995→The technical reviewer should feel:
+   996→
+   997→"There is serious intelligence underneath this simple interface."
+   998→
+   999→==================================================
+  1000→
+  1001→## 26. FINAL DESIGN TEST
+  1002→
+  1003→==================================================
+  1004→
+  1005→Before completing the design, perform this test:
+  1006→
+  1007→Give the interface to a first-time user.
+  1008→
+  1009→Without explaining anything, they should be able to answer:
+  1010→
+  1011→1. What is HireMind?
+  1012→2. What should I do first?
+  1013→3. What did the system discover?
+  1014→4. What is my biggest gap?
+  1015→5. Why am I being asked this interview question?
+  1016→6. What did my answer reveal?
+  1017→7. What should I improve next?
+  1018→
+  1019→If any answer is unclear, simplify the UI.
+  1020→
+  1021→FINAL DESIGN PRINCIPLE:
+  1022→
+  1023→# "Make the technology disappear. Make the intelligence obvious."
+  1024→
+  1025→Build the entire HireMind AI frontend around this principle.
+  1026→
+  1027→
+  1028→
+  1029→
+  1030→# HIREMIND AI — PRODUCTION-READY FIRST-PRIZE MASTER BUILD PROMPT
+  1031→
+  1032→You are now the **Lead AI Engineer, Principal Software Architect, Product Designer, UX Engineer, QA Engineer, DevOps Engineer, Security Engineer, and Hackathon Demo Engineer** responsible for completing this project.
+  1033→
+  1034→Your mission is to transform the existing **HireMind AI** project into a **production-quality, end-to-end, reliable, visually exceptional, AI-powered recruitment and job-readiness platform** that is strong enough for a national-level hackathon final round.
+  1035→
+  1036→This is NOT a request to create a superficial demo.
+  1037→
+  1038→Build a real, coherent, working product wherever technically possible.
+  1039→
+  1040→The priority order is:
+  1041→
+  1042→1. Reliability
+  1043→2. End-to-end functionality
+  1044→3. Real AI intelligence
+  1045→4. Explainability
+  1046→5. Adaptive interview behavior
+  1047→6. Premium UI/UX
+  1048→7. Security and data validation
+  1049→8. Demo reliability
+  1050→9. Production architecture
+  1051→10. Future scalability
+  1052→
+  1053→Do NOT overengineer.
+  1054→
+  1055→Do NOT create unnecessary microservices.
+  1056→
+  1057→Do NOT add random features simply to make the application look large.
+  1058→
+  1059→The core intelligence loop must be exceptionally strong.
+  1060→
+  1061→============================================================
+  1062→
+  1063→## 1. PROJECT IDENTITY
+  1064→
+  1065→============================================================
+  1066→
+  1067→Product:
+  1068→
+  1069→# HireMind AI
+  1070→
+  1071→Positioning:
+  1072→
+  1073→# "Don't just screen the resume. Measure the readiness."
+  1074→
+  1075→Core product statement:
+  1076→
+  1077→HireMind AI transforms a candidate's resume and target job into an evidence-based job-readiness profile by extracting candidate information, semantically matching the candidate against job requirements, identifying critical skill gaps, validating those gaps through an adaptive AI interview, evaluating interview evidence, calculating transparent readiness indices, and generating a personalized improvement roadmap.
+  1078→
+  1079→Official problem statement:
+  1080→
+  1081→PS 02 — Automated Smart Resume Parser & Mock Interviewer
+  1082→
+  1083→Problem Overview:
+  1084→
+  1085→Recruitment is often time-consuming for organizations, while students struggle to identify skill gaps and prepare effectively for interviews. AI can simplify candidate screening and provide personalized interview practice.
+  1086→
+  1087→Problem Statement:
+  1088→
+  1089→Develop an intelligent recruitment assistant capable of parsing resumes, matching candidates with suitable job roles, identifying missing skills, and conducting AI-powered mock interviews with detailed feedback.
+  1090→
+  1091→Objectives:
+  1092→
+  1093→• Extract information from resumes automatically.
+  1094→• Recommend relevant job roles.
+  1095→• Identify skill gaps.
+  1096→• Simulate technical and HR interviews.
+  1097→• Provide personalized improvement suggestions.
+  1098→
+  1099→DO NOT modify or replace the official problem statement.
+  1100→
+  1101→============================================================
+  1102→
+  1103→## 2. NON-NEGOTIABLE PRODUCT PRINCIPLE
+  1104→
+  1105→============================================================
+  1106→
+  1107→The entire application must revolve around this intelligence loop:
+  1108→
+  1109→RESUME
+  1110→+
+  1111→TARGET JOB
+  1112→↓
+  1113→CANDIDATE INTELLIGENCE
+  1114→↓
+  1115→SEMANTIC JOB MATCH
+  1116→↓
+  1117→SKILL GAP INTELLIGENCE
+  1118→↓
+  1119→GAP-DRIVEN ADAPTIVE INTERVIEW
+  1120→↓
+  1121→ANSWER EVALUATION
+  1122→↓
+  1123→NEW COMPETENCY EVIDENCE
+  1124→↓
+  1125→JOB READINESS
+  1126→↓
+  1127→PERSONALIZED IMPROVEMENT ROADMAP
+  1128→
+  1129→The most important feature is:
+  1130→
+  1131→# GAP-DRIVEN ADAPTIVE AI INTERVIEW
+  1132→
+  1133→The interview MUST NOT behave like a simple static chatbot.
+  1134→
+  1135→The system should:
+  1136→
+  1137→1. Identify a candidate's highest-impact gap.
+  1138→2. Select an interview competency based on that gap.
+  1139→3. Generate/select an appropriate question.
+  1140→4. Receive the candidate's answer.
+  1141→5. Evaluate the answer.
+  1142→6. Update the competency/evidence state.
+  1143→7. Determine the next weakness or uncertainty.
+  1144→8. Generate/select the next question based on the updated state.
+  1145→9. Continue until the interview is complete.
+  1146→10. Produce a transparent readiness assessment.
+  1147→
+  1148→The demo must visibly prove:
+  1149→
+  1150→QUESTION 1
+  1151→↓
+  1152→ANSWER
+  1153→↓
+  1154→EVALUATION
+  1155→↓
+  1156→WEAKNESS DETECTED
+  1157→↓
+  1158→COMPETENCY STATE UPDATED
+  1159→↓
+  1160→QUESTION 2 CHANGES
+  1161→
+  1162→This is the primary technical WOW moment.
+  1163→
+  1164→============================================================
+  1165→
+  1166→## 3. FIRST ACTION — AUDIT THE EXISTING PROJECT
+  1167→
+  1168→============================================================
+  1169→
+  1170→Before changing code:
+  1171→
+  1172→1. Inspect the entire repository.
+  1173→2. Understand the current architecture.
+  1174→3. Identify frontend framework.
+  1175→4. Identify backend framework.
+  1176→5. Identify database.
+  1177→6. Identify AI integrations.
+  1178→7. Identify authentication.
+  1179→8. Identify API routes.
+  1180→9. Identify existing components.
+  1181→10. Identify existing screens.
+  1182→11. Identify existing data models.
+  1183→12. Identify existing environment variables.
+  1184→13. Identify tests.
+  1185→14. Identify build configuration.
+  1186→15. Identify incomplete/TODO functionality.
+  1187→16. Identify mocked functionality.
+  1188→17. Identify broken functionality.
+  1189→18. Identify duplicate code.
+  1190→19. Identify security problems.
+  1191→20. Identify dead code.
+  1192→
+  1193→DO NOT blindly rewrite the application.
+  1194→
+  1195→Preserve good existing implementation.
+  1196→
+  1197→Reuse existing components and architecture where appropriate.
+  1198→
+  1199→First create an internal implementation checklist based on the actual repository.
+  1200→
+  1201→Then implement systematically.
+  1202→
+  1203→============================================================
+  1204→
+  1205→## 4. TRUTHFULNESS REQUIREMENT
+  1206→
+  1207→============================================================
+  1208→
+  1209→Never fabricate:
+  1210→
+  1211→• users
+  1212→• customers
+  1213→• revenue
+  1214→• accuracy
+  1215→• benchmark results
+  1216→• research results
+  1217→• production deployments
+  1218→• integrations
+  1219→• datasets
+  1220→• certifications
+  1221→• model performance
+  1222→• business results
+  1223→
+  1224→If a value is calculated by the prototype scoring engine, label it correctly.
+  1225→
+  1226→For example:
+  1227→
+  1228→"Prototype Job Match Index"
+  1229→
+  1230→NOT:
+  1231→
+  1232→"82% probability of getting hired"
+  1233→
+  1234→Similarly:
+  1235→
+  1236→"Prototype Job Readiness Index"
+  1237→
+  1238→NOT:
+  1239→
+  1240→"74% chance of employment"
+  1241→
+  1242→Every important score must have an explanation.
+  1243→
+  1244→============================================================
+  1245→
+  1246→## 5. TARGET PRODUCT ARCHITECTURE
+  1247→
+  1248→============================================================
+  1249→
+  1250→Use a modular architecture.
+  1251→
+  1252→Prefer a modular monolith for the hackathon/initial production MVP.
+  1253→
+  1254→Do NOT introduce unnecessary microservices.
+  1255→
+  1256→Logical architecture:
+  1257→
+  1258→FRONTEND
+  1259→↓
+  1260→APPLICATION/API LAYER
+  1261→↓
+  1262→DOMAIN SERVICES
+  1263→↓
+  1264→AI/INTELLIGENCE SERVICES
+  1265→↓
+  1266→SCORING/DECISION ENGINE
+  1267→↓
+  1268→DATABASE
+  1269→↓
+  1270→OBSERVABILITY/AUDIT
+  1271→
+  1272→Recommended conceptual modules:
+  1273→
+  1274→/candidate
+  1275→/jobs
+  1276→/matching
+  1277→/skills
+  1278→/interview
+  1279→/evaluation
+  1280→/readiness
+  1281→/roadmap
+  1282→/ai
+  1283→/documents
+  1284→/auth
+  1285→/audit
+  1286→
+  1287→Keep domain logic separate from UI.
+  1288→
+  1289→Keep AI provider-specific code behind an abstraction.
+  1290→
+  1291→============================================================
+  1292→
+  1293→## 6. FRONTEND
+  1294→
+  1295→============================================================
+  1296→
+  1297→Build a premium production-quality frontend.
+  1298→
+  1299→The UI should feel like a serious AI SaaS product.
+  1300→
+  1301→Do NOT make it look like:
+  1302→
+  1303→• a generic admin dashboard
+  1304→• a college project
+  1305→• a CRUD application
+  1306→• a chatbot wrapper
+  1307→
+  1308→Primary visual identity:
+  1309→
+  1310→Premium dark-first interface.
+  1311→
+  1312→Use:
+  1313→
+  1314→• deep neutral background
+  1315→• elevated dark surfaces
+  1316→• restrained electric blue/indigo accent
+  1317→• green for positive states
+  1318→• amber for warnings
+  1319→• red for critical gaps
+  1320→• high-contrast typography
+  1321→• subtle borders
+  1322→• minimal shadows
+  1323→• clean data visualization
+  1324→
+  1325→Do not overuse gradients.
+  1326→
+  1327→Do not overuse glassmorphism.
+  1328→
+  1329→Do not use cartoon AI imagery.
+  1330→
+  1331→Do not use fake statistics.
+  1332→
+  1333→============================================================
+  1334→
+  1335→## 7. REQUIRED APPLICATION SCREENS
+  1336→
+  1337→============================================================
+  1338→
+  1339→Implement these screens as a connected experience.
+  1340→
+  1341→### SCREEN 1 — COMMAND CENTER
+  1342→
+  1343→Purpose:
+  1344→
+  1345→Start candidate analysis.
+  1346→
+  1347→Components:
+  1348→
+  1349→• Resume upload
+  1350→• Target job input
+  1351→• Job description input
+  1352→• Target role selector
+  1353→• Demo candidate loader
+  1354→• Analyze Candidate button
+  1355→• Processing status
+  1356→
+  1357→Flow:
+  1358→
+  1359→UPLOAD RESUME
+  1360→+
+  1361→TARGET JOB
+  1362→→
+  1363→ANALYZE CANDIDATE
+  1364→
+  1365→============================================================
+  1366→
+  1367→### SCREEN 2 — CANDIDATE INTELLIGENCE
+  1368→
+  1369→============================================================
+  1370→
+  1371→Display structured candidate information extracted from resume.
+  1372→
+  1373→Include:
+  1374→
+  1375→• Candidate identity
+  1376→• Education
+  1377→• Experience
+  1378→• Projects
+  1379→• Certifications
+  1380→• Skills
+  1381→• Evidence
+  1382→
+  1383→Every extracted skill should have supporting evidence where available.
+  1384→
+  1385→Example:
+  1386→
+  1387→Python
+  1388→
+  1389→Evidence:
+  1390→"Built REST APIs using FastAPI..."
+  1391→
+  1392→Do not invent evidence.
+  1393→
+  1394→If evidence is unavailable:
+  1395→
+  1396→"Evidence not found."
+  1397→
+  1398→============================================================
+  1399→
+  1400→### SCREEN 3 — JOB MATCH INTELLIGENCE
+  1401→
+  1402→============================================================
+  1403→
+  1404→Display:
+  1405→
+  1406→Prototype Job Match Index
+  1407→
+  1408→Example:
+  1409→
+  1410→82%
+  1411→
+  1412→But clearly label:
+  1413→
+  1414→"Prototype Job Match Index"
+  1415→
+  1416→Show score breakdown.
+  1417→
+  1418→Possible dimensions:
+  1419→
+  1420→• Required skill coverage
+  1421→• Experience alignment
+  1422→• Project evidence
+  1423→• Semantic relevance
+  1424→
+  1425→Only use dimensions that are actually implemented.
+  1426→
+  1427→Every score must be explainable.
+  1428→
+  1429→Create candidate-vs-job skill comparison.
+  1430→
+  1431→Show:
+  1432→
+  1433→MATCHED
+  1434→WEAK
+  1435→MISSING
+  1436→UNKNOWN
+  1437→
+  1438→Do not automatically classify missing information as a missing skill.
+  1439→
+  1440→Distinguish:
+  1441→
+  1442→Missing evidence
+  1443→
+  1444→from:
+  1445→
+  1446→Missing skill
+  1447→
+  1448→This is important for fairness and accuracy.
+  1449→
+  1450→============================================================
+  1451→
+  1452→### SCREEN 4 — SKILL GAP INTELLIGENCE
+  1453→
+  1454→============================================================
+  1455→
+  1456→Create a prioritized competency gap engine.
+  1457→
+  1458→Each gap should contain:
+  1459→
+  1460→• Skill
+  1461→• Priority
+  1462→• Job requirement
+  1463→• Candidate evidence
+  1464→• Gap reason
+  1465→• Confidence/strength indicator
+  1466→• Recommended action
+  1467→
+  1468→Priority:
+  1469→
+  1470→CRITICAL
+  1471→HIGH
+  1472→MEDIUM
+  1473→LOW
+  1474→
+  1475→The highest-impact gap should be clearly highlighted.
+  1476→
+  1477→Example:
+  1478→
+  1479→SYSTEM DESIGN
+  1480→CRITICAL
+  1481→
+  1482→Why:
+  1483→
+  1484→Required by target role
+  1485→+
+  1486→Weak candidate evidence
+  1487→
+  1488→CTA:
+  1489→
+  1490→TEST THIS GAP
+  1491→
+  1492→============================================================
+  1493→
+  1494→## 8. SKILL TAXONOMY
+  1495→
+  1496→============================================================
+  1497→
+  1498→Implement a normalized competency representation.
+  1499→
+  1500→Support relationships such as:
+  1501→
+  1502→Python
+  1503→→ Programming
+  1504→→ Backend
+  1505→→ APIs
+  1506→
+  1507→Docker
+  1508→→ Containerization
+  1509→→ DevOps
+  1510→
+  1511→AWS
+  1512→→ Cloud
+  1513→→ Infrastructure
+  1514→
+  1515→System Design
+  1516→→ Architecture
+  1517→→ Scalability
+  1518→→ Distributed Systems
+  1519→
+  1520→Do not pretend this taxonomy is globally complete.
+  1521→
+  1522→Build a maintainable taxonomy structure that can be expanded.
+  1523→
+  1524→Allow aliases/synonyms.
+  1525→
+  1526→Example:
+  1527→
+  1528→"REST API"
+  1529→"RESTful APIs"
+  1530→"REST services"
+  1531→
+  1532→should be normalized where appropriate.
+  1533→
+  1534→============================================================
+  1535→
+  1536→## 9. SEMANTIC MATCH ENGINE
+  1537→
+  1538→============================================================
+  1539→
+  1540→Implement real semantic matching where supported.
+  1541→
+  1542→The engine should combine:
+  1543→
+  1544→1. Semantic similarity
+  1545→2. Normalized skill matching
+  1546→3. Evidence presence
+  1547→4. Job requirement importance
+  1548→5. Candidate evidence strength
+  1549→
+  1550→Do not rely only on keyword matching.
+  1551→
+  1552→Do not rely only on an LLM.
+  1553→
+  1554→Prefer embeddings for semantic similarity.
+  1555→
+  1556→Use deterministic scoring for final aggregation.
+  1557→
+  1558→Architecture:
+  1559→
+  1560→Resume Evidence
+  1561→+
+  1562→Job Requirements
+  1563→↓
+  1564→Embedding / Semantic Similarity
+  1565→+
+  1566→Skill Normalization
+  1567→+
+  1568→Evidence Weighting
+  1569→↓
+  1570→Transparent Match Score
+  1571→
+  1572→Make scoring configurable.
+  1573→
+  1574→Keep weights in one place.
+  1575→
+  1576→Do not scatter scoring formulas throughout the code.
+  1577→
+  1578→============================================================
+  1579→
+  1580→## 10. EXPLAINABLE SCORING
+  1581→
+  1582→============================================================
+  1583→
+  1584→Every major score must be explainable.
+  1585→
+  1586→Example:
+  1587→
+  1588→Job Match Index:
+  1589→
+  1590→Required Skills: 40%
+  1591→Experience: 20%
+  1592→Project Evidence: 20%
+  1593→Semantic Relevance: 20%
+  1594→
+  1595→Only use this exact weighting if it is actually implemented.
+  1596→
+  1597→Otherwise create a configurable scoring model and expose the actual configuration.
+  1598→
+  1599→When the user clicks:
+  1600→
+  1601→"Why 82%?"
+  1602→
+  1603→Show:
+  1604→
+  1605→Score
+  1606→↓
+  1607→Components
+  1608→↓
+  1609→Evidence
+  1610→↓
+  1611→Reasoning
+  1612→
+  1613→Do not expose hidden chain-of-thought.
+  1614→
+  1615→Show concise decision evidence and deterministic factors only.
+  1616→
+  1617→============================================================
+  1618→
+  1619→## 11. ADAPTIVE INTERVIEW ENGINE
+  1620→
+  1621→============================================================
+  1622→
+  1623→This is the most important backend feature.
+  1624→
+  1625→Create an interview state.
+  1626→
+  1627→Example:
+  1628→
+  1629→InterviewState:
+  1630→
+  1631→candidate_id
+  1632→job_id
+  1633→target_competencies
+  1634→current_competency
+  1635→questions_asked
+  1636→answers
+  1637→evaluations
+  1638→competency_scores
+  1639→identified_weaknesses
+  1640→next_question_reason
+  1641→interview_progress
+  1642→status
+  1643→
+  1644→The next question must depend on current state.
+  1645→
+  1646→Example:
+  1647→
+  1648→System Design gap
+  1649→↓
+  1650→Question about architecture
+  1651→↓
+  1652→Answer
+  1653→↓
+  1654→Evaluation detects weak scalability reasoning
+  1655→↓
+  1656→Next question targets scalability
+  1657→↓
+  1658→Evaluation detects weak fault tolerance
+  1659→↓
+  1660→Next question targets fault tolerance
+  1661→
+  1662→This must be implemented as application logic.
+  1663→
+  1664→Do NOT simply ask the LLM:
+  1665→
+  1666→"Generate another question."
+  1667→
+  1668→Instead provide the model with structured context and enforce application-level constraints.
+  1669→
+  1670→============================================================
+  1671→
+  1672→## 12. INTERVIEW QUESTION GENERATION
+  1673→
+  1674→============================================================
+  1675→
+  1676→Question generation must consider:
+  1677→
+  1678→• Target job
+  1679→• Required competency
+  1680→• Current competency gap
+  1681→• Previous questions
+  1682→• Previous answers
+  1683→• Difficulty
+  1684→• Interview mode
+  1685→• Previous evaluation
+  1686→• Remaining interview time
+  1687→
+  1688→Support:
+  1689→
+  1690→Technical Interview
+  1691→HR Interview
+  1692→
+  1693→But prioritize the technical adaptive interview for the hackathon demo.
+  1694→
+  1695→Avoid repetitive questions.
+  1696→
+  1697→Avoid asking about skills unrelated to the selected job.
+  1698→
+  1699→Store every question.
+  1700→
+  1701→============================================================
+  1702→
+  1703→## 13. ANSWER EVALUATION
+  1704→
+  1705→============================================================
+  1706→
+  1707→Evaluate answers using structured dimensions.
+  1708→
+  1709→Potential dimensions:
+  1710→
+  1711→• Technical accuracy
+  1712→• Relevance
+  1713→• Depth
+  1714→• Completeness
+  1715→• Communication
+  1716→
+  1717→Only use dimensions actually supported by the evaluator.
+  1718→
+  1719→Return structured JSON internally.
+  1720→
+  1721→Example conceptual structure:
+  1722→
+  1723→{
+  1724→score,
+  1725→strengths,
+  1726→weaknesses,
+  1727→evidence,
+  1728→competency_effect,
+  1729→next_focus
+  1730→}
+  1731→
+  1732→Never allow arbitrary model text to directly determine critical application state.
+  1733→
+  1734→Validate the response schema.
+  1735→
+  1736→Use deterministic bounds.
+  1737→
+  1738→============================================================
+  1739→
+  1740→## 14. ADAPTIVE DECISION ENGINE
+  1741→
+  1742→============================================================
+  1743→
+  1744→After evaluation:
+  1745→
+  1746→1. Update competency evidence.
+  1747→2. Identify weakness.
+  1748→3. Rank remaining uncertainties.
+  1749→4. Select next competency.
+  1750→5. Generate/select next question.
+  1751→6. Explain why that question was selected.
+  1752→
+  1753→Example UI:
+  1754→
+  1755→ADAPTIVE DECISION
+  1756→
+  1757→Previous answer:
+  1758→Good basic understanding
+  1759→
+  1760→Detected weakness:
+  1761→Scalability depth
+  1762→
+  1763→Next competency:
+  1764→Scalability
+  1765→
+  1766→Next question:
+  1767→"How would you introduce caching and load balancing..."
+  1768→
+  1769→Reason:
+  1770→
+  1771→"Selected because scalability was the weakest demonstrated competency."
+  1772→
+  1773→This is the key proof of intelligence.
+  1774→
+  1775→============================================================
+  1776→
+  1777→## 15. JOB READINESS ENGINE
+  1778→
+  1779→============================================================
+  1780→
+  1781→Create a transparent readiness index.
+  1782→
+  1783→Possible dimensions:
+  1784→
+  1785→• Job alignment
+  1786→• Technical competency
+  1787→• Interview evidence
+  1788→• Required skill coverage
+  1789→• Communication
+  1790→
+  1791→Use only dimensions that are implemented.
+  1792→
+  1793→Clearly label:
+  1794→
+  1795→"Prototype Job Readiness Index"
+  1796→
+  1797→Do not present it as a hiring probability.
+  1798→
+  1799→Create:
+  1800→
+  1801→Overall readiness
+  1802→+
+  1803→Competency breakdown
+  1804→+
+  1805→Critical blockers
+  1806→+
+  1807→Next best actions
+  1808→
+  1809→============================================================
+  1810→
+  1811→## 16. PERSONALIZED ROADMAP
+  1812→
+  1813→============================================================
+  1814→
+  1815→Generate an actionable roadmap from actual detected gaps.
+  1816→
+  1817→Example:
+  1818→
+  1819→CRITICAL
+  1820→
+  1821→System Design
+  1822→
+  1823→Recommended focus:
+  1824→
+  1825→• Scalability
+  1826→• Caching
+  1827→• Load balancing
+  1828→• Fault tolerance
+  1829→
+  1830→Do not generate random recommendations.
+  1831→
+  1832→Recommendations must be tied to detected gaps.
+  1833→
+  1834→Create:
+  1835→
+  1836→NOW
+  1837→NEXT
+  1838→REASSESS
+  1839→
+  1840→The roadmap should have completion states.
+  1841→
+  1842→============================================================
+  1843→
+  1844→## 17. EVIDENCE GRAPH
+  1845→
+  1846→============================================================
+  1847→
+  1848→Implement an evidence-oriented UI.
+  1849→
+  1850→For each important competency show:
+  1851→
+  1852→JOB REQUIREMENT
+  1853→↓
+  1854→RESUME EVIDENCE
+  1855→↓
+  1856→INTERVIEW EVIDENCE
+  1857→↓
+  1858→CURRENT ASSESSMENT
+  1859→
+  1860→Example:
+  1861→
+  1862→SYSTEM DESIGN
+  1863→
+  1864→Job:
+  1865→Required
+  1866→
+  1867→Resume:
+  1868→Limited evidence
+  1869→
+  1870→Interview:
+  1871→Weak scalability depth
+  1872→
+  1873→Assessment:
+  1874→Critical gap
+  1875→
+  1876→This is a major trust feature.
+  1877→
+  1878→============================================================
+  1879→
+  1880→## 18. AI TRANSPARENCY
+  1881→
+  1882→============================================================
+  1883→
+  1884→Show processing stages:
+  1885→
+  1886→Parsing Resume...
+  1887→✓
+  1888→
+  1889→Understanding Job...
+  1890→✓
+  1891→
+  1892→Semantic Matching...
+  1893→✓
+  1894→
+  1895→Finding Skill Gaps...
+  1896→✓
+  1897→
+  1898→Preparing Adaptive Interview...
+  1899→✓
+  1900→
+  1901→Evaluating Answer...
+  1902→✓
+  1903→
+  1904→Updating Competency...
+  1905→✓
+  1906→
+  1907→Do not expose internal chain-of-thought.
+  1908→
+  1909→Only show concise, user-facing reasoning/evidence.
+  1910→
+  1911→============================================================
+  1912→
+  1913→## 19. DATABASE
+  1914→
+  1915→============================================================
+  1916→
+  1917→Use a relational database.
+  1918→
+  1919→Prefer PostgreSQL if already configured.
+  1920→
+  1921→Create normalized tables/entities for:
+  1922→
+  1923→users
+  1924→profiles
+  1925→resumes
+  1926→resume_documents
+  1927→jobs
+  1928→job_requirements
+  1929→skills
+  1930→candidate_skills
+  1931→candidate_evidence
+  1932→matches
+  1933→skill_gaps
+  1934→interviews
+  1935→interview_questions
+  1936→interview_answers
+  1937→answer_evaluations
+  1938→competency_assessments
+  1939→readiness_scores
+  1940→roadmaps
+  1941→roadmap_items
+  1942→audit_events
+  1943→
+  1944→Use:
+  1945→
+  1946→• foreign keys
+  1947→• indexes
+  1948→• constraints
+  1949→• timestamps
+  1950→• appropriate uniqueness
+  1951→• soft deletion where appropriate
+  1952→• transaction boundaries
+  1953→
+  1954→Do not store unnecessary sensitive information.
+  1955→
+  1956→============================================================
+  1957→
+  1958→## 20. AUTHENTICATION & AUTHORIZATION
+  1959→
+  1960→============================================================
+  1961→
+  1962→Implement secure authentication if the existing architecture supports it.
+  1963→
+  1964→Users must only access their own candidate information.
+  1965→
+  1966→Use server-side authorization.
+  1967→
+  1968→Never trust user-provided user IDs.
+  1969→
+  1970→Do not expose service-role credentials to the browser.
+  1971→
+  1972→Protect API keys.
+  1973→
+  1974→Use environment variables.
+  1975→
+  1976→============================================================
+  1977→
+  1978→## 21. FILE UPLOAD SECURITY
+  1979→
+  1980→============================================================
+  1981→
+  1982→Resume upload must validate:
+  1983→
+  1984→• MIME type
+  1985→• extension
+  1986→• size
+  1987→• filename
+  1988→• parsing failure
+  1989→• malformed files
+  1990→
+  1991→Prevent:
+  1992→
+  1993→• path traversal
+  1994→• arbitrary file execution
+  1995→• unsafe file handling
+  1996→
+  1997→Store files safely.
+  1998→
+  1999→Never expose private files publicly by default.
+  2000→
+
+[showing lines 1-2000 of 8071; use offset=2001 with limit to continue reading]
