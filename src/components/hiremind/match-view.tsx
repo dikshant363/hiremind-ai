@@ -9,6 +9,7 @@ import { useHireMind } from "@/lib/store";
 import { toast } from "sonner";
 import { ScoreRing, CompetencyBar, StatusPill, AnimatedCounter } from "./shell";
 import { JobInsights } from "./job-insights";
+import { JobMarketInsights } from "./job-market-insights";
 import type { MatchStatus } from "@/lib/types";
 
 export function MatchView() {
@@ -176,6 +177,9 @@ export function MatchView() {
 
       {/* Job Description Insights — what the AI extracted from the JD */}
       <JobInsights />
+
+      {/* Job market insights — deterministic signals derived from the JD */}
+      <JobMarketInsights />
 
       <div className="mt-8 flex items-center justify-end">
         <motion.div

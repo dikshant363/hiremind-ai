@@ -11,6 +11,7 @@ import type { SkillEvidence } from "@/lib/types";
 import { ScoreRing } from "./shell";
 import { EvidenceGraph } from "./evidence-graph";
 import { SkillHeatmap } from "./skill-heatmap";
+import { SkillRadar } from "./skill-radar";
 import { ResumeStrength } from "./resume-strength";
 
 /** Compute profile completeness as a 0..100 integer. */
@@ -327,6 +328,9 @@ export function CandidateView() {
 
       {/* Skill confidence heatmap — at-a-glance visual grid */}
       <SkillHeatmap />
+
+      {/* Skill proficiency radar — average evidence strength by category */}
+      <SkillRadar />
 
       {/* Resume strength score — deterministic signal-richness assessment */}
       <ResumeStrength />

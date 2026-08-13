@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { ScoreRing, CompetencyBar, AnimatedCounter } from "./shell";
 import { SessionSummary } from "./session-summary";
 import { ExportResults } from "./export-results";
+import { InterviewTimeline } from "./interview-timeline";
 import type { SkillLevel } from "@/lib/types";
 
 /** Map a 0..1 dimension score onto the smooth color scale:
@@ -448,6 +449,9 @@ export function ReadinessView() {
           </div>
         </motion.div>
       )}
+
+      {/* Interview journey — full adaptive timeline */}
+      <InterviewTimeline />
 
       {/* Session Summary */}
       <SessionSummary />

@@ -10,6 +10,7 @@ import type { InterviewDifficulty } from "@/lib/types";
 import { ScoreRing } from "./shell";
 import { AnswerCoach } from "./answer-coach";
 import { InterviewTimer } from "./interview-timer";
+import { VoiceInput } from "./voice-input";
 import { cn } from "@/lib/utils";
 
 /** Maps a difficulty level to its tonal color tokens for pills and badges. */
@@ -405,6 +406,20 @@ export function InterviewView() {
                 <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
                   <span>{wordCount} words</span>
                   <span>Tip: explain tradeoffs, not just keywords</span>
+                </div>
+
+                {/* Voice input — progressive enhancement, hidden when unsupported */}
+                <div className="mt-3">
+                  <VoiceInput
+                    disabled={loading}
+                    onTranscript={(text) => {
+                      setAnswer((prev) => {
+                        const trimmed = prev.trimEnd();
+                        const sep = trimmed ? " " : "";
+                        return trimmed + sep + text;
+                      });
+                    }}
+                  />
                 </div>
 
                 <div className="mt-5 flex flex-col sm:flex-row sm:flex-wrap gap-2.5 sm:items-center">

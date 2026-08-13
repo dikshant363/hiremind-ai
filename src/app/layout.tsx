@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { GradientMesh } from "@/components/hiremind/gradient-mesh";
 
 const inter = Inter({
   variable: "--font-geist-sans",
@@ -50,7 +51,16 @@ export default function RootLayout({
         className={`${inter.variable} font-sans antialiased bg-background text-foreground min-h-screen flex flex-col`}
       >
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          {children}
+          {/* Animated gradient mesh background — rendered once at the app root
+              so it appears on ALL views, behind all content. Fixed inset-0,
+              z-0, pointer-events-none so it never interferes with clicks or
+              creates horizontal scroll. The children wrapper below uses
+              `relative z-10` to guarantee all foreground content paints
+              above the mesh. */}
+          <GradientMesh />
+          <div className="relative z-10 flex flex-col flex-1">
+            {children}
+          </div>
           <Toaster />
           <SonnerToaster richColors position="top-center" />
         </ThemeProvider>

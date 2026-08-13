@@ -14,6 +14,7 @@ import { RoadmapView } from "@/components/hiremind/roadmap-view";
 import { CompareView } from "@/components/hiremind/compare-view";
 import { LoadingOverlay } from "@/components/hiremind/loading-overlay";
 import { ShortcutHint } from "@/components/hiremind/shortcut-hint";
+import { CommandPalette } from "@/components/hiremind/command-palette";
 import { OnboardingTooltip } from "@/components/hiremind/onboarding-tooltip";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -70,15 +71,53 @@ export default function Home() {
   // Watch store state and unlock achievements as milestones are reached.
   // Uses refs to avoid re-running on every render; only fires when the
   // relevant piece of state actually transitions to a truthy value.
+  //
+  // IMPORTANT: We track an `isHydrating` flag. When a session is hydrated
+  // (from URL hash or recent-sessions click), all state pieces transition
+  // from null → non-null in a single batch. That would otherwise fire 6-7
+  // achievement toasts at once. Instead, during hydration we silently
+  // sync the "previous" refs to current state without unlocking anything.
+  // Only *new* actions taken during the live session unlock achievements.
   const prevCandidate = React.useRef(candidate);
   const prevGaps = React.useRef(gaps);
   const prevInterview = React.useRef(interview);
   const prevReadiness = React.useRef(readiness);
   const prevRoadmap = React.useRef(roadmap);
   const prevEval = React.useRef(lastEvaluation);
+  const isHydrating = React.useRef(false);
+
+  // Detect hydration calls (hydrateSession sets loading + view transitions)
+  const prevLoading = React.useRef(false);
+  useEffect(() => {
+    const { loading } = useHireMind.getState();
+    // If we just landed on a non-home view via hydration (URL hash present),
+    // mark hydrating so the achievement effect skips the initial batch.
+    if (hydratedRef.current && typeof window !== "undefined") {
+      const hash = window.location.hash;
+      if (hash.includes("session=") && hash.includes("view=")) {
+        isHydrating.current = true;
+      }
+    }
+    prevLoading.current = loading;
+  }, [candidate, gaps, interview, readiness, roadmap]);
 
   useEffect(() => {
     if (!achievementsMounted) return;
+
+    // If we're in hydration mode, just sync refs without unlocking.
+    // The first time loading flips back to false AFTER hydration, we clear
+    // the hydrating flag so subsequent real user actions unlock normally.
+    if (isHydrating.current) {
+      prevCandidate.current = candidate;
+      prevGaps.current = gaps;
+      prevInterview.current = interview;
+      prevReadiness.current = readiness;
+      prevRoadmap.current = roadmap;
+      prevEval.current = lastEvaluation;
+      // Clear hydrating flag once we've synced once
+      isHydrating.current = false;
+      return;
+    }
 
     // first_analysis: candidate just became non-null
     if (candidate && !prevCandidate.current) {
@@ -162,6 +201,7 @@ export default function Home() {
       <SiteFooter />
       <LoadingOverlay />
       <ShortcutHint open={showHints} onClose={() => setShowHints(false)} />
+      <CommandPalette />
       {view === "home" && <OnboardingTooltip />}
     </>
   );

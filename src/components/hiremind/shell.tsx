@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
-import { Sun, Moon, BrainCircuit, RotateCcw, Monitor, HelpCircle, GitCompare } from "lucide-react";
+import { Sun, Moon, BrainCircuit, RotateCcw, Monitor, HelpCircle, GitCompare, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHireMind, type View } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -34,6 +34,9 @@ export function SiteHeader() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
+  // Platform detection for the ⌘K / Ctrl K hint — only meaningful after mount
+  // to avoid SSR/hydration mismatch.
+  const isMac = mounted && /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent);
 
   // Track how many past sessions exist so we can enable the "Compare" nav
   // item only when there are at least two. Re-fetch whenever the active
@@ -135,6 +138,20 @@ export function SiteHeader() {
             <Monitor className="h-4 w-4" />
           </Button>
           <Button
+            variant="outline"
+            size="sm"
+            aria-label="Open command palette"
+            onClick={() => document.dispatchEvent(new CustomEvent("hm-open-command-palette"))}
+            className="h-8 gap-2 border-border/60 px-2.5 text-muted-foreground hover:text-foreground"
+            title="Search commands (Cmd+K)"
+          >
+            <Search className="h-3.5 w-3.5" />
+            <span className="hidden text-[12px] font-medium lg:inline">Search commands…</span>
+            <kbd className="hidden items-center rounded border border-border bg-muted px-1 py-0 text-[9px] font-mono font-medium text-muted-foreground sm:inline-flex">
+              {mounted && !isMac ? "Ctrl K" : "⌘K"}
+            </kbd>
+          </Button>
+          <Button
             variant="ghost"
             size="icon"
             aria-label="Show keyboard shortcuts"
@@ -234,7 +251,6 @@ export function ScoreRing({
   labelExtra?: React.ReactNode;
 }) {
   const [display, setDisplay] = React.useState(0);
-  const [glowActive, setGlowActive] = React.useState(true);
   const [shimmerActive, setShimmerActive] = React.useState(false);
 
   React.useEffect(() => {
@@ -266,12 +282,6 @@ export function ScoreRing({
     };
   }, [value, delay]);
 
-  // Fade out glow after entrance
-  React.useEffect(() => {
-    const t = setTimeout(() => setGlowActive(false), 1800);
-    return () => clearTimeout(t);
-  }, []);
-
   const stroke = 7;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
@@ -292,15 +302,16 @@ export function ScoreRing({
   return (
     <div className="flex flex-col items-center" style={{ width: size }}>
       <div className="relative" style={{ width: size, height: size }}>
-        {/* Glow layer behind ring */}
-        {glowActive && (
-          <div
-            className="hm-ring-glow"
-            style={{
-              background: `radial-gradient(circle, color-mix(in oklch, ${toneColor} 12%, transparent), transparent 70%)`,
-            }}
-          />
-        )}
+        {/* Glow layer behind ring — plays a 1.4s entrance radiance, then
+            settles into a subtle 4s breathing pulse so the ring always
+            feels "alive" even when idle. Uses the .hm-ring-glow-breathe
+            utility class which chains both animations. */}
+        <div
+          className="hm-ring-glow-breathe"
+          style={{
+            background: `radial-gradient(circle, color-mix(in oklch, ${toneColor} 12%, transparent), transparent 70%)`,
+          }}
+        />
         <svg width={size} height={size} className="-rotate-90" style={{ overflow: "visible" }}>
           <defs>
             {/* Gradient fade — full color at the arc start, fading to a softer
@@ -336,14 +347,16 @@ export function ScoreRing({
             style={{ transition: "stroke-dashoffset 0.1s linear" }}
           />
         </svg>
-        {/* Shimmer sweep overlay */}
+        {/* Shimmer sweep overlay — first sweep fires ~200ms after the count-up
+            completes, then repeats on a 5s cycle using hm-shimmer-periodic
+            (1.6s sweep + 3.4s idle). Adds premium "alive" sheen. */}
         {shimmerActive && (
           <div className="absolute inset-0 overflow-hidden rounded-full pointer-events-none">
             <div
               className="absolute inset-0"
               style={{
                 background: `linear-gradient(105deg, transparent 40%, color-mix(in oklch, ${toneColor} 10%, var(--card)) 50%, transparent 60%)`,
-                animation: "hm-shimmer 1.6s ease-in-out 1 both",
+                animation: "hm-shimmer-periodic 5s ease-in-out infinite",
               }}
             />
           </div>

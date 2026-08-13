@@ -1,10 +1,140 @@
 # HIREMIND AI — Worklog / Handover
 
-> **Last updated**: Round 3 (cron-review) — 10 major features/enhancements completed
+> **Last updated**: Round 4 (cron-review) — Bug fix + 6 new features completed
 
-## Current Project Status: STABLE + Feature-Rich + Premium UX
+## Current Project Status: STABLE + Premium + Productivity-Enhanced
 
-All P0–P3 features working. Core intelligence loop verified end-to-end. Round 3 adds: interview timer, achievement/badge system, onboarding tooltips, enhanced home/candidate/gaps/roadmap views, share links, re-interview, and extensive styling polish.
+All P0–P4 features working. Round 4 fixes the achievement toast spam bug and adds: command palette (Cmd+K), skill radar chart, interview timeline, voice input, gradient mesh background, and job market insights.
+
+---
+
+Task ID: cron-review-4
+Agent: main
+Task: QA assessment + bug fix + 6 new features + premium styling polish
+
+## QA Assessment (Pre-Work)
+- agent-browser walkthrough: PASS ✓
+- Dev server: stable, all 200s ✓
+- Lint: 0 errors ✓
+- No browser errors ✓
+- **Bug found**: Achievement toast spam on session hydration — when a session is hydrated from URL or recent-sessions click, ALL achievements fire at once because state transitions happen in a batch, spawning 6-7 stacked toasts simultaneously.
+
+## Bug Fix
+
+1. **Achievement toast spam on session hydration** — Fixed in `page.tsx`:
+   - Added `isHydrating` ref that detects when a session is being hydrated (URL hash with session= param)
+   - When hydrating, the achievement effect silently syncs the "previous" refs to current state WITHOUT unlocking anything
+   - The flag clears after the first sync, so subsequent real user actions unlock normally
+   - Only *new* actions taken during the live session unlock achievements
+   - Verified: Loading a recent session no longer spams achievement toasts ✓
+
+## New Features (6 items)
+
+1. **Command Palette (Cmd+K / Ctrl+K)** — New `command-palette.tsx` + `use-command-palette.ts`:
+   - Premium Apple-inspired modal with glass-morphism backdrop
+   - 16 commands across 3 sections: Navigation (8), Actions (5), Theme (3)
+   - Full keyboard navigation: Arrow Up/Down, Enter, Tab trapping, Escape
+   - Search input with magnifier icon, autofocus
+   - Selected item: bg-secondary + left accent border + CornerDownLeft indicator
+   - "⌘K" / "Ctrl+K" hint button added to header between Presentation and Help
+   - Listens for `hm-open-command-palette` custom event from header button
+   - Capture-phase keydown listener beats existing bubble-phase shortcuts
+
+2. **Skill Proficiency Radar Chart** — New `skill-radar.tsx`:
+   - Pure SVG radar/spider chart (no chart library)
+   - 10 axes (one per competency category)
+   - 4 concentric grid rings (25/50/75/100%)
+   - Gradient-filled data polygon with animated draw-in (spring)
+   - Hoverable data points with tooltip (category, avg %, skill count)
+   - Smart label positioning per axis angle
+   - Empty state: "No evidence yet"
+   - Placed between SkillHeatmap and ResumeStrength on candidate view
+
+3. **Interview Journey Timeline** — New `interview-timeline.tsx`:
+   - Vertical timeline showing each Q&A pair from the interview
+   - 4 stat tiles: Questions answered, Avg score, Total time, Competencies covered
+   - Number badges (Q1, Q2...) colored by score tone
+   - Expandable answers (line-clamp-2 + "Show full answer")
+   - Adaptation indicators between entries (curved arrow + "Adapted to → [competency]")
+   - Per-question elapsed time derived from interview history timestamps
+   - Placed on readiness view below "Interview evidence"
+
+4. **Voice Input for Interview Answers** — New `voice-input.tsx` + `use-speech-recognition.ts`:
+   - Web Speech API wrapper (SSR-safe)
+   - Mic button: h-10 w-10 rounded-full
+   - Listening state: bg-critical/15 + ring-2 ring-critical/30 + pulsing animation
+   - Live interim transcript preview (italic, muted)
+   - Final transcript appends to answer (with separating space)
+   - Browser support detection (hides if unsupported)
+   - Error handling: not-allowed, no-speech, network
+   - Integrated into interview-view below the word count
+
+5. **Animated Gradient Mesh Background** — New `gradient-mesh.tsx`:
+   - 4 large blurred color blobs (accent-blue, success, warning, chart-5)
+   - Slow drift animations (20-30s, ease-in-out, infinite alternate)
+   - Very subtle opacity (0.04 light / 0.06 dark)
+   - Fixed position, pointer-events-none, z-0
+   - Respects prefers-reduced-motion
+   - 4 CSS keyframes: hm-mesh-drift-1 through hm-mesh-drift-4
+   - Rendered at app root in layout.tsx
+   - Enhanced ScoreRing with breathing glow + periodic shimmer
+
+6. **Job Market Insights Panel** — New `job-market-insights.tsx`:
+   - Deterministic insights derived from job profile (no AI calls):
+     - Demand level (based on requirement count)
+     - Seniority signal (keyword scan)
+     - Skill scarcity (candidate's coverage of critical skills)
+     - Work flexibility (remote/hybrid detection)
+     - Tech stack diversity (distinct category count)
+     - Top 5 in-demand skills (by importance)
+   - Grid of insight tiles with icon chips
+   - Skill pills with importance badges
+   - Placed on match view below JobInsights
+
+## CSS Additions (globals.css)
+- `@keyframes hm-mesh-drift-1/2/3/4` — mesh blob drift animations
+- `.hm-mesh-blob` base styles
+- Primary button hover scale + shadow lift
+- Card hover border glow enhancement
+- Nav hover underline animation
+- Loading text shimmer effect
+- ScoreRing breathing glow + periodic shimmer
+- `prefers-reduced-motion` block
+
+## Verification Results
+- Lint: 0 errors ✓
+- Dev server: stable, all 200s ✓
+- agent-browser walkthrough PASSED ✓:
+  - Command palette: opens with button + Cmd+K, 16 commands, keyboard nav ✓
+  - Skill radar: renders on candidate view with animated polygon ✓
+  - Interview timeline: shows on readiness view with Q&A pairs + adaptation arrows ✓
+  - Voice input: mic button visible on interview view ✓
+  - Gradient mesh: subtle animated background visible ✓
+  - Job market insights: 6 insights on match view ✓
+  - **Achievement toast spam: FIXED** — loading session no longer spams toasts ✓
+  - Dark mode: no regressions ✓
+  - Mobile (375px): responsive ✓
+
+## Screenshots Saved
+- `/home/z/my-project/download/command-palette.png`
+- `/home/z/my-project/download/candidate-radar.png`
+- `/home/z/my-project/download/readiness-timeline.png`
+- `/home/z/my-project/download/interview-voice-input.png`
+- `/home/z/my-project/download/dark-mode-candidate.png`
+- `/home/z/my-project/download/mobile-responsive.png`
+
+## Unresolved Issues / Risks
+1. Voice input depends on Web Speech API (Chrome/Edge only) — gracefully hidden on unsupported browsers
+2. Interview timeline per-question time is derived from history timestamps (includes API latency) — could be made more precise with a dedicated `secondsSpent` field
+3. Gradient mesh is very subtle by design — may need tuning per environment
+
+## Priority Recommendations for Next Phase
+1. **PDF export enhancement** — Printable resume report with all insights
+2. **Interview question bookmarks** — Let users star/flag questions for review
+3. **Skill gap deep-dive modals** — Click a gap to see detailed learning resources
+4. **Comparative analytics** — Track readiness improvement across multiple sessions
+5. **Custom job templates** — Pre-built JD templates for common roles
+6. **Interview replay** — Step through the interview Q&A in a dedicated player
 
 ---
 
@@ -2029,3 +2159,212 @@ Stage Summary:
 - Practice checkbox state is React state + localStorage, not in the Zustand store
 - No new npm packages added
 - Build verified clean
+
+---
+Task ID: 4f
+Agent: full-stack-developer
+Task: Add voice input for interview answers
+
+Work Log:
+- Read worklog.md, existing interview-view.tsx, use-mobile.ts, tooltip.tsx, and globals.css to understand the codebase conventions and confirm critical color tokens are available
+- Created /home/z/my-project/src/hooks/use-speech-recognition.ts:
+  - SSR-safe wrapper around window.SpeechRecognition / window.webkitSpeechRecognition
+  - Minimal TS type declarations for the Web Speech API (no `any`)
+  - Returns { isListening, transcript, interimTranscript, isSupported, start, stop, reset, error }
+  - Config: lang='en-US', continuous=true, interimResults=true, maxAlternatives=1
+  - Auto-restarts on transient no-speech/aborted events; surfaces friendly errors for not-allowed/audio-capture/network
+  - Full cleanup on unmount (nulls handlers, aborts recognition)
+- Created /home/z/my-project/src/components/hiremind/voice-input.tsx:
+  - Circular mic button (h-10 w-10 rounded-full) using shadcn Tooltip with dynamic label
+  - Idle: bg-secondary text-muted-foreground; Listening: bg-critical/15 text-critical-foreground ring-2 ring-critical/30 + animate-ping ring
+  - Uses both Lucide Mic (idle) and MicOff (listening) icons
+  - "Listening…" label (text-[10px] uppercase tracking-wider text-critical-foreground) with pulsing critical dot
+  - Interim transcript preview (text-[11px] italic text-muted-foreground, truncated)
+  - Error pill in text-[10px] text-critical-foreground/80 when not listening
+  - mounted guard to prevent hydration mismatch
+  - Unsupported browsers: muted MicOff chip with "Voice input not supported in this browser" tooltip
+  - Commits final transcript to parent via onTranscript on listening→idle transition, then resets
+- Integrated into interview-view.tsx:
+  - Imported VoiceInput
+  - Inserted <VoiceInput /> in a new mt-3 row between the word count row and the action buttons row, inside the answer column (lg:col-span-3)
+  - onTranscript appends to answer state: trims trailing whitespace, adds a single space separator, concatenates transcript — never replaces existing typed text
+  - disabled={loading} so mic is unavailable during AI evaluation
+  - Textarea remains editable while listening (per spec)
+- Ran ESLint (bun run lint): 0 errors, 0 warnings
+- Verified dev server log: no compile errors after edits (only pre-existing unrelated SQLite read-only warnings on /api/analyze)
+
+Stage Summary:
+- New files: src/hooks/use-speech-recognition.ts, src/components/hiremind/voice-input.tsx
+- Modified: src/components/hiremind/interview-view.tsx (import + voice input row)
+- Progressive enhancement: typing flow untouched; voice button hidden as inert chip when Web Speech API is unavailable
+- SSR-safe and hydration-safe (typeof window guard + mounted flag)
+- No new npm packages — pure native Web Speech API
+- Lint passes cleanly; premium feel with subtle pulsing ring, real-time interim preview, and accessible tooltips
+
+---
+
+Task ID: 4c
+Agent: frontend-styling-expert
+Task: Add skill proficiency radar chart
+
+Work Log:
+- Read worklog.md, candidate-view.tsx, skill-heatmap.tsx, resume-strength.tsx, and types.ts to match the existing design language and understand the SkillEvidence / CompetencyCategory shapes
+- Inspected globals.css to confirm available color tokens (--accent-blue, --success, --warning, --muted-foreground, --border) and the .hm-card / .hm-card-hover utilities
+- Verified `Radar` and `AlertCircle` icons exist in lucide-react before importing
+- Created /home/z/my-project/src/components/hiremind/skill-radar.tsx:
+  - Pure SVG radar/spider chart, viewBox 280×280, width=100% so it scales responsively with the container (maxWidth cap = SIZE+80 to leave room for labels/overflow)
+  - 10 fixed categories (System Design, Backend, Frontend, Data, ML, Cloud, DevOps, Languages, Communication, Domain) plotted as axes from center to edge, starting at top and rotating clockwise
+  - 4 concentric grid rings at 25/50/75/100% of radius, stroke=border, strokeWidth=1, opacity=0.4
+  - Data polygon: linearGradient (#radar-gradient) fill from accent-blue @ 50% opacity → accent-blue @ 10% opacity, stroke var(--accent-blue) strokeWidth=2, strokeLinejoin=round
+  - Spring-eased entrance: motion.polygon scales 0 → 1 over 0.8s (stiffness 120, damping 14, delay 0.1) with transformOrigin set to center
+  - Data points: motion.circle r=4, fill accent-blue, stroke white strokeWidth=2; cascaded spring entrance (delay 0.5 + i*0.04); whileHover scales to 1.6 for tactile feedback
+  - Category labels positioned at LABEL_RADIUS=116 with smart text-anchor (top/bottom=middle, left=end, right=start) and dominantBaseline adjustments so labels never overlap the chart
+  - Hover tooltip: simple React state (hover index), absolute-positioned div over the SVG showing category name, avg strength %, and skill count — uses bg-popover / border / shadow-md tokens, pointer-events-none
+  - Header: hm-card with accent-blue/10 icon chip, "Skill proficiency radar" title, "Average evidence strength by category" subtitle; right-aligned "Categories X/10" counter
+  - Graceful empty state: when evidence.length === 0, shows AlertCircle + "No evidence yet." centered message
+  - Footer hint with Radar icon explaining the outer ring = 100% scale
+- Wired the new component into candidate-view.tsx:
+  - Added `import { SkillRadar } from "./skill-radar";`
+  - Inserted `<SkillRadar />` between `<SkillHeatmap />` and `<ResumeStrength />` with an inline comment
+- Lint passes cleanly (npm run lint -- --quiet → 0 errors)
+- TypeScript check: no errors in skill-radar.tsx or candidate-view.tsx (pre-existing unrelated errors elsewhere untouched)
+
+Stage Summary:
+- New premium SVG radar chart component (skill-radar.tsx, ~310 lines) visualizes average evidence strength across all 10 competency categories
+- Pure SVG implementation, zero new npm packages — only existing framer-motion + lucide-react + hiremind store/types
+- Premium styling matches existing hiremind cards: hm-card surface, accent-blue tokens, spring-eased animations, hover micro-interactions
+- Responsive (viewBox + width=100%) and gracefully handles empty evidence state
+- Integrated into CandidateView between SkillHeatmap and ResumeStrength per spec
+- Lint clean, types clean — ready for visual QA in dev
+
+---
+
+Task ID: 4a
+Agent: full-stack-developer
+Task: Build command palette (Cmd+K)
+
+Work Log:
+- Read worklog.md, page.tsx, shell.tsx, use-keyboard-shortcuts.ts, store.ts, shortcut-hint.tsx, home-view.tsx, button.tsx, globals.css to learn existing patterns (hm-* custom events, zustand store, framer-motion AnimatePresence, premium tokens).
+- Created src/hooks/use-command-palette.ts: returns { open, setOpen }; global keydown listener on window with capture phase; toggles on Cmd+K/Ctrl+K (works even when input focused); closes on Escape when open with stopPropagation so the general shortcuts hook doesn't also navigate home; listens for hm-open-command-palette custom event so the header button can open it.
+- Created src/components/hiremind/command-palette.tsx: premium glass-morphism modal (max-w-xl, rounded-xl, bg-card/95 backdrop-blur-xl, shadow-2xl); backdrop bg-background/60 backdrop-blur-sm click-to-close; h-12 search input with magnifier icon + autofocus; sectioned filtered list (Navigation/Actions/Theme) with text-[10px] uppercase headers; command rows px-3 py-2.5 rounded-md, selected = bg-secondary + left accent-blue border; kbd shortcut chips; ArrowUp/Down/Enter keyboard nav; Tab focus trap; onMouseMove selects hovered row; auto scrollIntoView; "No commands found" empty state; footer hint bar; Framer Motion scale+fade entrance with [0.22,1,0.36,1] easing; role=dialog/aria-modal/aria-label + role=listbox/option/aria-selected for a11y.
+- Commands: Navigation (8: Overview, Candidate, Job Match, Skill Gaps, Interview, Readiness, Roadmap, Compare — with 1-8 shortcuts; session-required views disabled when no session); Actions (5: Load Demo Candidate [D], Start Over [disabled w/o session], Toggle Theme [T], Toggle Presentation Mode [P], Show Keyboard Shortcuts [?]); Theme (3: Light, Dark, System). Theme toggle + shortcuts reuse the existing hm-toggle-theme / hm-show-shortcuts custom events.
+- Modified src/components/hiremind/shell.tsx: added Search icon import + isMac detection (gated on mounted to avoid hydration mismatch); inserted an outline "Search commands…" button between Presentation and Help (icon always, label on lg+, ⌘K/Ctrl K kbd on sm+) that dispatches hm-open-command-palette.
+- Modified src/app/page.tsx: imported and rendered <CommandPalette /> alongside LoadingOverlay and ShortcutHint.
+- Verified: bun run lint passes (0 errors); GET / returns 200; dev.log clean.
+
+Stage Summary:
+- New: src/hooks/use-command-palette.ts, src/components/hiremind/command-palette.tsx.
+- Modified: src/components/hiremind/shell.tsx (header search button + platform hint), src/app/page.tsx (render CommandPalette).
+- No new npm packages. Works with or without a session (session-dependent commands disabled, not hidden). No conflicts with use-keyboard-shortcuts (capture-phase Escape + input-focus gate keep them separated). Tab focus trapped inside modal. Lint clean, page serves 200.
+
+---
+
+Task ID: 4e
+Agent: full-stack-developer
+Task: Add job market insights panel
+
+Work Log:
+- Read project context: worklog.md, match-view.tsx, job-insights.tsx, src/lib/types.ts, src/lib/store.ts, globals.css (verified hm-card/hm-elevated/bg-critical tokens), resume-strength.tsx (matched header/icon-chip pattern), agent-ctx records 4a/4f for conventions.
+- Created src/components/hiremind/job-market-insights.tsx — single client component with an InsightTile subcomponent. Computes 6 deterministic insights from JobProfile (no AI calls):
+  - Demand level (<5 / 5-8 / 9-12 / >12 requirements → Niche / Moderate / High / Very high demand)
+  - Seniority signal (regex over title+summary+responsibilities: senior|lead|staff|principal / junior|entry|graduate|intern / mid|intermediate / else Mid-Senior)
+  - Skill scarcity (critical-skill coverage from match.rows matched count: >70% / 40-70% / <40% verdicts, with safe "No critical skills defined" fallback)
+  - Work flexibility (remote|hybrid|flexible|wfh|distributed keyword scan with preferential remote > hybrid > flexible > on-site)
+  - Tech stack diversity (count of distinct categories in requirements)
+  - Top in-demand skills (top 5 by importance rank critical→low, then required flag, then alphabetical)
+- Visual: hm-card with Zap icon chip header; grid sm:grid-cols-2 lg:grid-cols-3 of 5 InsightTiles (hm-elevated rounded-lg p-3, h-8 w-8 bg-secondary icon chip, text-[10px] uppercase label, text-sm font-semibold value, text-[11px] muted description); 6th cell spans sm:col-span-2 lg:col-span-3 and renders the in-demand skills as rounded-full bg-secondary px-2.5 py-1 text-[11px] pills with tiny solid-color importance dots (bg-critical/warning/accent-blue/muted-foreground/60) and importance suffix. Staggered framer-motion entrance with [0.22, 1, 0.36, 1] ease, delays 0.3 + i*0.06 for tiles, 0.5 + i*0.05 for pills.
+- Wired into match-view.tsx: imported JobMarketInsights, rendered immediately below <JobInsights /> and above the "See your gaps" CTA.
+- Verified: bun run lint clean (0 errors, 0 warnings); dev.log shows successful recompiles with no errors.
+
+Stage Summary:
+- New file: src/components/hiremind/job-market-insights.tsx (~230 LOC, client component + InsightTile helper).
+- Modified: src/components/hiremind/match-view.tsx (one import + one JSX insertion between JobInsights and the CTA).
+- All insights computed deterministically from JobProfile — no AI calls, no new routes, no new npm packages.
+- Styling matches existing HireMind tokens; lint clean; reuses framer-motion + lucide-react + zustand store.
+
+---
+
+Task ID: 4b
+Agent: frontend-styling-expert
+Task: Add interview answer history/timeline view
+
+Work Log:
+- Read worklog.md, types.ts, store.ts, engine.ts (interview/history shape), interview-view.tsx, evaluation-view.tsx, interview-timer.tsx, readiness-view.tsx, interview-insights.tsx, evidence-graph.tsx, achievements.tsx, and globals.css to confirm styling tokens (hm-card, accent-blue/success/warning/critical, framer-motion ease [0.22,1,0.36,1]).
+- Confirmed InterviewState shape: questions[], answers[] ({questionId,text}), evaluations[] (with overall, detectedGap, nextFocus, strengths, weaknesses), history[] ({step, detail, at}) — history contains `interview_start` and `evaluation_applied` timestamps used to derive per-question elapsed time.
+- Created `/home/z/my-project/src/components/hiremind/interview-timeline.tsx` (~360 LOC) exporting `InterviewTimeline`:
+  • Header: "Interview journey" / "How your interview adapted — each question was chosen from the previous answer's detected gap." with GitBranch icon chip.
+  • StatsSummary: 4 stat tiles in a grid-cols-2 sm:grid-cols-4 layout (Questions answered, Avg score % with tone, Total time MM:SS, Competencies covered). Each tile = hm-card p-3 + colored 8x8 icon chip (ListChecks/TrendingUp/Clock/Layers).
+  • Timeline: vertical 2px gradient line (w-0.5 bg-gradient-to-b from-accent-blue via-accent-blue/60 to-success) absolutely positioned left-5 to align with the center of the 10x10 number badges.
+  • Each entry: grid-cols-[2.5rem_1fr] layout — left column holds a NumberBadge (h-10 w-10 rounded-full bg-card border-2, ring colored by score tone: success/warning/critical, "Q{n}" label, framer-motion scale-in entrance), right column holds a TimelineEntryCard (hm-card hm-card-hover p-4) plus optional AdaptationIndicator below.
+  • TimelineEntryCard: header row (competency badge with Target icon + difficulty badge + optional HR pill) on the left, elapsed time + score pill (rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums ring-1; green ≥70, yellow 50-69, red <50) on the right; question text below; expandable answer block (line-clamp-2 + "Show full answer" ChevronDown toggle for answers >110 chars); detected gap row with ArrowRight; first weakness dot row; first strength dot row (when no gap detected).
+  • AdaptationIndicator: small dashed SVG curved arrow + pill "Adapted to → [competency]" (rounded-full border-accent-blue/25 bg-accent-blue/8 px-2 py-0.5 text-[10px] with GitBranch + ArrowRight icons). Rendered between entries only when the previous evaluation had a detectedGap (drives the next question). AnimatePresence height animation for smooth mount.
+  • Per-question elapsed time derived from `interview.history` timestamps: derivePerQuestionSeconds filters `evaluation_applied` events, computes delta from `interview_start` for Q1 and delta-to-previous-eval for subsequent Qs, formatted MM:SS via pad2 helper. Falls back to "—" if unavailable.
+  • Empty-guard: returns null when interview is missing or has 0 evaluations.
+  • All animations use staggered delays (0.1 + i*0.12) with the project's signature ease [0.22, 1, 0.36, 1].
+- Wired into readiness-view.tsx: imported `InterviewTimeline` and rendered it directly below the existing "Interview evidence" summary card and above the `<SessionSummary />` (so the journey story sits between evidence-by-competency and the session-level summary).
+- Lint: `bun run lint` → 0 errors, 0 warnings.
+- TypeScript: `bunx tsc --noEmit` shows zero errors in interview-timeline.tsx and readiness-view.tsx (pre-existing unrelated errors in other files only).
+
+Stage Summary:
+- New file: src/components/hiremind/interview-timeline.tsx (~360 LOC, client component, single named export `InterviewTimeline`).
+- Modified: src/components/hiremind/readiness-view.tsx (one import + one JSX line `<InterviewTimeline />` placed after the Interview evidence card).
+- No new npm packages, no new API routes, no store changes — purely derived from existing `interview` state (questions, answers, evaluations, history).
+- Visual storytelling: score-toned number badges on a gradient line, expandable answers, and dashed "Adapted to →" pills between entries make the adaptive flow visible at a glance.
+- Stats summary gives at-a-glance totals (questions, avg score, total time, competencies covered).
+- Lint clean; TypeScript clean for the new/modified files.
+
+---
+
+Task ID: 4d
+Agent: frontend-styling-expert
+Task: Add animated gradient mesh background and premium micro-interactions
+
+Work Log:
+- Read existing globals.css, layout.tsx, page.tsx, shell.tsx, and button.tsx to understand the design system, color tokens (accent-blue, success, warning, chart-5), and integration points
+- Created `/src/components/hiremind/gradient-mesh.tsx`:
+  - Fixed-position container (`fixed inset-0 z-0 overflow-hidden pointer-events-none`) with `aria-hidden="true"` for accessibility
+  - 4 large blurred gradient blobs (max-w/h 600px, blur(64px), opacity 0.04 light / 0.06 dark) positioned in each screen quadrant
+  - Each blob uses a different semantic color (accent-blue, success, warning, chart-5) via inline radial-gradient style
+  - Animations applied via CSS utility classes (`.hm-mesh-blob-1` … `.hm-mesh-blob-4`) for performance — no inline keyframes
+- Added CSS to globals.css:
+  - `.hm-mesh` container base styles (position:fixed, inset:0, overflow:hidden, pointer-events:none)
+  - `.hm-mesh-blob` base styles (absolute, 600px, rounded-full, blur 64px, opacity 0.04 / 0.06 dark)
+  - Four `@keyframes hm-mesh-drift-{1,2,3,4}` animations — transform-only (translate + scale), GPU-friendly, distinct patterns per blob
+  - Animation utilities `.hm-mesh-blob-{1,2,3,4}` with different durations (22s, 26s, 24s, 28s) so blobs never sync — ease-in-out infinite alternate
+  - Primary button hover: `[data-slot="button"].bg-primary` gets `transform: scale(1.02)` + layered shadow lift on hover, `scale(0.99)` on active, with dark-mode variant
+  - Enhanced `.hm-card-hover`: added `border-color` transition + accent-blue border glow + 1px ring on hover (on top of existing lift)
+  - Nav item hover underline: `.hm-nav-item::after` pseudo-element with `scaleX(0) → scaleX(1)` spring sweep on hover (active items still use the inline 2px underline)
+  - Loading text shimmer: `.hm-loading-text::after` sweeps a diagonal light band every 2.5s via `hm-loading-shimmer` keyframe (background-position animation)
+  - Score ring breathing: `@keyframes hm-ring-breathe` (4s, 1.0↔1.015 scale, opacity 0.85↔1) + `.hm-ring-glow-breathe` utility chaining entrance (1.4s forwards) + breathing (4s 1.8s-delay infinite)
+  - Periodic shimmer: `@keyframes hm-shimmer-periodic` runs the shimmer sweep for ~1.6s of a 5s cycle then idles invisibly for ~3.4s — gives the "every 5s" cadence
+  - `@media (prefers-reduced-motion: reduce)` block disables all decorative animations (mesh drift, breathing, shimmers, particles, hero orb, pulse-critical, thinking, step-pulse) while keeping entrance reveals; mesh blobs stay visible (static, opacity 0.05/0.07) so background still has atmosphere
+- Integrated GradientMesh into layout.tsx:
+  - Imported `GradientMesh` and rendered it as the first child inside `<ThemeProvider>`, before `{children}`
+  - Wrapped `{children}` in `<div className="relative z-10 flex flex-col flex-1">` to guarantee all foreground content paints above the mesh (CSS stacking context rules: a fixed z-0 element would otherwise paint over static in-flow content)
+  - Toaster and SonnerToaster remain outside the z-10 wrapper so they still render at their own high z-index
+- Enhanced ScoreRing component in shell.tsx:
+  - Removed `glowActive` state and its dismissal timeout — glow layer is now always rendered (was previously unmounted after 1800ms)
+  - Changed glow layer class from `hm-ring-glow` (1.4s forwards only) to `hm-ring-glow-breathe` (1.4s entrance + 4s breathing pulse with 1.8s delay)
+  - Changed shimmer overlay animation from `hm-shimmer 1.6s ease-in-out 1 both` (one-shot) to `hm-shimmer-periodic 5s ease-in-out infinite` (repeats every 5s with 1.6s sweep + 3.4s idle)
+  - Updated inline comments to reflect the new behavior
+- Verified via agent-browser:
+  - Mesh container: `position:fixed, z-index:0, pointer-events:none, overflow:hidden`, 4 blob children
+  - Blob 1: `width:600px, height:600px, opacity:0.04, filter:blur(64px), borderRadius:9999px, animationName:hm-mesh-drift-1, animationDuration:22s, animationIterationCount:infinite`
+  - Dark mode opacity bump verified: 0.04 → 0.06 when `.dark` class is on `<html>`
+  - Primary button transition verified: `transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s, background-color 0.2s`
+  - Nav underline pseudo-element verified: height 2px, width 16px, transform `matrix(0,0,0,1,-8,0)` (scaleX(0)) initially, opacity 0
+  - ScoreRing glow: `animationName: hm-ring-glow, hm-ring-breathe`, `animationDuration: 1.4s, 4s`, `animationIterationCount: 1, infinite`, `animationDelay: 0s, 1.8s`
+  - ScoreRing shimmer: `animationName: hm-shimmer-periodic, animationDuration: 5s, animationIterationCount: infinite`
+- ESLint passes with 0 errors. Dev server boots cleanly, page returns HTTP 200.
+
+Stage Summary:
+- Animated gradient mesh background: 4 large blurred color blobs (accent-blue, success, warning, chart-5) drift slowly around the viewport with distinct 22–28s ease-in-out infinite alternate animations. VERY subtle (opacity 0.04 light / 0.06 dark) so it adds atmosphere without distracting. Fixed inset-0, z-0, pointer-events-none, overflow-hidden — never interferes with clicks or causes horizontal scroll.
+- Premium micro-interactions added globally:
+  - Primary buttons get a subtle `scale(1.02)` + shadow lift on hover (cubic-bezier spring)
+  - `.hm-card-hover` enhanced with accent-blue border glow + 1px ring on hover (in addition to existing lift + shadow)
+  - `.hm-nav-item` gets an animated hover underline (scaleX spring sweep) for non-active items
+  - `.hm-loading-text` class provides a periodic diagonal shimmer sweep for loading placeholders
+- ScoreRing enhancements: glow layer now plays a 1.4s entrance radiance then settles into a continuous 4s breathing pulse (1.0↔1.015 scale, opacity 0.85↔1); shimmer sweep now repeats every 5s (1.6s sweep + 3.4s idle) instead of firing once.
+- Accessibility: `prefers-reduced-motion` media query disables all decorative animations (mesh drift, breathing, shimmers, particles, pulses) while keeping entrance reveals and one-shot state-change animations; mesh blobs remain visible statically so background atmosphere is preserved.
+- Performance: All animations use transform/opacity only (GPU-composited). `will-change: transform, opacity` on blobs. No layout thrashing. No new npm packages.
+- Integration: GradientMesh rendered once at the app root in layout.tsx, appears on ALL views. Foreground content wrapped in `relative z-10` to guarantee it paints above the mesh per CSS stacking context rules.

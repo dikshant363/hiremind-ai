@@ -1170,4 +1170,266 @@
     0%, 100% { opacity: 0.4; transform: scale(1) rotate(0deg); }
     50% { opacity: 0.9; transform: scale(1.15) rotate(15deg); }
   }
+
+  /* ─── Animated Gradient Mesh Background ───
+     Fixed full-screen container with 4 large blurred color blobs that slowly
+     drift around the viewport. VERY subtle — opacity 0.04 (light) / 0.06 (dark)
+     so the mesh adds atmosphere without distracting from foreground content.
+     Animations are GPU-friendly: transform + opacity only. */
+
+  .hm-mesh {
+    /* Container matches the fixed inset-0 classes applied in the component,
+       but we declare it here too so the class is self-documenting and any
+       future bare <div className="hm-mesh"> usage works correctly. */
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  /* Base blob styles — large, blurred, low-opacity radial gradients.
+     max-w/h 600px keeps blobs from overwhelming the viewport on small screens.
+     The actual color is set inline by the component (per-blob CSS var). */
+  .hm-mesh-blob {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    max-width: 600px;
+    max-height: 600px;
+    border-radius: 9999px;
+    filter: blur(64px);
+    opacity: 0.04;
+    will-change: transform, opacity;
+    pointer-events: none;
+  }
+  .dark .hm-mesh-blob {
+    /* Dark mode: slightly more visible so the mesh remains perceptible
+       against the deep charcoal background. */
+    opacity: 0.06;
+  }
+
+  /* Four distinct drift patterns. Each runs 22–28s, ease-in-out, infinite
+     alternate so motion reverses smoothly — no jarring jump back to start.
+     Animates transform ONLY (translate + scale) — opacity is set by the
+     .hm-mesh-blob class so dark mode can bump it via the .dark override
+     without conflicting with keyframe values. This keeps motion GPU-friendly
+     (transform is composited on the GPU; opacity is too, but isolating it
+     to the class avoids the keyframe/class cascade fighting each other). */
+
+  @keyframes hm-mesh-drift-1 {
+    0%   { transform: translate(0, 0) scale(1); }
+    50%  { transform: translate(60px, 80px) scale(1.12); }
+    100% { transform: translate(-40px, 120px) scale(0.95); }
+  }
+  @keyframes hm-mesh-drift-2 {
+    0%   { transform: translate(0, 0) scale(1); }
+    33%  { transform: translate(-80px, 60px) scale(1.08); }
+    66%  { transform: translate(40px, 100px) scale(0.92); }
+    100% { transform: translate(-60px, -40px) scale(1.05); }
+  }
+  @keyframes hm-mesh-drift-3 {
+    0%   { transform: translate(0, 0) scale(1); }
+    50%  { transform: translate(80px, -60px) scale(1.1); }
+    100% { transform: translate(-50px, 40px) scale(0.94); }
+  }
+  @keyframes hm-mesh-drift-4 {
+    0%   { transform: translate(0, 0) scale(1); }
+    40%  { transform: translate(-70px, -80px) scale(1.06); }
+    75%  { transform: translate(50px, -50px) scale(0.96); }
+    100% { transform: translate(60px, 70px) scale(1.08); }
+  }
+
+  /* Apply each drift animation to its respective blob. Different durations
+     (22s, 26s, 24s, 28s) so blobs never sync up — keeps the motion feeling
+     organic and unforced. Opacity is inherited from .hm-mesh-blob (0.04 light,
+     0.06 dark). */
+  .hm-mesh-blob-1 {
+    animation: hm-mesh-drift-1 22s ease-in-out infinite alternate;
+  }
+  .hm-mesh-blob-2 {
+    animation: hm-mesh-drift-2 26s ease-in-out infinite alternate;
+  }
+  .hm-mesh-blob-3 {
+    animation: hm-mesh-drift-3 24s ease-in-out infinite alternate;
+  }
+  .hm-mesh-blob-4 {
+    animation: hm-mesh-drift-4 28s ease-in-out infinite alternate;
+  }
+
+  /* ─── Premium micro-interactions ─── */
+
+  /* Primary button hover — subtle scale (1.02) + shadow lift.
+     Targets any element with the shadcn default-variant .bg-primary class
+     (covers <Button> default variant AND any custom element using bg-primary).
+     Uses cubic-bezier for an Apple-style spring. */
+  [data-slot="button"].bg-primary,
+  button.bg-primary {
+    transition:
+      transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.25s ease,
+      background-color 0.2s ease;
+  }
+  [data-slot="button"].bg-primary:hover,
+  button.bg-primary:hover {
+    transform: scale(1.02);
+    box-shadow:
+      0 4px 14px -4px color-mix(in oklch, var(--primary) 30%, transparent),
+      0 2px 6px -2px color-mix(in oklch, var(--foreground) 12%, transparent);
+  }
+  [data-slot="button"].bg-primary:active,
+  button.bg-primary:active {
+    transform: scale(0.99);
+  }
+  .dark [data-slot="button"].bg-primary:hover,
+  .dark button.bg-primary:hover {
+    box-shadow:
+      0 4px 14px -4px color-mix(in oklch, var(--primary) 45%, transparent),
+      0 2px 6px -2px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Enhanced card hover — adds a subtle border glow on top of the existing
+     lift + shadow. Accent-blue ring tint signals interactivity. */
+  .hm-card-hover {
+    transition:
+      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.3s ease,
+      border-color 0.3s ease;
+  }
+  .hm-card-hover:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in oklch, var(--accent-blue) 35%, var(--border));
+    box-shadow:
+      0 8px 24px -8px color-mix(in oklch, var(--accent-blue) 18%, transparent),
+      0 0 0 1px color-mix(in oklch, var(--accent-blue) 18%, transparent),
+      0 4px 12px -4px color-mix(in oklch, var(--foreground) 8%, transparent);
+  }
+  .dark .hm-card-hover:hover {
+    border-color: color-mix(in oklch, var(--accent-blue) 40%, transparent);
+    box-shadow:
+      0 8px 24px -8px color-mix(in oklch, var(--accent-blue) 24%, transparent),
+      0 0 0 1px color-mix(in oklch, var(--accent-blue) 22%, transparent),
+      0 4px 12px -4px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Nav item hover underline — premium animated sweep. Active items already
+     have a 2px underline (set inline in shell.tsx); this adds a hover-only
+     underline that grows from the left on non-active items for a tactile
+     "this is clickable" hint. */
+  .hm-nav-item {
+    position: relative;
+  }
+  .hm-nav-item::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%) scaleX(0);
+    transform-origin: center;
+    height: 2px;
+    width: 16px;
+    border-radius: 999px;
+    background: var(--accent-blue);
+    opacity: 0;
+    transition:
+      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.2s ease;
+    pointer-events: none;
+  }
+  .hm-nav-item:not(:disabled):hover::after {
+    transform: translateX(-50%) scaleX(1);
+    opacity: 0.7;
+  }
+  .hm-nav-item:disabled::after {
+    /* Never show underline on disabled items */
+    display: none;
+  }
+
+  /* Loading text shimmer — applies to elements with .hm-loading-text class.
+     Sweeps a diagonal light band across the text every 2.5s for a premium
+     "thinking" feel. Use on loading placeholders, AI processing hints. */
+  .hm-loading-text {
+    position: relative;
+    color: var(--muted-foreground);
+    overflow: hidden;
+  }
+  .hm-loading-text::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      transparent 30%,
+      color-mix(in oklch, var(--foreground) 18%, transparent) 50%,
+      transparent 70%
+    );
+    background-size: 200% 100%;
+    animation: hm-loading-shimmer 2.5s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes hm-loading-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Score ring idle breathing — subtle continuous pulse to keep the ring
+     feeling "alive" even when no data is changing. Very slow (4s) and gentle
+     (1.0 ↔ 1.015 scale). */
+  @keyframes hm-ring-breathe {
+    0%, 100% { transform: scale(1); opacity: 0.85; }
+    50% { transform: scale(1.015); opacity: 1; }
+  }
+  .hm-ring-glow-breathe {
+    animation: hm-ring-glow 1.4s ease-out forwards, hm-ring-breathe 4s ease-in-out 1.8s infinite;
+  }
+
+  /* Periodic shimmer sweep — runs the shimmer across the element for ~1.6s
+     of a 5s cycle, then idles invisibly for the remaining ~3.4s. This gives
+     the "shimmer every 5s" effect used on the ScoreRing after its initial
+     entrance sweep. */
+  @keyframes hm-shimmer-periodic {
+    0%   { transform: translateX(-100%) skewX(-15deg); opacity: 0; }
+    4%   { opacity: 1; }
+    32%  { transform: translateX(200%) skewX(-15deg); opacity: 1; }
+    34%  { opacity: 0; }
+    100% { transform: translateX(200%) skewX(-15deg); opacity: 0; }
+  }
+}
+
+/* ─── prefers-reduced-motion: disable non-essential animations ───
+   Respects users who prefer reduced motion. Entrance reveals and one-shot
+   animations (hm-reveal, hm-fade, hm-check-pop, hm-timeline-draw) are kept
+   because they communicate state changes; purely decorative motion (mesh
+   drift, breathing, ambient floats, shimmer sweeps) is disabled. */
+@media (prefers-reduced-motion: reduce) {
+  .hm-mesh-blob-1,
+  .hm-mesh-blob-2,
+  .hm-mesh-blob-3,
+  .hm-mesh-blob-4 {
+    animation: none !important;
+  }
+  .hm-ring-glow-breathe,
+  .hm-ring-glow {
+    animation: none !important;
+  }
+  .hm-loading-text::after,
+  .hm-shimmer::after,
+  .hm-shimmer-line,
+  .hm-particles::before,
+  .hm-particles::after,
+  .hm-particles-inner::before,
+  .hm-particles-inner::after,
+  .hm-hero-orb,
+  .hm-glow-pulse,
+  .hm-pulse-critical,
+  .hm-thinking,
+  .hm-step-pulse {
+    animation: none !important;
+  }
+  /* Mesh blobs: keep them visible (static) so background still has atmosphere */
+  .hm-mesh-blob {
+    opacity: 0.05;
+  }
+  .dark .hm-mesh-blob {
+    opacity: 0.07;
+  }
 }
