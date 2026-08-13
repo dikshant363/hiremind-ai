@@ -10,9 +10,10 @@ import { useHireMind } from "@/lib/store";
 import { DEMO_RESUME, DEMO_JOB, DEMO_JOB_TITLE } from "@/lib/demo";
 import { FileUpload } from "./file-upload";
 import { SessionHistory } from "./session-history";
+import { PipelineProgress } from "./pipeline-progress";
 
 export function HomeView() {
-  const { resumeText, jobTitle, jobText, setResumeText, setJobTitle, setJobText, analyze, loading, error } = useHireMind();
+  const { resumeText, jobTitle, jobText, setResumeText, setJobTitle, setJobText, analyze, loading, error, sessionId } = useHireMind();
 
   const onDemo = () => {
     setResumeText(DEMO_RESUME);
@@ -26,7 +27,7 @@ export function HomeView() {
   const canAnalyze = resumeText.trim().length > 30 && jobText.trim().length > 30;
 
   return (
-    <div className="hm-ambient hm-particles">
+    <div className="hm-ambient hm-particles hm-textured-bg">
       <section className="mx-auto max-w-5xl px-4 sm:px-8 pt-12 sm:pt-24 pb-10 sm:pb-12">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -46,6 +47,7 @@ export function HomeView() {
           <p className="mt-5 mx-auto max-w-xl text-sm sm:text-base text-foreground/70 leading-relaxed text-pretty">
             Upload your resume and choose a target role. HireMind finds your strongest evidence, identifies your biggest gap, and tests it in an adaptive AI interview.
           </p>
+          <div className="hm-shimmer-line mt-4 mx-auto max-w-xs" />
         </motion.div>
 
         <motion.div
@@ -164,6 +166,9 @@ export function HomeView() {
           The demo runs end-to-end: match · biggest gap · adaptive interview · readiness · roadmap.
         </p>
 
+        {/* Pipeline progress — only shown when a session is active */}
+        {sessionId && <PipelineProgress />}
+
         <SessionHistory />
       </section>
 
@@ -194,7 +199,7 @@ export function HomeView() {
               transition={{ duration: 0.5, delay: 0.1 + i * 0.12, ease: [0.22, 1, 0.36, 1] }}
               whileHover={{ scale: 1.03, y: -2, transition: { type: "spring", stiffness: 400, damping: 25 } }}
               whileTap={{ scale: 0.99 }}
-              className="flex gap-3 cursor-default"
+              className="flex gap-3 cursor-default hm-card-hover"
             >
               <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
                 {f.icon}

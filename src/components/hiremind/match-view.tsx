@@ -25,7 +25,7 @@ function AnimatedCounter({ value, delay = 0 }: { value: number; delay?: number }
     const timeout = setTimeout(() => { raf = requestAnimationFrame(tick); }, delay * 1000);
     return () => { clearTimeout(timeout); cancelAnimationFrame(raf); };
   }, [value, delay]);
-  return <span className="font-semibold tabular-nums">{display}</span>;
+  return <span className="font-semibold tabular-nums hm-num-tabular">{display}</span>;
 }
 
 export function MatchView() {
@@ -57,7 +57,7 @@ export function MatchView() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="hm-card p-5 sm:p-7 lg:col-span-2 flex flex-col items-center justify-center text-center relative"
+          className="hm-card hm-card-hover p-5 sm:p-7 lg:col-span-2 flex flex-col items-center justify-center text-center relative"
         >
           <motion.div
             initial={{ scale: 0.9 }}
@@ -82,7 +82,7 @@ export function MatchView() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="hm-card p-5 sm:p-7 lg:col-span-3"
+          className="hm-card hm-card-hover p-5 sm:p-7 lg:col-span-3"
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[13px] font-semibold">Why this score</h3>
@@ -115,6 +115,8 @@ export function MatchView() {
           </div>
         </motion.div>
       </div>
+
+      <div className="hm-divider-soft my-6" />
 
       {/* Competency comparison */}
       <motion.div

@@ -1,6 +1,6 @@
 /**
  * POST /api/interview/start
- * Body: { sessionId: string }
+ * Body: { sessionId: string, difficultyPreference?: "auto" | "easy" | "medium" | "hard" }
  *
  * Initializes the adaptive interview state machine from the session's gaps.
  * The first question targets the highest-impact gap.
@@ -10,13 +10,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { initInterview } from "@/lib/engine";
 import { loadSession, persistSession } from "@/lib/session";
+import type { InterviewDifficulty } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
 export async function POST(req: NextRequest) {
   try {
-    const { sessionId } = await req.json().catch(() => ({}));
+    const body = await req.json().catch(() => ({}));
+    const { sessionId } = body;
+    const difficultyPreference: InterviewDifficulty =
+      ["auto", "easy", "medium", "hard"].includes(body.difficultyPreference)
+        ? (body.difficultyPreference as InterviewDifficulty)
+        : "auto";
+
     if (!sessionId) return NextResponse.json({ error: "Missing sessionId." }, { status: 400 });
 
     const payload = await loadSession(sessionId);
@@ -25,7 +32,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Run analysis first." }, { status: 400 });
     }
 
-    const interview = initInterview(payload.gaps, payload.candidate, payload.match);
+    const interview = initInterview(payload.gaps, payload.candidate, payload.match, difficultyPreference);
     await persistSession(sessionId, { interviewJson: JSON.stringify(interview), status: "interviewed" });
 
     return NextResponse.json({ interview });

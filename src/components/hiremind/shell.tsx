@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
-import { Sun, Moon, BrainCircuit, RotateCcw, Monitor } from "lucide-react";
+import { Sun, Moon, BrainCircuit, RotateCcw, Monitor, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHireMind, type View } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -96,6 +96,17 @@ export function SiteHeader() {
             className={cn("h-8 w-8", presentationMode && "bg-accent-blue/15 text-accent-blue-foreground")}
           >
             <Monitor className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Show keyboard shortcuts"
+            onClick={() => document.dispatchEvent(new CustomEvent("hm-show-shortcuts"))}
+            className="h-8 w-8 relative group"
+          >
+            <HelpCircle className="h-4 w-4" />
+            {/* Subtle pulse dot to hint at discoverability */}
+            <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-accent-blue opacity-60 group-hover:opacity-0 transition-opacity" />
           </Button>
           <Button
             variant="ghost"

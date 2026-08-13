@@ -139,9 +139,13 @@ export interface CompetencyState {
   notes: string;
 }
 
+export type InterviewDifficulty = "auto" | "easy" | "medium" | "hard";
+
 export interface InterviewState {
   status: "idle" | "asking" | "evaluating" | "complete";
   mode: "technical" | "hr";
+  /** User-selected difficulty preference — affects question selection. */
+  difficultyPreference: InterviewDifficulty;
   currentIndex: number;
   totalQuestions: number;
   targetCompetencies: string[];

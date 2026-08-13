@@ -20,6 +20,7 @@ import type {
   MatchStatus,
   InterviewState,
   InterviewQuestion,
+  InterviewDifficulty,
   AnswerEvaluation,
   CompetencyState,
   ReadinessResult,
@@ -342,8 +343,16 @@ export const QUESTION_BANK: Record<string, Omit<InterviewQuestion, "id" | "reaso
 /**
  * Initialize the interview state machine from gaps. We pre-select target
  * competencies: the highest-impact gap first, then a few neighboring gaps.
+ *
+ * `difficultyPreference` (optional) biases question selection toward easy /
+ * medium / hard variants when the question bank has multiple options.
  */
-export function initInterview(gaps: SkillGap[], candidate: CandidateProfile, match: MatchResult): InterviewState {
+export function initInterview(
+  gaps: SkillGap[],
+  candidate: CandidateProfile,
+  match: MatchResult,
+  difficultyPreference: InterviewDifficulty = "auto"
+): InterviewState {
   const targetCompetencies: string[] = [];
   const topGap = highestImpactGap(gaps);
   if (topGap) targetCompetencies.push(topGap.competency);
@@ -383,12 +392,13 @@ export function initInterview(gaps: SkillGap[], candidate: CandidateProfile, mat
 
   // Generate the first question deterministically (highest-impact gap)
   const questions: InterviewQuestion[] = [];
-  const firstQ = pickQuestionForCompetency(topGap?.competency ?? targetCompetencies[0], targetCompetencies, topGap);
+  const firstQ = pickQuestionForCompetency(topGap?.competency ?? targetCompetencies[0], targetCompetencies, topGap, difficultyPreference);
   if (firstQ) questions.push(firstQ);
 
   return {
     status: "asking",
     mode: "technical",
+    difficultyPreference,
     currentIndex: 0,
     totalQuestions,
     targetCompetencies,
@@ -400,17 +410,22 @@ export function initInterview(gaps: SkillGap[], candidate: CandidateProfile, mat
     history: [
       {
         step: "interview_start",
-        detail: `Interview started. Initial target: ${topGap?.competency ?? "first weak competency"} (${topGap?.priority ?? "medium"} priority gap).`,
+        detail: `Interview started (difficulty: ${difficultyPreference}). Initial target: ${topGap?.competency ?? "first weak competency"} (${topGap?.priority ?? "medium"} priority gap).`,
         at: new Date().toISOString(),
       },
     ],
   };
 }
 
+/**
+ * Pick a question for a given competency, preferring ones that match the
+ * user's selected difficulty. Falls back gracefully if no exact match exists.
+ */
 function pickQuestionForCompetency(
   competency: string,
   asked: string[],
-  gap: SkillGap | null
+  gap: SkillGap | null,
+  difficultyPreference: InterviewDifficulty = "auto"
 ): InterviewQuestion | null {
   const bank = QUESTION_BANK[competency] ?? [];
   if (bank.length === 0) {
@@ -419,16 +434,41 @@ function pickQuestionForCompetency(
       competency,
       category: gap?.category ?? "domain",
       text: `Tell me about your experience with ${competency} and how you've applied it to a real problem.`,
-      difficulty: "medium",
+      difficulty: difficultyPreference === "auto" ? "medium" : difficultyPreference,
       mode: "technical",
       reason: gap
         ? `${competency} was identified as your ${gap.priority}-priority gap for this role.`
         : `Exploring your ${competency} knowledge.`,
     };
   }
-  // Prefer a question not yet asked; fall back to first bank question.
+
+  // Filter out already-asked questions
   const usedTexts = new Set(asked);
-  const chosen = bank.find((q) => !usedTexts.has(q.text)) ?? bank[0];
+  const available = bank.filter((q) => !usedTexts.has(q.text));
+  const pool = available.length > 0 ? available : bank;
+
+  // Difficulty preference ordering — pick the closest available variant
+  let chosen: (typeof pool)[number] | undefined;
+  if (difficultyPreference === "auto") {
+    chosen = pool[0];
+  } else {
+    // Exact match first
+    chosen = pool.find((q) => q.difficulty === difficultyPreference);
+    if (!chosen) {
+      // Fall back: easy→medium→hard, hard→medium→easy, medium→easy→hard
+      const fallbackOrder: Record<Exclude<InterviewDifficulty, "auto">, ("easy" | "medium" | "hard")[]> = {
+        easy: ["medium", "hard"],
+        medium: ["easy", "hard"],
+        hard: ["medium", "easy"],
+      };
+      for (const alt of fallbackOrder[difficultyPreference]) {
+        chosen = pool.find((q) => q.difficulty === alt);
+        if (chosen) break;
+      }
+    }
+    if (!chosen) chosen = pool[0];
+  }
+
   return {
     id: cryptoId(),
     ...chosen,
@@ -522,7 +562,7 @@ export function applyEvaluation(
     nextGapReason = `Verifying depth in ${nextCompetency}, a stronger area of your profile.`;
   }
 
-  const nextQuestion = pickQuestionForCompetency(nextCompetency, next.questions.map((q) => q.text), null);
+  const nextQuestion = pickQuestionForCompetency(nextCompetency, next.questions.map((q) => q.text), null, next.difficultyPreference);
   if (nextQuestion) {
     nextQuestion.reason = nextGapReason ?? nextQuestion.reason;
     next.questions.push(nextQuestion);

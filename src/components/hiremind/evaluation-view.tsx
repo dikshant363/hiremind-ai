@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, TrendingDown, Lightbulb, CheckCircle2, AlertTriangle, Sparkles } from "lucide-react";
+import { ArrowRight, TrendingDown, Lightbulb, CheckCircle2, AlertTriangle, Sparkles, MessageSquareQuote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHireMind } from "@/lib/store";
 import { CompetencyBar } from "./shell";
@@ -10,7 +10,44 @@ import type { AnswerEvaluation } from "@/lib/types";
 
 export function EvaluationView() {
   const { lastEvaluation, interview, setView, isDemo } = useHireMind();
-  if (!lastEvaluation || !interview) return null;
+
+  // Empty state — happens when user refreshes on /evaluation view, since
+  // lastEvaluation isn't persisted (only the interview state is). Show a
+  // friendly recovery state.
+  if (!lastEvaluation || !interview) {
+    const isComplete = interview?.status === "complete";
+    return (
+      <div className="mx-auto max-w-3xl px-4 sm:px-8 py-10 sm:py-14 text-center">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+          <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-accent-blue/10 text-accent-blue-foreground">
+            <MessageSquareQuote className="h-7 w-7" />
+          </span>
+          <h1 className="mt-5 text-2xl sm:text-3xl font-semibold tracking-tight">
+            {isComplete ? "Your interview is complete." : "Pick up where you left off."}
+          </h1>
+          <p className="mt-3 text-sm text-muted-foreground max-w-md mx-auto">
+            {isComplete
+              ? "Head to your readiness report to see the full picture, or open your roadmap for next steps."
+              : "Continue your adaptive interview — each question adapts based on your previous answer."}
+          </p>
+          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+            {isComplete ? (
+              <Button size="lg" className="h-12 px-7 gap-2" onClick={() => setView("readiness")}>
+                See your readiness <ArrowRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button size="lg" className="h-12 px-7 gap-2" onClick={() => setView("interview")}>
+                Continue interview <ArrowRight className="h-4 w-4" />
+              </Button>
+            )}
+            <Button variant="outline" size="lg" className="h-12 px-7" onClick={() => setView("candidate")}>
+              Back to candidate
+            </Button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   const ev: AnswerEvaluation = lastEvaluation;
   const isComplete = interview.status === "complete";
@@ -31,7 +68,7 @@ export function EvaluationView() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.05 }}
-        className="hm-card mt-6 sm:mt-8 p-5 sm:p-8"
+        className="hm-card hm-card-hover mt-6 sm:mt-8 p-5 sm:p-8"
       >
         <div className="grid sm:grid-cols-2 gap-x-8 gap-y-4">
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}>
@@ -60,7 +97,7 @@ export function EvaluationView() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="hm-card p-4 sm:p-6"
+          className="hm-card hm-card-hover p-4 sm:p-6"
         >
           <div className="flex items-center gap-2 mb-3">
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-success/15 text-success-foreground">
@@ -86,7 +123,7 @@ export function EvaluationView() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.15 }}
-          className="hm-card p-4 sm:p-6"
+          className="hm-card hm-card-hover p-4 sm:p-6"
         >
           <div className="flex items-center gap-2 mb-3">
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-warning/15 text-warning-foreground">
@@ -117,7 +154,7 @@ export function EvaluationView() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="hm-card mt-5 sm:mt-6 p-6 sm:p-10 relative overflow-hidden hm-radial-glow"
+            className="hm-card hm-insight-callout mt-5 sm:mt-6 p-6 sm:p-10 relative overflow-hidden hm-radial-glow"
           >
             <div
               className="absolute -top-32 -right-32 h-72 w-72 rounded-full opacity-[0.08]"

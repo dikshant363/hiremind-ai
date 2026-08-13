@@ -16,6 +16,7 @@ import type {
   MatchResult,
   SkillGap,
   InterviewState,
+  InterviewDifficulty,
   AnswerEvaluation,
   ReadinessResult,
   Roadmap,
@@ -77,7 +78,7 @@ interface StoreState {
 
   // Actions
   analyze: (opts?: { demo?: boolean }) => Promise<void>;
-  startInterview: () => Promise<void>;
+  startInterview: (opts?: { difficulty?: InterviewDifficulty }) => Promise<void>;
   submitAnswer: (questionId: string, answer: string, opts?: { useDemoAnswer?: boolean }) => Promise<void>;
   computeReadiness: () => Promise<void>;
   hydrateSession: (sessionId: string, view?: View) => Promise<void>;
@@ -188,18 +189,19 @@ export const useHireMind = create<StoreState>((set, get) => ({
     }
   },
 
-  startInterview: async () => {
+  startInterview: async (opts) => {
     const { sessionId } = get();
     if (!sessionId) {
       set({ error: "Run an analysis first." });
       return;
     }
+    const difficulty = opts?.difficulty ?? "auto";
     set({ loading: true, loadingStep: LOADING_STEPS.interview_start, error: null });
     try {
       const res = await fetch("/api/interview/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId }),
+        body: JSON.stringify({ sessionId, difficultyPreference: difficulty }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Couldn't start interview.");

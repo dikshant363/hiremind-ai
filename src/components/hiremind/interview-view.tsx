@@ -2,17 +2,56 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Send, SkipForward, Wand2, CheckCircle2, MessageSquareQuote } from "lucide-react";
+import { Sparkles, Send, SkipForward, Wand2, CheckCircle2, MessageSquareQuote, Zap, Flame, Mountain, Gauge } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useHireMind } from "@/lib/store";
+import type { InterviewDifficulty } from "@/lib/types";
 import { ScoreRing } from "./shell";
 import { AnswerCoach } from "./answer-coach";
 import { cn } from "@/lib/utils";
 
+const DIFFICULTY_OPTIONS: {
+  value: InterviewDifficulty;
+  label: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+  tone: string;
+}[] = [
+  {
+    value: "easy",
+    label: "Warm-up",
+    description: "Foundational concepts and definitions. Build confidence first.",
+    icon: Zap,
+    tone: "var(--success)",
+  },
+  {
+    value: "medium",
+    label: "Balanced",
+    description: "Real-world scenarios with tradeoffs. The default interview feel.",
+    icon: Gauge,
+    tone: "var(--accent-blue)",
+  },
+  {
+    value: "hard",
+    label: "Deep dive",
+    description: "Multi-step system design and edge cases. Push your limits.",
+    icon: Mountain,
+    tone: "var(--critical)",
+  },
+  {
+    value: "auto",
+    label: "Adaptive",
+    description: "Let HireMind pick based on your gap priority and resume strength.",
+    icon: Flame,
+    tone: "var(--warning)",
+  },
+];
+
 export function InterviewView() {
   const { interview, startInterview, submitAnswer, loading, loadingStep, setView, isDemo } = useHireMind();
   const [answer, setAnswer] = React.useState("");
+  const [difficulty, setDifficulty] = React.useState<InterviewDifficulty>("auto");
 
   if (!interview) {
     return (
@@ -23,22 +62,90 @@ export function InterviewView() {
           </span>
           <h1 className="mt-5 text-2xl sm:text-3xl font-semibold tracking-tight">Your adaptive interview awaits.</h1>
           <p className="mt-3 text-sm text-muted-foreground max-w-md mx-auto">
-            The interview targets your highest-impact skill gap and adapts based on your answers.
+            The interview targets your highest-impact skill gap and adapts based on your answers. Pick a difficulty to begin.
           </p>
+
+          {/* Difficulty selector */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="mt-7 grid sm:grid-cols-2 gap-2.5 text-left"
+          >
+            {DIFFICULTY_OPTIONS.map((opt, i) => {
+              const isActive = difficulty === opt.value;
+              const Icon = opt.icon;
+              return (
+                <motion.button
+                  key={opt.value}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, delay: 0.2 + i * 0.06 }}
+                  whileHover={{ scale: 1.02, y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setDifficulty(opt.value)}
+                  className={cn(
+                    "group relative rounded-xl border p-3.5 text-left transition-all",
+                    isActive
+                      ? "border-transparent bg-secondary/60 shadow-sm"
+                      : "border-border/60 bg-card/40 hover:border-border hover:bg-secondary/40"
+                  )}
+                  style={isActive ? { boxShadow: `0 0 0 2px color-mix(in oklch, ${opt.tone} 50%, transparent), 0 4px 12px -4px color-mix(in oklch, ${opt.tone} 30%, transparent)` } : undefined}
+                >
+                  <div className="flex items-start gap-2.5">
+                    <span
+                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                      style={{
+                        background: `color-mix(in oklch, ${opt.tone} 12%, transparent)`,
+                        color: opt.tone,
+                      }}
+                    >
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <h4 className="text-[13px] font-semibold">{opt.label}</h4>
+                        {isActive && (
+                          <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                            className="inline-flex h-4 w-4 items-center justify-center rounded-full"
+                            style={{ background: opt.tone, color: "white" }}
+                          >
+                            <CheckCircle2 className="h-3 w-3" />
+                          </motion.span>
+                        )}
+                      </div>
+                      <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed">{opt.description}</p>
+                    </div>
+                  </div>
+                </motion.button>
+              );
+            })}
+          </motion.div>
+
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.5, delay: 0.45, ease: [0.22, 1, 0.36, 1] }}
             className="mt-7"
           >
-            <Button size="lg" className="h-11 sm:h-12 px-6 sm:px-7 gap-2" onClick={() => startInterview()} disabled={loading}>
+            <Button
+              size="lg"
+              className="h-11 sm:h-12 px-6 sm:px-7 gap-2"
+              onClick={() => startInterview({ difficulty })}
+              disabled={loading}
+            >
               {loading ? (
                 <>
                   <Sparkles className="h-4 w-4 hm-thinking" />
                   {loadingStep || "Starting interview…"}
                 </>
               ) : (
-                "Begin interview →"
+                <>
+                  Begin {difficulty === "auto" ? "adaptive " : ""}interview →
+                </>
               )}
             </Button>
           </motion.div>
@@ -115,6 +222,11 @@ export function InterviewView() {
                   Demo
                 </span>
               )}
+              {interview.difficultyPreference && interview.difficultyPreference !== "auto" && (
+                <span className="rounded-full bg-secondary text-secondary-foreground px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider capitalize">
+                  {interview.difficultyPreference}
+                </span>
+              )}
             </div>
             <span className="tabular-nums">
               Question {interview.currentIndex + 1} of {interview.totalQuestions}
@@ -154,7 +266,7 @@ export function InterviewView() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -16 }}
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            className="hm-card mt-6 sm:mt-8 p-6 sm:p-10"
+            className="hm-card hm-card-hover mt-6 sm:mt-8 p-6 sm:p-10"
           >
             <div className="text-[11px] font-semibold text-accent-blue-foreground uppercase tracking-wider">
               {current.competency} · {current.difficulty}
@@ -167,7 +279,7 @@ export function InterviewView() {
             </h1>
 
             {/* Why we're asking */}
-            <div className="mt-5 rounded-xl border border-border/60 bg-secondary/30 p-4">
+            <div className="mt-5 hm-insight-callout p-4">
               <div className="flex items-start gap-2.5">
                 <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-md bg-accent-blue/10 text-accent-blue-foreground">
                   <MessageSquareQuote className="h-3.5 w-3.5" />

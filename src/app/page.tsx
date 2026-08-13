@@ -13,7 +13,7 @@ import { ReadinessView } from "@/components/hiremind/readiness-view";
 import { RoadmapView } from "@/components/hiremind/roadmap-view";
 import { LoadingOverlay } from "@/components/hiremind/loading-overlay";
 import { ShortcutHint } from "@/components/hiremind/shortcut-hint";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
@@ -51,28 +51,32 @@ export default function Home() {
     return () => document.removeEventListener("hm-toggle-theme", handler);
   }, [setTheme, theme]);
 
+  // Listen for help button click from header (opens shortcut hint overlay)
+  useEffect(() => {
+    const handler = () => setShowHints(true);
+    document.addEventListener("hm-show-shortcuts", handler);
+    return () => document.removeEventListener("hm-show-shortcuts", handler);
+  }, [setShowHints]);
+
   return (
     <>
       <SiteHeader />
       <main className="flex-1">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={view}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-          >
-            {view === "home" && <HomeView />}
-            {view === "candidate" && <CandidateView />}
-            {view === "match" && <MatchView />}
-            {view === "gaps" && <GapsView />}
-            {view === "interview" && <InterviewView />}
-            {view === "evaluation" && <EvaluationView />}
-            {view === "readiness" && <ReadinessView />}
-            {view === "roadmap" && <RoadmapView />}
-          </motion.div>
-        </AnimatePresence>
+        <motion.div
+          key={view}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+        >
+          {view === "home" && <HomeView />}
+          {view === "candidate" && <CandidateView />}
+          {view === "match" && <MatchView />}
+          {view === "gaps" && <GapsView />}
+          {view === "interview" && <InterviewView />}
+          {view === "evaluation" && <EvaluationView />}
+          {view === "readiness" && <ReadinessView />}
+          {view === "roadmap" && <RoadmapView />}
+        </motion.div>
       </main>
       <SiteFooter />
       <LoadingOverlay />

@@ -46,13 +46,13 @@ export function GapsView() {
           <p className="mt-3 text-sm text-muted-foreground max-w-xl leading-relaxed">{top.reason}</p>
 
           <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-[12px]">
-            <div className="rounded-lg bg-secondary/40 p-3">
+            <div className="hm-stat-tile p-3">
               <div className="text-muted-foreground uppercase tracking-wider text-[10px] mb-1">Why it matters</div>
               <div className="text-foreground">
                 Marked <span className="font-medium">{top.importance}</span> for {job?.title ?? "this role"}.
               </div>
             </div>
-            <div className="rounded-lg bg-secondary/40 p-3">
+            <div className="hm-stat-tile p-3">
               <div className="text-muted-foreground uppercase tracking-wider text-[10px] mb-1.5">Your evidence</div>
               {top.candidateLevel === "unknown" ? (
                 <div
@@ -66,13 +66,13 @@ export function GapsView() {
                 <div className="text-foreground capitalize">{top.candidateLevel} · {top.status}</div>
               )}
             </div>
-            <div className="rounded-lg bg-secondary/40 p-3">
+            <div className="hm-stat-tile p-3">
               <div className="text-muted-foreground uppercase tracking-wider text-[10px] mb-1.5">Priority</div>
               <div className="flex items-center">
                 <PriorityPill priority={top.priority} />
               </div>
             </div>
-            <div className="rounded-lg bg-secondary/40 p-3">
+            <div className="hm-stat-tile p-3">
               <div className="text-muted-foreground uppercase tracking-wider text-[10px] mb-1">Next step</div>
               <div className="text-foreground">Test it in the adaptive interview.</div>
             </div>
@@ -117,7 +117,7 @@ export function GapsView() {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {others.map((g) => (
-              <div key={g.competency} className="hm-elevated rounded-xl p-4 flex items-center justify-between">
+              <div key={g.competency} className="hm-elevated hm-card-hover rounded-xl p-4 flex items-center justify-between">
                 <div>
                   <div className="text-[13px] font-medium">{g.competency}</div>
                   <div className="text-[11px] text-muted-foreground capitalize">

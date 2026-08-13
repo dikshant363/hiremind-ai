@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { Calendar, ArrowRight, Repeat, CheckCircle2 } from "lucide-react";
+import { Calendar, ArrowRight, Repeat, CheckCircle2, Map, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHireMind } from "@/lib/store";
 import type { RoadmapStep } from "@/lib/types";
@@ -15,8 +15,63 @@ const PHASE_META: Record<RoadmapStep["phase"], { label: string; tone: string }> 
 };
 
 export function RoadmapView() {
-  const { roadmap, readiness, reset, setView } = useHireMind();
-  if (!roadmap) return null;
+  const { roadmap, readiness, reset, setView, computeReadiness, loading, loadingStep } = useHireMind();
+
+  // Empty state — roadmap is generated together with readiness, so if it's
+  // missing, the user hasn't computed readiness yet. Show a clear CTA.
+  if (!roadmap) {
+    const hasReadiness = !!readiness;
+    return (
+      <div className="mx-auto max-w-3xl px-4 sm:px-8 py-10 sm:py-14 text-center">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+          <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-accent-blue/20 to-chart-5/15 text-accent-blue-foreground ring-1 ring-accent-blue/20 shadow-sm">
+            <Map className="h-7 w-7" />
+          </span>
+          <h1 className="mt-5 text-2xl sm:text-3xl font-semibold tracking-tight">
+            {hasReadiness ? "Your roadmap is ready to generate." : "Calculate readiness to unlock your roadmap."}
+          </h1>
+          <p className="mt-3 text-sm text-foreground/70 max-w-md mx-auto leading-relaxed">
+            Your improvement roadmap is built directly from your detected gaps and interview weaknesses — every step has a clear reason and a concrete practice plan.
+          </p>
+          <div className="mt-6">
+            <Button
+              size="lg"
+              className="h-12 px-7 gap-2"
+              onClick={hasReadiness ? () => setView("roadmap") : computeReadiness}
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Compass className="h-4 w-4 hm-thinking" />
+                  {loadingStep || "Working…"}
+                </>
+              ) : hasReadiness ? (
+                <>
+                  Open my roadmap <ArrowRight className="h-4 w-4" />
+                </>
+              ) : (
+                <>
+                  Calculate readiness first <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </div>
+          {!hasReadiness && (
+            <p className="mt-4 text-xs text-muted-foreground">
+              Or go to{" "}
+              <button
+                className="text-accent-blue-foreground underline underline-offset-2"
+                onClick={() => setView("readiness")}
+              >
+                Readiness
+              </button>{" "}
+              to see what we&apos;ll measure.
+            </p>
+          )}
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-4xl px-4 sm:px-8 py-8 sm:py-14">
@@ -58,7 +113,7 @@ export function RoadmapView() {
                 >
                   <Calendar className="h-4 w-4" style={{ color: meta.tone }} />
                 </span>
-                <div className="hm-card p-4 sm:p-5">
+                <div className="hm-card hm-card-hover p-4 sm:p-5">
                   <div className="flex items-center justify-between">
                     <span
                       className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider"
@@ -109,7 +164,7 @@ export function RoadmapView() {
         </div>
         {readiness && (
           <div className="mt-5 text-[11px] text-muted-foreground">
-            Current readiness: <span className="font-semibold text-foreground">{readiness.index}/100</span> · {readiness.band}
+            Current readiness: <span className="font-semibold text-foreground hm-num-tabular">{readiness.index}/100</span> · {readiness.band}
           </div>
         )}
       </motion.div>

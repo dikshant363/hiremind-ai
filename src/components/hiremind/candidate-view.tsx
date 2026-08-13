@@ -8,6 +8,7 @@ import { useHireMind } from "@/lib/store";
 import type { SkillEvidence } from "@/lib/types";
 import { EvidenceGraph } from "./evidence-graph";
 import { SkillHeatmap } from "./skill-heatmap";
+import { ResumeStrength } from "./resume-strength";
 
 export function CandidateView() {
   const { candidate, job, isDemo, meta, setView } = useHireMind();
@@ -38,7 +39,7 @@ export function CandidateView() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.05 }}
-          className="hm-card p-4 sm:p-6 lg:col-span-1"
+          className="hm-card hm-card-hover p-4 sm:p-6 lg:col-span-1"
         >
           <div className="flex items-center gap-2 mb-4">
             <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-secondary-foreground text-[12px] font-semibold">
@@ -65,7 +66,7 @@ export function CandidateView() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="hm-card p-4 sm:p-6 lg:col-span-2"
+          className="hm-card hm-card-hover p-4 sm:p-6 lg:col-span-2"
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold">Demonstrated skills</h3>
@@ -151,6 +152,9 @@ export function CandidateView() {
       {/* Skill confidence heatmap — at-a-glance visual grid */}
       <SkillHeatmap />
 
+      {/* Resume strength score — deterministic signal-richness assessment */}
+      <ResumeStrength />
+
       <EvidenceGraph />
 
       <div className="mt-8 flex items-center justify-between">
@@ -172,7 +176,7 @@ function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex items-center justify-between">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-semibold tabular-nums">{value}</span>
+      <span className="font-semibold tabular-nums hm-num-tabular">{value}</span>
     </div>
   );
 }

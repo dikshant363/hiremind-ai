@@ -26,7 +26,7 @@ export function ReadinessView() {
             We&rsquo;ll combine your match index, interview evidence and identified weaknesses into a transparent Prototype Job Readiness Index.
           </p>
           <div className="mt-6">
-            <Button size="lg" className="h-12 px-7 gap-2" onClick={computeReadiness} disabled={loading}>
+            <Button size="lg" className={`h-12 px-7 gap-2${loading ? " hm-glow-pulse" : ""}`} onClick={computeReadiness} disabled={loading}>
               {loading ? (
                 <>
                   <Sparkles className="h-4 w-4 hm-thinking" /> {loadingStep || "Working…"}
@@ -111,7 +111,7 @@ export function ReadinessView() {
           initial={{ opacity: 0, y: 8, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-          className="hm-card p-4 sm:p-6 lg:col-span-2 flex flex-col items-center justify-center text-center"
+          className="hm-card hm-card-hover p-4 sm:p-6 lg:col-span-2 flex flex-col items-center justify-center text-center"
         >
           <ScoreRing
             value={readiness.index}
@@ -126,7 +126,7 @@ export function ReadinessView() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="hm-card p-4 sm:p-6 lg:col-span-3"
+          className="hm-card hm-card-hover p-4 sm:p-6 lg:col-span-3"
         >
           <h3 className="text-[13px] font-semibold mb-4">Readiness dimensions</h3>
           <div className="space-y-4">
@@ -134,7 +134,7 @@ export function ReadinessView() {
               <div key={d.label}>
                 <div className="flex items-center justify-between text-[13px] mb-1.5">
                   <span className="font-medium">{d.label}</span>
-                  <span className="font-semibold tabular-nums">{Math.round(d.score * 100)}</span>
+                  <span className="font-semibold tabular-nums hm-num-tabular">{Math.round(d.score * 100)}</span>
                 </div>
                 <CompetencyBar
                   label=""
