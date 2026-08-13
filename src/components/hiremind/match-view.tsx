@@ -6,6 +6,7 @@ import { ArrowRight, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHireMind } from "@/lib/store";
 import { ScoreRing, CompetencyBar, StatusPill } from "./shell";
+import { JobInsights } from "./job-insights";
 import type { MatchStatus } from "@/lib/types";
 
 /** Animated number counter for score displays */
@@ -56,7 +57,7 @@ export function MatchView() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="hm-card p-4 sm:p-6 lg:col-span-2 flex flex-col items-center justify-center text-center relative"
+          className="hm-card p-5 sm:p-7 lg:col-span-2 flex flex-col items-center justify-center text-center relative"
         >
           <motion.div
             initial={{ scale: 0.9 }}
@@ -81,7 +82,7 @@ export function MatchView() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="hm-card p-4 sm:p-6 lg:col-span-3"
+          className="hm-card p-5 sm:p-7 lg:col-span-3"
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[13px] font-semibold">Why this score</h3>
@@ -97,7 +98,7 @@ export function MatchView() {
               >
                 <div className="flex items-center justify-between text-[13px] mb-1.5">
                   <div>
-                    <span className="font-medium">{c.label}</span>
+                    <span className="font-semibold">{c.label}</span>
                     <span className="ml-2 text-[11px] text-muted-foreground">weight {Math.round(c.weight * 100)}%</span>
                   </div>
                   <AnimatedCounter value={Math.round(c.score * 100)} delay={0.3 + ci * 0.1} />
@@ -142,7 +143,7 @@ export function MatchView() {
               <div key={row.competency} className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium line-clamp-1">{row.competency}</span>
+                    <span className="text-sm font-semibold line-clamp-1">{row.competency}</span>
                     {row.required && (
                       <span className="rounded bg-secondary text-secondary-foreground px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider">
                         Required
@@ -158,7 +159,7 @@ export function MatchView() {
                   rightLabel={`${row.importance}`}
                 />
                 {row.evidence && (
-                  <div className="text-[11px] text-muted-foreground leading-relaxed line-clamp-1">
+                  <div className="hm-evidence-quote italic mt-1 text-[11px] line-clamp-1">
                     “{row.evidence}”
                   </div>
                 )}
@@ -167,6 +168,9 @@ export function MatchView() {
           })}
         </div>
       </motion.div>
+
+      {/* Job Description Insights — what the AI extracted from the JD */}
+      <JobInsights />
 
       <div className="mt-8 flex items-center justify-end">
         <motion.div

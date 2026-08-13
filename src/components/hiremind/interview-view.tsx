@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useHireMind } from "@/lib/store";
 import { ScoreRing } from "./shell";
+import { AnswerCoach } from "./answer-coach";
 import { cn } from "@/lib/utils";
 
 export function InterviewView() {
@@ -178,52 +179,60 @@ export function InterviewView() {
               </div>
             </div>
 
-            {/* Answer */}
-            <div className="mt-6">
-              <Textarea
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                placeholder="Write your answer here. Take your time — depth matters more than length."
-                className="min-h-[140px] sm:min-h-[160px] resize-none text-sm leading-relaxed bg-transparent border-border/60 hm-focus-ring transition-all duration-200"
-                disabled={loading}
-              />
-              <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
-                <span>{answer.trim().split(/\s+/).filter(Boolean).length} words</span>
-                <span>Tip: explain tradeoffs, not just keywords</span>
-              </div>
-            </div>
+            {/* Answer + Coach — side-by-side on lg */}
+            <div className="mt-6 grid gap-4 lg:grid-cols-5">
+              {/* Answer column */}
+              <div className="lg:col-span-3">
+                <Textarea
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
+                  placeholder="Write your answer here. Take your time — depth matters more than length."
+                  className="min-h-[180px] sm:min-h-[220px] resize-none text-sm leading-relaxed bg-transparent border-border/60 hm-focus-ring transition-all duration-200"
+                  disabled={loading}
+                />
+                <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
+                  <span>{answer.trim().split(/\s+/).filter(Boolean).length} words</span>
+                  <span>Tip: explain tradeoffs, not just keywords</span>
+                </div>
 
-            <div className="mt-5 flex flex-col sm:flex-row gap-3">
-              <Button onClick={onSubmit} size="lg" disabled={loading || answer.trim().length < 5} className="h-11 sm:h-12 px-5 sm:px-6 gap-2">
-                {loading ? (
-                  <>
-                    <Sparkles className="h-4 w-4 hm-thinking" />
-                    {loadingStep || "Working…"}
-                  </>
-                ) : (
-                  <>
-                    Submit answer <Send className="h-4 w-4" />
-                  </>
-                )}
-              </Button>
-              {isDemo && (
-                <Button onClick={onDemoAnswer} variant="outline" size="lg" disabled={loading} className="h-11 sm:h-12 px-5 gap-2">
-                  <Wand2 className="h-4 w-4" />
-                  Use scripted demo answer
-                </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="lg"
-                disabled={loading}
-                onClick={() => {
-                  submitAnswer(current.id, "I'd like to skip this one.");
-                  setAnswer("");
-                }}
-                className="h-11 sm:h-12 px-5 text-muted-foreground gap-2"
-              >
-                <SkipForward className="h-4 w-4" /> Skip
-              </Button>
+                <div className="mt-5 flex flex-col sm:flex-row gap-3">
+                  <Button onClick={onSubmit} size="lg" disabled={loading || answer.trim().length < 5} className="h-11 sm:h-12 px-5 sm:px-6 gap-2">
+                    {loading ? (
+                      <>
+                        <Sparkles className="h-4 w-4 hm-thinking" />
+                        {loadingStep || "Working…"}
+                      </>
+                    ) : (
+                      <>
+                        Submit answer <Send className="h-4 w-4" />
+                      </>
+                    )}
+                  </Button>
+                  {isDemo && (
+                    <Button onClick={onDemoAnswer} variant="outline" size="lg" disabled={loading} className="h-11 sm:h-12 px-5 gap-2">
+                      <Wand2 className="h-4 w-4" />
+                      Use scripted demo answer
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="lg"
+                    disabled={loading}
+                    onClick={() => {
+                      submitAnswer(current.id, "I'd like to skip this one.");
+                      setAnswer("");
+                    }}
+                    className="h-11 sm:h-12 px-5 text-muted-foreground gap-2"
+                  >
+                    <SkipForward className="h-4 w-4" /> Skip
+                  </Button>
+                </div>
+              </div>
+
+              {/* Coach column */}
+              <div className="lg:col-span-2">
+                <AnswerCoach answer={answer} />
+              </div>
             </div>
           </motion.div>
         </AnimatePresence>

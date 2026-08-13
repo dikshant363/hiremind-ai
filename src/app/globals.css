@@ -93,8 +93,8 @@
   /* Status — soft, never alarming */
   --success: oklch(0.72 0.13 155);
   --success-foreground: oklch(0.18 0.04 155);
-  --warning: oklch(0.82 0.12 80);
-  --warning-foreground: oklch(0.27 0.06 80);
+  --warning: oklch(0.78 0.13 75); /* refined amber — deeper, less muddy than gold */
+  --warning-foreground: oklch(0.27 0.06 75);
   --critical: oklch(0.66 0.16 25);
   --critical-foreground: oklch(0.18 0.05 25);
 
@@ -105,7 +105,7 @@
 
   --chart-1: oklch(0.52 0.04 250);     /* accent blue */
   --chart-2: oklch(0.72 0.13 155);     /* success green */
-  --chart-3: oklch(0.82 0.12 80);      /* warning amber */
+  --chart-3: oklch(0.78 0.13 75);      /* refined amber */
   --chart-4: oklch(0.66 0.16 25);      /* critical red */
   --chart-5: oklch(0.55 0.05 305);     /* soft violet */
 
@@ -147,8 +147,8 @@
 
   --success: oklch(0.7 0.12 155);
   --success-foreground: oklch(0.16 0.03 155);
-  --warning: oklch(0.8 0.11 80);
-  --warning-foreground: oklch(0.18 0.05 80);
+  --warning: oklch(0.78 0.13 75); /* refined amber — consistent with light mode */
+  --warning-foreground: oklch(0.18 0.05 75);
   --critical: oklch(0.66 0.16 25);
   --critical-foreground: oklch(0.18 0.05 25);
 
@@ -159,7 +159,7 @@
 
   --chart-1: oklch(0.7 0.05 250);
   --chart-2: oklch(0.7 0.12 155);
-  --chart-3: oklch(0.8 0.11 80);
+  --chart-3: oklch(0.78 0.13 75); /* match refined amber */
   --chart-4: oklch(0.66 0.16 25);
   --chart-5: oklch(0.65 0.06 305);
 
@@ -718,5 +718,87 @@
   }
   [data-presentation="true"] .hm-footer-hide {
     display: none;
+  }
+
+  /* ─── Premium VLM-polish utilities ─── */
+
+  /* Evidence quote — italic, left-border accent, softer muted color */
+  .hm-evidence-quote {
+    font-style: italic;
+    color: color-mix(in oklch, var(--muted-foreground) 90%, var(--foreground));
+    border-left: 2px solid color-mix(in oklch, var(--border) 60%, var(--muted-foreground));
+    padding-left: 8px;
+    line-height: 1.5;
+  }
+  .dark .hm-evidence-quote {
+    color: color-mix(in oklch, var(--muted-foreground) 85%, var(--foreground));
+    border-left-color: color-mix(in oklch, var(--border) 70%, var(--muted-foreground));
+  }
+
+  /* Premium input — softer background, focus ring with glow */
+  .hm-input-premium {
+    background: color-mix(in oklch, var(--card) 92%, var(--muted));
+    border-color: color-mix(in oklch, var(--border) 80%, var(--muted-foreground));
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  }
+  .hm-input-premium:focus-visible {
+    box-shadow:
+      0 0 0 3px color-mix(in oklch, var(--accent-blue) 18%, transparent),
+      0 0 0 1px color-mix(in oklch, var(--accent-blue) 40%, transparent);
+    border-color: color-mix(in oklch, var(--accent-blue) 45%, var(--border));
+    outline: none;
+  }
+  .dark .hm-input-premium {
+    background: color-mix(in oklch, var(--card) 88%, var(--muted));
+  }
+
+  /* Vertical divider between buttons — 1px wide x 16px tall, with opacity */
+  .hm-divider-vertical {
+    width: 1px;
+    height: 16px;
+    background: color-mix(in oklch, var(--muted-foreground) 35%, transparent);
+    flex-shrink: 0;
+  }
+  .dark .hm-divider-vertical {
+    background: color-mix(in oklch, var(--muted-foreground) 30%, transparent);
+  }
+
+  /* Void box — visual placeholder for "missing evidence" */
+  .hm-void-box {
+    border: 1px dashed color-mix(in oklch, var(--muted-foreground) 35%, var(--border));
+    background: color-mix(in oklch, var(--muted) 50%, transparent);
+    color: color-mix(in oklch, var(--muted-foreground) 80%, var(--foreground));
+    border-radius: 8px;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .hm-void-box:hover {
+    border-color: color-mix(in oklch, var(--accent-blue) 40%, var(--border));
+    background: color-mix(in oklch, var(--accent-blue) 6%, var(--muted));
+  }
+  .dark .hm-void-box {
+    border-color: color-mix(in oklch, var(--muted-foreground) 30%, transparent);
+    background: color-mix(in oklch, var(--muted) 30%, transparent);
+  }
+
+  /* Premium badge — subtle gradient bg, refined border */
+  .hm-badge-premium {
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklch, var(--accent-blue) 8%, var(--card)),
+      color-mix(in oklch, var(--accent-blue) 5%, var(--card))
+    );
+    border: 1px solid color-mix(in oklch, var(--accent-blue) 22%, var(--border));
+    /* Use accent-blue directly so text is readable on the soft tinted bg
+       (accent-blue-foreground is near-white in light mode and would vanish). */
+    color: var(--accent-blue);
+  }
+  .dark .hm-badge-premium {
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklch, var(--accent-blue) 14%, transparent),
+      color-mix(in oklch, var(--accent-blue) 8%, transparent)
+    );
+    border: 1px solid color-mix(in oklch, var(--accent-blue) 30%, transparent);
+    color: var(--accent-blue);
   }
 }

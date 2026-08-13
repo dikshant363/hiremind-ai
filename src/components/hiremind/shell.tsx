@@ -216,10 +216,13 @@ export function ScoreRing({
     return () => clearTimeout(t);
   }, []);
 
-  const stroke = 9;
+  const stroke = 7;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const offset = c - (display / 100) * c;
+
+  // Use a stable, unique gradient id so multiple ScoreRings on a page don't clash
+  const gradientId = React.useId().replace(/:/g, "");
 
   const toneColor =
     tone === "success"
@@ -243,6 +246,17 @@ export function ScoreRing({
           />
         )}
         <svg width={size} height={size} className="-rotate-90" style={{ overflow: "visible" }}>
+          <defs>
+            {/* Gradient fade — full color at the arc start, fading to a softer
+                tone toward the arc end so the transition into the muted track
+                feels continuous (no hard "Pac-Man" gap). */}
+            <linearGradient id={gradientId} x1="100%" y1="0%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor={toneColor} stopOpacity={1} />
+              <stop offset="55%" stopColor={toneColor} stopOpacity={0.92} />
+              <stop offset="100%" stopColor={toneColor} stopOpacity={0.4} />
+            </linearGradient>
+          </defs>
+          {/* Track — full closed circle, slightly muted */}
           <circle
             cx={size / 2}
             cy={size / 2}
@@ -250,14 +264,15 @@ export function ScoreRing({
             fill="none"
             stroke="var(--muted)"
             strokeWidth={stroke}
-            opacity={0.6}
+            opacity={0.55}
           />
+          {/* Progress arc — uses gradient stroke + rounded linecap for soft ends */}
           <circle
             cx={size / 2}
             cy={size / 2}
             r={r}
             fill="none"
-            stroke={toneColor}
+            stroke={`url(#${gradientId})`}
             strokeWidth={stroke}
             strokeLinecap="round"
             strokeDasharray={c}

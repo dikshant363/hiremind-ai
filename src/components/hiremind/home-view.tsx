@@ -34,7 +34,7 @@ export function HomeView() {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="text-center"
         >
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-3 py-1 text-[11px] font-medium text-muted-foreground mb-6">
+          <div className="hm-badge-premium inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium mb-6">
             <Sparkles className="h-3 w-3" />
             <span>Evidence-based job readiness · AI-assisted assessment</span>
           </div>
@@ -43,7 +43,7 @@ export function HomeView() {
             <br />
             <span className="hm-text-gradient">readiness.</span>
           </h1>
-          <p className="mt-5 mx-auto max-w-xl text-sm sm:text-base text-muted-foreground leading-relaxed text-pretty">
+          <p className="mt-5 mx-auto max-w-xl text-sm sm:text-base text-foreground/70 leading-relaxed text-pretty">
             Upload your resume and choose a target role. HireMind finds your strongest evidence, identifies your biggest gap, and tests it in an adaptive AI interview.
           </p>
         </motion.div>
@@ -52,7 +52,7 @@ export function HomeView() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-          className="mt-10 sm:mt-12 grid gap-4 md:grid-cols-2"
+          className="mt-10 sm:mt-12 grid gap-4 md:grid-cols-2 items-stretch"
         >
           {/* Resume input */}
           <div className="hm-card p-4 sm:p-6 flex flex-col">
@@ -70,7 +70,7 @@ export function HomeView() {
               value={resumeText}
               onChange={(e) => setResumeText(e.target.value)}
               placeholder="Or paste your resume text here — name, experience, skills, projects…"
-              className="flex-1 min-h-[100px] sm:min-h-[120px] resize-none text-sm leading-relaxed bg-transparent border-border/60 focus-visible:ring-1 focus-visible:ring-ring/40"
+              className="hm-input-premium flex-1 min-h-[100px] sm:min-h-[120px] resize-none text-sm leading-relaxed placeholder:text-foreground/40 focus-visible:ring-2 focus-visible:ring-accent-blue/30 focus-visible:border-accent-blue/40"
             />
             <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
               <span>Never stored beyond this session</span>
@@ -93,17 +93,22 @@ export function HomeView() {
               value={jobTitle}
               onChange={(e) => setJobTitle(e.target.value)}
               placeholder="e.g. AI/ML Software Engineer"
-              className="text-sm bg-transparent border-border/60"
+              className="hm-input-premium text-sm placeholder:text-foreground/40 focus-visible:ring-2 focus-visible:ring-accent-blue/30 focus-visible:border-accent-blue/40"
             />
             <Textarea
               value={jobText}
               onChange={(e) => setJobText(e.target.value)}
               placeholder="Paste the job description — responsibilities, required skills, preferred qualifications…"
-              className="mt-3 flex-1 min-h-[120px] sm:min-h-[140px] resize-none text-sm leading-relaxed bg-transparent border-border/60 focus-visible:ring-1 focus-visible:ring-ring/40"
+              className="mt-3 flex-1 min-h-[120px] sm:min-h-[140px] resize-none text-sm leading-relaxed placeholder:text-foreground/40 focus-visible:ring-2 focus-visible:ring-accent-blue/30 focus-visible:border-accent-blue/40"
             />
             <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
               <span>Required + preferred skills matter</span>
               <span>{jobText.length.toLocaleString()} chars</span>
+            </div>
+            {/* Tips mini-section — balances the height with the Resume card (which has FileUpload) */}
+            <div className="mt-3 rounded-lg bg-secondary/40 border border-border/40 px-3 py-2.5 text-[11px] leading-relaxed">
+              <span className="font-semibold text-foreground">Tips for best results</span>
+              <span className="text-muted-foreground"> — include required + preferred skills, seniority, and team context for sharper matching.</span>
             </div>
           </div>
         </motion.div>
@@ -133,7 +138,14 @@ export function HomeView() {
             {loading ? "Analyzing…" : "Analyze my readiness"}
             {!loading && <ArrowRight className="h-4 w-4" />}
           </Button>
-          <span className="text-[12px] text-muted-foreground">or</span>
+          {/* Premium 'or' divider — flanked by 1px lines so it reads as a real separator, not floating text */}
+          <div className="flex items-center gap-3" aria-hidden>
+            <div className="sm:hidden h-px w-6 bg-border/70" />
+            <div className="hidden sm:block hm-divider-vertical" />
+            <span className="text-[12px] text-muted-foreground/60">or</span>
+            <div className="sm:hidden h-px w-6 bg-border/70" />
+            <div className="hidden sm:block hm-divider-vertical" />
+          </div>
           <div className="hm-gradient-border rounded-[calc(var(--radius)+6px)]">
             <Button
               onClick={onDemo}

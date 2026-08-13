@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useHireMind } from "@/lib/store";
 import type { SkillEvidence } from "@/lib/types";
 import { EvidenceGraph } from "./evidence-graph";
+import { SkillHeatmap } from "./skill-heatmap";
 
 export function CandidateView() {
   const { candidate, job, isDemo, meta, setView } = useHireMind();
@@ -146,6 +147,9 @@ export function CandidateView() {
           )}
         </motion.div>
       </div>
+
+      {/* Skill confidence heatmap — at-a-glance visual grid */}
+      <SkillHeatmap />
 
       <EvidenceGraph />
 

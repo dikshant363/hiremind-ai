@@ -449,3 +449,174 @@ Stage Summary:
 - Typography: consistent heading hierarchy (h1: 2xl→4xl/5xl/6xl, body: sm→base), line-clamp on long text
 - Micro-interactions: card hover shadows, nav active indicators, staggered trust features, interview button entrance animation, whileTap on interactive elements
 - Skeleton/empty states: new skeleton components for loading, contextual loading overlay steps
+
+---
+Task ID: cron-review-3-styling
+Agent: frontend-styling-expert
+Task: Apply premium visual polish based on VLM feedback
+
+Work Log:
+- globals.css: Refined --warning token from muddy yellow `oklch(0.82 0.12 80)` to deeper amber `oklch(0.78 0.13 75)` in both light and dark themes (also matched --warning-foreground hue and --chart-3 token).
+- globals.css: Added 5 new premium utility classes with `.dark` overrides: `.hm-evidence-quote` (italic + left border accent + softer muted color), `.hm-input-premium` (softer bg + focus glow ring), `.hm-divider-vertical` (1px × 16px vertical divider), `.hm-void-box` (dashed border + muted bg + hover accent), `.hm-badge-premium` (subtle gradient bg + refined border, uses `var(--accent-blue)` for text color so it stays readable on the soft tinted background — initial implementation used `var(--accent-blue-foreground)` which is near-white in light mode and made the text invisible; fixed after VLM verification).
+- shell.tsx (ScoreRing): Reduced stroke width from 9 → 7 (thinner, more elegant). Added SVG `<defs>` + `<linearGradient>` with stops 0%→55%→100% at opacity 1.0→0.92→0.4 so the progress arc fades smoothly into the muted track (no more hard "Pac-Man" gap). Used React.useId() for stable unique gradient IDs so multiple ScoreRings on a page don't clash. Track opacity reduced 0.6→0.55. Count-up animation, glow layer, and shimmer overlay preserved.
+- home-view.tsx: Added `items-stretch` to the dual-input grid so Resume and Target role cards are equal height. Added "Tips for best results" hint box to Target role card to balance the height added by FileUpload on the Resume side. Changed hero body paragraph `text-muted-foreground` → `text-foreground/70` for better contrast. Replaced faint top pill badge with new `hm-badge-premium` class (subtle blue gradient + refined border + accent-blue text). Replaced floating "or" between buttons with a proper divider: 1px×16px `hm-divider-vertical` lines on desktop, 1px×24px horizontal lines on mobile, flanking the "or" text. Added `hm-input-premium` + `focus-visible:ring-2 focus-visible:ring-accent-blue/30 focus-visible:border-accent-blue/40` to both inputs and textareas for premium focus rings. Added `placeholder:text-foreground/40` for darker, more readable placeholders.
+- match-view.tsx: Changed component score label `font-medium` → `font-semibold` and competency name `font-medium` → `font-semibold` (VLM wanted Semi-bold 600). Wrapped evidence quotes in `hm-evidence-quote italic` styled container (italic + left border accent + softer muted color + line-clamp-1). Also added explicit Tailwind `italic` utility as belt-and-suspenders after VLM verification caught the italic wasn't visible with CSS class alone. Changed both score card and breakdown card padding from `p-4 sm:p-6` → `p-5 sm:p-7` for consistent vertical padding.
+- gaps-view.tsx: Imported `Plus` icon. Changed "Your evidence" cell copy: when `top.candidateLevel === "unknown"`, now shows a `hm-void-box` dashed-border element with `Plus` icon and "Add evidence" text (title attribute as tooltip) instead of "Unknown · Gap" copy. Restructured hero info grid from 3 cols → `sm:grid-cols-2 lg:grid-cols-4` and added a new "Priority" cell with PriorityPill for layout balance. Changed "Other open gaps" grid from `sm:grid-cols-2` → `sm:grid-cols-2 lg:grid-cols-3` to balance the orphan card wrapping.
+- readiness-view.tsx (pre-calc state only): Replaced faint Sparkles icon with `Compass` icon wrapped in `bg-gradient-to-br from-accent-blue/20 to-chart-5/15` + `ring-1 ring-accent-blue/20` + `shadow-sm` for a more vibrant, confident visual. Changed body paragraph `text-muted-foreground` → `text-foreground/70` for better contrast. Added "What we calculate" preview section below the button: 3 mini-cards (Job alignment, Required coverage, Interview evidence) with icons (Target, ListChecks, MessageSquare) and staggered entrance animation. Added trust feature row at the bottom (Honest by design, Explainable scores, Adaptive not static) with icons to reduce the massive whitespace below the button. Imported Target, ListChecks, MessageSquare, ShieldCheck, GitBranch from lucide-react.
+
+Stage Summary:
+- Lint: 0 errors ✓ (verified with `bun run lint`)
+- Dev server: stable, HTTP 200 ✓
+- VLM verification (using z-ai vision CLI) confirmed all 6 polish areas:
+  1. Home view: equal-height cards ✓, premium badge visible with readable text ✓, "or" divider properly framed by lines ✓, body text readable ✓, "Tips for best results" box visible ✓
+  2. Score ring (match view): thin elegant stroke ✓, smooth gradient fade (no Pac-Man gap) ✓, refined amber color ✓
+  3. Match view evidence quotes: italic + left border accent + softer muted color ✓
+  4. Gaps view: 4-cell info grid ✓, "Add evidence" dashed void box ✓, 3-column other-gaps grid ✓
+  5. Readiness pre-calc: Compass icon ✓, "What we calculate" 3 mini-cards ✓, trust feature row ✓
+  6. Readiness full: thin elegant ring stroke ✓, smooth fade ✓, semibold dimension labels ✓
+- Files changed: globals.css, shell.tsx, home-view.tsx, match-view.tsx, gaps-view.tsx, readiness-view.tsx (6 files)
+- No new npm packages added. No data flow / store / API changes. Dark mode preserved (every new utility has `.dark` overrides). Mobile responsive preserved (sm: and lg: breakpoints used throughout). Existing animations, demo flow, and keyboard shortcuts unaffected.
+- Screenshots saved to /home/z/my-project/download/: polish-home.png, polish-home-v2.png, polish-candidate.png, polish-match.png, polish-match-v2.png, polish-gaps.png, polish-readiness-pre.png, polish-readiness-full.png
+
+---
+
+# HIREMIND AI — Round 3 (cron-review) Handover
+
+> **Last updated**: Round 3 (cron-review-3) — 3 major new features + 6 visual polish areas
+
+## Current Project Status: STABLE + Polished + Feature-Expanded
+
+All P0 + P1 + P2 features working. Core intelligence loop verified end-to-end. Three high-impact new features added (Job Insights, Skill Heatmap, Answer Coach) and six visual polish areas addressed based on VLM analysis. All changes verified via agent-browser + VLM critique (grades A-/A across the board).
+
+---
+
+Task ID: cron-review-3
+Agent: main (cron-triggered)
+Task: QA assessment + visual polish (delegated) + 3 new features + dark mode QA + worklog handover
+
+## QA Assessment Results (this round)
+
+- **Lint**: 0 errors ✓
+- **Dev server**: stable on port 3000, all requests HTTP 200 ✓
+- **No runtime errors** in console after reload ✓
+- **agent-browser walkthrough PASSED**:
+  - Home view renders with balanced dual cards + premium badge ✓
+  - Demo flow: Candidate → Match (with JobInsights) → Gaps → Interview (with AnswerCoach) → Evaluation → Readiness → Roadmap ✓
+  - Skill Heatmap renders with category groupings on Candidate view ✓
+  - JobInsights expands/collapses responsibilities on Match view ✓
+  - AnswerCoach updates readiness 0% → 100% live as user types ✓
+  - Dark mode verified — premium look preserved ✓
+- **VLM critique grades**:
+  - Home polish: A (card balance), B+ (or grouping), A- (overall premium feel)
+  - Answer Coach: A- (sophisticated, user-centric, gamified progress)
+  - JobInsights: A- (high transparency, strong trust building)
+  - Skill Heatmap: A- (excellent category groupings, intuitive color coding)
+  - Dark mode: A- (sophisticated palette, semantic colors visible)
+
+## Visual Polish Completed (Task cron-review-3-styling — frontend-styling-expert)
+
+Six areas polished based on VLM (Vision Language Model) analysis of actual screenshots:
+
+1. **Score Ring redesign** (shell.tsx): Closed the gap (no more Pac-Man), reduced stroke 9→7, added SVG linear gradient for smooth arc fade. Refined warning tone to deeper amber `oklch(0.78 0.13 75)`.
+2. **Home view** (home-view.tsx): `items-stretch` for equal card heights, added "Tips for best results" box on Target role card, body text `text-muted-foreground`→`text-foreground/70` for contrast, top pill uses `hm-badge-premium`, "or" wrapped with vertical divider flanks, inputs use `hm-input-premium` + focus rings.
+3. **Match view** (match-view.tsx): Bar labels `font-medium`→`font-semibold`, evidence quotes wrapped in `hm-evidence-quote italic` styled container with left-border accent, padding standardized `p-5 sm:p-7`.
+4. **Gaps view** (gaps-view.tsx): "Your evidence" cell shows `hm-void-box` with Plus icon + "Add evidence" when `candidateLevel === "unknown"` (replaces "Unknown · Gap"), hero info grid 3→4 cells with Priority column, other-open-gaps grid now `lg:grid-cols-3` to balance.
+5. **Readiness pre-calc state** (readiness-view.tsx): Replaced Sparkles with `Compass` in gradient bg, added 3 "What we calculate" mini-cards (Job alignment / Required coverage / Interview evidence), added trust row.
+6. **CSS utilities** (globals.css): Added 5 new premium classes — `.hm-evidence-quote`, `.hm-input-premium`, `.hm-divider-vertical`, `.hm-void-box`, `.hm-badge-premium` — all with `.dark` overrides.
+
+## New Features Added (Task cron-review-3 — main)
+
+### Feature 1: Job Description Insights Card (`job-insights.tsx`)
+- **Location**: Match view, below the competency comparison
+- **What it shows**: AI-extracted summary, Required vs Preferred skill chips (color-coded by importance + matched status), Required coverage stat (X/Y), collapsible Key Responsibilities list
+- **Premium details**: Staggered chip entrance animations, matched skills get green + Sparkles icon, importance tone gradient (critical/high/medium/low), collapsible responsibilities with motion height animation
+- **Value**: Transparency — user can see exactly what the AI extracted from the JD, builds trust in the matching logic
+
+### Feature 2: Skill Confidence Heatmap (`skill-heatmap.tsx`)
+- **Location**: Candidate view, above the EvidenceGraph
+- **What it shows**: Color-coded tile grid of every detected competency, grouped by category (System Design / Backend / ML / etc.), with legend showing counts
+- **Premium details**: Tiles color by level (strong=green, moderate=amber, weak=gray), hover scale + tooltip with source skill, category headers with counts, staggered entrance per category
+- **Value**: At-a-glance visual scan of candidate's full competency profile — recruiter/candidate can see strengths and gaps in 2 seconds vs reading a list
+
+### Feature 3: Interactive Answer Coach Panel (`answer-coach.tsx`)
+- **Location**: Interview view, beside the answer textarea (lg:grid-cols-5 split, 3/2 ratio)
+- **What it shows**: Live answer readiness score 0-100%, 5 quality signals checklist (substance/structure/quantified/tradeoff/concrete), competency-specific "What great answers include", structure template, pitfalls to avoid, length guidance
+- **Premium details**: Collapsible (click header), real-time signal detection (regex-based), readiness bar with tone color (success/warning/muted), staggered list animations
+- **Value**: Transforms the interview from "test" into "active learning environment" — gives candidates a rubric without writing the answer for them. Live readiness meter gamifies the experience.
+
+### Supporting: Coach Tips data file (`coach-tips.ts`)
+- Static, deterministic coaching content keyed by canonical competency name
+- 16 competency-specific tips (System Design, Scalability, Fault Tolerance, Caching, Databases, REST APIs, Microservices, Docker, Kubernetes, Python, ML, Deep Learning, NLP, MLOps, Communication, Collaboration) + generic fallback
+- `answerReadiness(answer)` function — computes 0..1 score from 5 quality signals using regex patterns
+
+## Verification Results
+
+- **Lint**: 0 errors ✓
+- **Build**: succeeds ✓
+- **Dev server**: stable on port 3000, HTTP 200 on all routes ✓
+- **Demo flow**: end-to-end PASSED with all 3 new features visible ✓
+- **Dark mode**: verified — no hardcoded colors, all new utilities have `.dark` overrides ✓
+- **Mobile responsive**: lg:grid-cols-5 split on interview collapses to single column on mobile, all new cards use responsive padding ✓
+- **No new npm packages added** ✓
+
+## Files Changed This Round
+
+**New files (4):**
+- `src/lib/coach-tips.ts` — Coach tip data + answerReadiness() function
+- `src/components/hiremind/job-insights.tsx` — JD insights card
+- `src/components/hiremind/skill-heatmap.tsx` — Skill heatmap grid
+- `src/components/hiremind/answer-coach.tsx` — Live answer coach panel
+
+**Modified files (7):**
+- `src/app/globals.css` — 5 new premium utility classes + refined warning token
+- `src/components/hiremind/shell.tsx` — ScoreRing redesign (stroke, gradient, closed circle)
+- `src/components/hiremind/home-view.tsx` — Card balance, contrast, badge, dividers, focus rings
+- `src/components/hiremind/match-view.tsx` — Bar labels, evidence quote styling, JobInsights integration
+- `src/components/hiremind/gaps-view.tsx` — Void box, priority column, grid balance
+- `src/components/hiremind/readiness-view.tsx` — Pre-calc state with preview cards
+- `src/components/hiremind/candidate-view.tsx` — SkillHeatmap integration
+- `src/components/hiremind/interview-view.tsx` — AnswerCoach integration with 2-col layout
+
+---
+
+## Unresolved Issues / Risks
+
+1. **AI Timeout on first call**: z-ai-web-dev-sdk occasionally times out (21.9s seen in logs this round). Deterministic fallback handles this gracefully — results still valid.
+2. **Answer Coach regex signals are heuristic**: The 5 quality signals (substance/structure/quantified/tradeoff/concrete) use simple regex. Could be enhanced with semantic analysis, but the heuristic is intentionally transparent and explainable.
+3. **JobInsights chip density**: For roles with 30+ required skills, the chip area may become cluttered. Current demo (12 required + 8 preferred) works well. Recommendation: add a "Show more" expansion if required.length > 20.
+4. **SkillHeatmap tile width variance**: Tiles are width-fit-content, so columns don't perfectly align. Stylistic choice for organic feel; could be made uniform with `grid-cols-3` if scannability becomes an issue.
+
+## Priority Recommendations for Next Phase
+
+1. **Answer Coach enhancement** — Add real-time AI-powered answer preview scoring (call /api/interview/preview every 5s for live AI feedback). Currently the readiness is heuristic; AI would add depth.
+2. **Compare Sessions feature** — Side-by-side comparison of two past sessions to show growth over time.
+3. **Interview difficulty selector** — Let user pick easy/medium/hard before starting interview. Question bank already supports difficulty.
+4. **Session cleanup cron** — Auto-cleanup sessions older than 24 hours (DB grows unbounded).
+5. **Resume strength score** — On candidate view, show resume quality breakdown (evidence quality / skill coverage / quantified achievements).
+6. **Mobile UX deep test** — Verify the new 2-column interview layout collapses cleanly at 375px width.
+7. **PDF export of roadmap** — Currently export is markdown-to-clipboard; a styled PDF would be more shareable.
+
+## Project Overview (unchanged)
+
+HIREMIND AI is an AI-powered recruitment assistant (Smart Resume Parser & Mock Interviewer). Core intelligence loop:
+
+```
+RESUME + TARGET JOB
+   -> CANDIDATE INTELLIGENCE (+ Skill Heatmap)
+   -> SEMANTIC JOB MATCH (+ Job Insights)  (Prototype Job Match Index)
+   -> SKILL GAP INTELLIGENCE
+   -> GAP-DRIVEN ADAPTIVE INTERVIEW (+ Answer Coach)  (THE WOW FEATURE)
+   -> ANSWER EVALUATION
+   -> COMPETENCY STATE UPDATE
+   -> JOB READINESS (Prototype Job Readiness Index)
+   -> PERSONALIZED IMPROVEMENT ROADMAP
+```
+
+Tech stack: Next.js 16 (App Router) + TypeScript + Tailwind CSS 4 + shadcn/ui + Prisma (SQLite) + z-ai-web-dev-sdk (LLM) + Zustand + Framer Motion. Single visible route `/` (orchestrated client-side via Zustand view state).
+
+Critical principles (all preserved this round):
+- AI understands. Application logic decides. Deterministic scoring.
+- Distinguish KNOWN / WEAK / UNKNOWN evidence. Never treat absence as proof of missing skill.
+- Adaptive interview: next question MUST depend on previous answer (the demo's WOW moment).
+- Demo mode must work reliably end-to-end.
+- Prototype-labeled indices (never "hiring probability").

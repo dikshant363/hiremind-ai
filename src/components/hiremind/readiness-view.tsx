@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Sparkles, AlertOctagon, Compass } from "lucide-react";
+import { ArrowRight, Sparkles, AlertOctagon, Compass, Target, ListChecks, MessageSquare, ShieldCheck, GitBranch } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHireMind } from "@/lib/store";
 import { ScoreRing, CompetencyBar } from "./shell";
@@ -17,12 +17,13 @@ export function ReadinessView() {
     return (
       <div className="mx-auto max-w-3xl px-4 sm:px-8 py-10 sm:py-14 text-center">
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-          <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-accent-blue/10 text-accent-blue-foreground">
-            <Sparkles className="h-7 w-7" />
+          {/* Vibrant Compass icon with subtle gradient background — more confident than a faint Sparkles */}
+          <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-accent-blue/20 to-chart-5/15 text-accent-blue-foreground ring-1 ring-accent-blue/20 shadow-sm">
+            <Compass className="h-7 w-7" />
           </span>
           <h1 className="mt-5 text-2xl sm:text-3xl font-semibold tracking-tight">Calculate your job readiness.</h1>
-          <p className="mt-3 text-sm text-muted-foreground max-w-md mx-auto">
-            We'll combine your match index, interview evidence and identified weaknesses into a transparent Prototype Job Readiness Index.
+          <p className="mt-3 text-sm text-foreground/70 max-w-md mx-auto leading-relaxed">
+            We&rsquo;ll combine your match index, interview evidence and identified weaknesses into a transparent Prototype Job Readiness Index.
           </p>
           <div className="mt-6">
             <Button size="lg" className="h-12 px-7 gap-2" onClick={computeReadiness} disabled={loading}>
@@ -34,6 +35,52 @@ export function ReadinessView() {
                 <>Calculate readiness</>
               )}
             </Button>
+          </div>
+
+          {/* "What we calculate" preview — shows the dimensions before computing */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="mt-10 grid sm:grid-cols-3 gap-3 text-left"
+          >
+            {[
+              { icon: <Target className="h-4 w-4" />, title: "Job alignment", body: "How well your evidence maps to required + preferred competencies." },
+              { icon: <ListChecks className="h-4 w-4" />, title: "Required coverage", body: "Share of must-have competencies you have demonstrated." },
+              { icon: <MessageSquare className="h-4 w-4" />, title: "Interview evidence", body: "Depth and clarity from your adaptive interview answers." },
+            ].map((item, i) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.2 + i * 0.08 }}
+                className="hm-elevated rounded-xl p-4"
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-accent-blue/10 text-accent-blue-foreground">
+                    {item.icon}
+                  </span>
+                  <h4 className="text-[13px] font-semibold">{item.title}</h4>
+                </div>
+                <p className="text-[12px] text-muted-foreground leading-relaxed">{item.body}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* Trust feature row — reduces the empty space below the button */}
+          <div className="mt-10 pt-6 border-t border-border/60 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[11px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5 text-accent-blue-foreground" />
+              Honest by design
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-accent-blue-foreground" />
+              Explainable scores
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <GitBranch className="h-3.5 w-3.5 text-accent-blue-foreground" />
+              Adaptive, not static
+            </span>
           </div>
         </motion.div>
       </div>
