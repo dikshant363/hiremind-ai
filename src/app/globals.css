@@ -185,6 +185,9 @@
     @apply bg-background text-foreground;
     font-feature-settings: "ss01", "cv01", "cv03";
     letter-spacing: -0.011em;
+    /* Defensive: prevent horizontal scroll from any minor content overflow
+       (e.g. header nav with many items, wide tables, animated transforms). */
+    overflow-x: hidden;
   }
 
   /* Headings — tight, premium letter spacing */
@@ -2041,5 +2044,174 @@
   }
   .hm-footer-gradient-line {
     animation: none !important;
+  }
+}
+
+/* ===========================================================================
+ * Round 7 — Premium micro-interaction utilities
+ * Adds spotlight, animated gradient borders, staggered fades, shine sweeps,
+ * and a subtle grid texture. All respect prefers-reduced-motion (below).
+ * =========================================================================== */
+
+/* Spotlight card — a soft radial light follows hover, giving the card a
+   premium "alive" sheen. Uses a ::before overlay with a radial-gradient
+   positioned via --mx/--my custom properties (defaulting to center). The
+   component can update --mx/--my on mousemove for a true follow effect;
+   without JS it still shows a centered glow on hover. */
+.hm-spotlight-card {
+  position: relative;
+  --mx: 50%;
+  --my: 0%;
+}
+.hm-spotlight-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    340px circle at var(--mx) var(--my),
+    color-mix(in oklch, var(--accent-blue) 14%, transparent),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+.hm-spotlight-card:hover::before {
+  opacity: 1;
+}
+.hm-spotlight-card > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Animated gradient border — a rotating conic gradient border using a
+   mask trick. The border appears to rotate around the element. Great for
+   hero cards and CTAs. */
+.hm-gradient-border-anim {
+  position: relative;
+  isolation: isolate;
+}
+.hm-gradient-border-anim::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--hm-gradient-angle, 0deg),
+    transparent 0deg,
+    var(--accent-blue) 60deg,
+    color-mix(in oklch, var(--accent-blue) 50%, var(--success)) 120deg,
+    transparent 180deg,
+    transparent 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.6;
+  animation: hm-gradient-rotate 6s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+@property --hm-gradient-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes hm-gradient-rotate {
+  to { --hm-gradient-angle: 360deg; }
+}
+/* Fallback for browsers without @property support: animate background-position. */
+@supports not (background: paint(test)) {
+  .hm-gradient-border-anim::before {
+    animation: hm-gradient-rotate-fallback 6s linear infinite;
+  }
+}
+@keyframes hm-gradient-rotate-fallback {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Stagger fade — for list items. Each child fades + slides up with an
+   incremental delay via nth-child. Pure CSS, works on up to 12 items. */
+.hm-stagger-fade > * {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: hm-stagger-fade-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.hm-stagger-fade > *:nth-child(1) { animation-delay: 0.04s; }
+.hm-stagger-fade > *:nth-child(2) { animation-delay: 0.08s; }
+.hm-stagger-fade > *:nth-child(3) { animation-delay: 0.12s; }
+.hm-stagger-fade > *:nth-child(4) { animation-delay: 0.16s; }
+.hm-stagger-fade > *:nth-child(5) { animation-delay: 0.20s; }
+.hm-stagger-fade > *:nth-child(6) { animation-delay: 0.24s; }
+.hm-stagger-fade > *:nth-child(7) { animation-delay: 0.28s; }
+.hm-stagger-fade > *:nth-child(8) { animation-delay: 0.32s; }
+.hm-stagger-fade > *:nth-child(9) { animation-delay: 0.36s; }
+.hm-stagger-fade > *:nth-child(10) { animation-delay: 0.40s; }
+.hm-stagger-fade > *:nth-child(11) { animation-delay: 0.44s; }
+.hm-stagger-fade > *:nth-child(12) { animation-delay: 0.48s; }
+@keyframes hm-stagger-fade-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Shine line — a brief light sweep across a heading or divider. Use on
+   elements with overflow:hidden. The sweep repeats every 5s. */
+.hm-shine-line {
+  position: relative;
+  overflow: hidden;
+}
+.hm-shine-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    color-mix(in oklch, var(--foreground) 8%, transparent),
+    transparent
+  );
+  transform: skewX(-18deg);
+  animation: hm-shine-sweep 5s ease-in-out infinite;
+  animation-delay: 1.2s;
+  pointer-events: none;
+}
+@keyframes hm-shine-sweep {
+  0% { left: -60%; }
+  40% { left: 130%; }
+  100% { left: 130%; }
+}
+
+/* Grid texture fade — a subtle dotted/grid background that fades at the
+   edges using a mask. Adds premium texture to large card surfaces. */
+.hm-grid-fade {
+  background-image:
+    linear-gradient(to right, color-mix(in oklch, var(--foreground) 4%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklch, var(--foreground) 4%, transparent) 1px, transparent 1px);
+  background-size: 24px 24px;
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+}
+
+/* Respect reduced motion — disable Round 7 decorative animations. */
+@media (prefers-reduced-motion: reduce) {
+  .hm-gradient-border-anim::before,
+  .hm-stagger-fade > *,
+  .hm-shine-line::after {
+    animation: none !important;
+  }
+  .hm-stagger-fade > * {
+    opacity: 1;
+    transform: none;
+  }
+  .hm-spotlight-card::before {
+    transition: none;
   }
 }

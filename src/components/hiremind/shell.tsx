@@ -58,7 +58,7 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-background/70 border-b border-border/60 pt-safe">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8 h-14 flex items-center justify-between gap-4">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8 h-14 flex items-center justify-between gap-4">
         <button
           onClick={() => setView("home")}
           className="flex items-center gap-2 group"
@@ -77,7 +77,7 @@ export function SiteHeader() {
           )}
         </button>
 
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-1">
           {NAV.map((item) => {
             const requiresSession = NAV_REQUIRES_SESSION.includes(item.id);
             const needsTwoSessions = item.id === "compare";
@@ -125,7 +125,7 @@ export function SiteHeader() {
               className="text-muted-foreground hover:text-foreground gap-1.5"
             >
               <RotateCcw className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Start over</span>
+              <span className="hidden 2xl:inline">Start over</span>
             </Button>
           )}
           <Button
@@ -146,8 +146,8 @@ export function SiteHeader() {
             title="Search commands (Cmd+K)"
           >
             <Search className="h-3.5 w-3.5" />
-            <span className="hidden text-[12px] font-medium lg:inline">Search commands…</span>
-            <kbd className="hidden items-center rounded border border-border bg-muted px-1 py-0 text-[9px] font-mono font-medium text-muted-foreground sm:inline-flex">
+            <span className="hidden text-[12px] font-medium 2xl:inline">Search commands…</span>
+            <kbd className="hidden items-center rounded border border-border bg-muted px-1 py-0 text-[9px] font-mono font-medium text-muted-foreground 2xl:inline-flex">
               {mounted && !isMac ? "Ctrl K" : "⌘K"}
             </kbd>
           </Button>
@@ -193,7 +193,7 @@ export function SiteHeader() {
           keeps each label on one line. 'Gaps' shortLabel prevents "Skill Gaps"
           from wrapping/clipping at 375px width. px-0.5 keeps all 7 tabs visible
           inside the 375px viewport without horizontal scroll. */}
-      <nav className="md:hidden flex items-center gap-0 overflow-x-auto px-2 pb-2 -mt-1 no-scrollbar pl-safe pr-safe">
+      <nav className="lg:hidden flex items-center gap-0 overflow-x-auto px-2 pb-2 -mt-1 no-scrollbar pl-safe pr-safe">
         {NAV.map((item) => {
           const requiresSession = NAV_REQUIRES_SESSION.includes(item.id);
           const needsTwoSessions = item.id === "compare";

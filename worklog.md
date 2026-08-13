@@ -3121,3 +3121,233 @@ All P0–P6 features working. Round 6 QA passed with **zero bugs**. Added six hi
 4. **P3 — Resume Builder Suggestions**: Actionable suggestions for what to add to the resume based on gaps
 5. **P4 — Dark Mode Premium Polish**: Ensure all new glassmorphism/glow effects are optimized for dark mode
 6. **P5 — Performance**: Lazy-load heavy components (SkillRadar, SkillHeatmap) with React.lazy()
+
+---
+
+# Round 7 — QA-Driven Bug Fix + 3 New Features + Premium Styling
+
+> **Started**: Round 7 (cron-review) — QA found 1 P0 bug + adding 3 high-impact features
+
+## Round 7 — Work In Progress
+
+### QA Findings (agent-browser)
+
+- ✅ End-to-end demo flow verified (home → candidate → match → gaps → interview ×6 → evaluation → readiness → roadmap)
+- ✅ Dark mode, achievement gallery, command palette all functional
+- ✅ Lint clean (0 errors, 0 warnings), dev server stable
+- 🐛 **P0 Bug**: Body horizontal overflow (143px on 1280px viewport) — header nav had 8 items + 5 right-side controls exceeding `max-w-6xl` container at md breakpoint.
+
+### Round 7 — Plan
+
+1. **Fix P0 overflow bug** — change header nav breakpoint md→lg + add `overflow-x: hidden` to body (DONE)
+2. **New Feature: Interview Question Bank modal** — browse all 60+ questions by competency/difficulty before starting (Task 7-a)
+3. **New Feature: Resume Improvement Suggestions** — actionable resume additions derived from detected gaps (Task 7-b)
+4. **New Feature: Export format dropdown** — JSON + Markdown file download alongside PDF (Task 7-c)
+5. **Premium CSS utilities** — spotlight-card, gradient-border-anim, stagger-fade, shine-line + view integration (Task 7-d)
+
+---
+Task ID: 7-c
+Agent: full-stack-developer (Export Dropdown)
+Task: Enhance export-results.tsx with a dropdown menu offering Copy Markdown, Download .md, and Download .json alongside existing PDF.
+
+Work Log:
+- Read worklog.md (Round 6 + Round 7 sections) and existing `export-results.tsx` to understand the current clipboard-only export + print-to-PDF flow, plus `types.ts` for the session data shapes and `dropdown-menu.tsx` to confirm the shadcn component exports.
+- Added imports for the DropdownMenu primitives (`DropdownMenu`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuLabel`, `DropdownMenuSeparator`, `DropdownMenuTrigger`) and merged the new lucide icons (`ChevronDown`, `FileJson`, `FileText`) into the existing icon import alongside `Copy`, `Check`, `FileDown`.
+- Added a module-scope `downloadBlob(content, filename, type)` helper that creates a Blob, an object URL, a temporary `<a>` appended to `document.body`, triggers `.click()`, then revokes the URL — used by both file-download handlers.
+- Extracted the markdown-building logic from the old `handleExport` into a `buildMarkdown` `useCallback` that returns the assembled string, with deps `[candidate, job, match, gaps, interview, readiness, roadmap]` so memoization stays stable.
+- Renamed the clipboard handler to `handleCopyMarkdown` (calls `buildMarkdown()`, writes to `navigator.clipboard`, toggles `copied` for 2s, toasts success/error). Reuses `buildMarkdown` so clipboard + .md output are byte-identical.
+- Added `handleDownloadMarkdown` — builds the markdown, calls `downloadBlob(..., "hiremind-assessment.md", "text/markdown;charset=utf-8")`, toasts "Markdown downloaded", sets `downloaded("md")` for 2s.
+- Added `handleDownloadJson` — assembles a `{ generatedAt, app, version, candidate, job, match, gaps, interview, readiness, roadmap }` payload (null-coalescing every optional slice), `JSON.stringify(payload, null, 2)`, downloads as `hiremind-assessment.json` with `application/json;charset=utf-8`, toasts "JSON downloaded", sets `downloaded("json")` for 2s.
+- Added a new `downloaded` state (`string | null`) alongside the existing `copied` and `printing` states for the per-item "Downloaded" feedback.
+- Replaced the old "Export results" button with a `<DropdownMenu>` whose trigger shows `FileDown` + "Export" + `ChevronDown`; the menu offers a labeled "Export format" header followed by three items — Copy Markdown (Copy/Check icon, "Copied!" feedback), Download .md (FileText/Check icon, "Downloaded" feedback), Download .json (FileJson/Check icon, "Downloaded" feedback).
+- Left the existing "Download PDF" button and its `printing`/`printingRef` double-rAF + afterprint + 30s fallback teardown logic completely unchanged.
+- Ran `cd /home/z/my-project && bun run lint` — 0 errors, 0 warnings. Verified dev.log shows clean compiles with no runtime errors after the edit.
+
+Stage Summary:
+- Modified: `src/components/hiremind/export-results.tsx` (only file touched).
+- Lint status: pass (0 errors, 0 warnings).
+- Key decisions: (a) Extracted `buildMarkdown` as a shared `useCallback` so clipboard + .md download can never drift apart; (b) used a single `downloaded: string | null` state to drive both .md and .json "Downloaded" feedback rather than two booleans; (c) module-scope `downloadBlob` keeps the component body lean and is reusable; (d) JSON payload includes a `generatedAt`/`app`/`version` envelope so downloaded files are self-describing; (e) kept `onClick` on `DropdownMenuItem` per spec (Radix still auto-closes the menu on select).
+
+
+---
+
+Task ID: 7-b
+Agent: full-stack-developer (Resume Suggestions)
+Task: Build Resume Improvement Suggestions panel with deterministic gap-based suggestions, integrate into gaps-view as collapsible.
+
+Work Log:
+- Read worklog.md (Round 5b → Round 7), gaps-view.tsx (full structure), types.ts (SkillGap/SkillLevel), taxonomy.ts, gap-deep-dive.tsx (CATEGORY_BADGE + PriorityPill conventions), and scanned globals.css for `hm-glass-panel` + `hm-card-lift` (both exist — used them directly).
+- Created `/home/z/my-project/src/components/hiremind/resume-suggestions.tsx`:
+  - `"use client"` component exporting `ResumeSuggestions({ gaps }: { gaps: SkillGap[] })`.
+  - Inlined a local `CATEGORY_BADGE` map + `CategoryBadge` helper that mirrors gaps-view.tsx exactly (so the panel stays portable / decoupled from gaps-view internals, matching the gap-deep-dive.tsx pattern).
+  - Added a color-coded `LEVEL_BADGE` / `LevelBadge` for candidate-level labels: unknown → critical tint, weak → warning tint, moderate → accent-blue tint, strong → success tint.
+  - `buildSuggestion(gap)` — pure deterministic switch on `candidateLevel`:
+    - `unknown`  → "Add a project or work experience demonstrating {competency}. Even a personal project counts."
+    - `weak`     → "Strengthen your {competency} evidence — quantify impact (e.g. 'reduced latency by 40%') and mention specific tools/methods."
+    - `moderate` → "Add depth to your {competency} mention — include scale, tradeoffs, and outcomes."
+    - `strong`   → returns `null` (skipped — no suggestion needed).
+  - `deriveSuggestions(gaps)` slices top 6 gaps, filters out `null` suggestions, returns `{ gap, text }[]`.
+  - `SuggestionCard` — premium card with: competency name + category badge, priority pill, level badge, suggestion text, and a ghost copy button. Copy button uses `navigator.clipboard.writeText`, swaps to a check icon for 2s, calls `toast.success("Suggestion copied")`. On clipboard failure (insecure context / no focus), surfaces `toast.error("Couldn't copy — please copy manually.")`. Uses `React.useCallback` to keep the handler stable across renders.
+  - Card styling: `hm-card-lift hm-elevated rounded-xl p-4 sm:p-5 bg-card/60 border border-border/60` — uses existing CSS utilities (no globals.css changes).
+  - Framer Motion staggered fade-in: `listVariants` (staggerChildren: 0.06) + `itemVariants` (opacity 0→1, y 10→0, ease [0.22, 1, 0.36, 1]).
+  - Panel uses shadcn `Collapsible` + `CollapsibleTrigger` + `CollapsibleContent`. Default `open=false`.
+  - Trigger button: large icon tile (`FileText`), title "Resume improvement suggestions", subtitle "Concrete additions to strengthen your resume, derived from your detected gaps.", an "{n} actionable" pill with `Sparkles` icon, and a chevron that rotates 180° when open. Trigger has `aria-expanded` and `aria-controls="resume-suggestions-content"`.
+  - Collapsible content wrapped in `AnimatePresence` + motion height-auto animation. Includes a divider, the grid of cards (sm:grid-cols-2), and a footnote explaining the suggestions are deterministic.
+  - Empty state: if `suggestions.length === 0` (every gap is `strong`), returns `null` rather than rendering an empty collapsible.
+- Integrated into `/home/z/my-project/src/components/hiremind/gaps-view.tsx`:
+  - Added `import { ResumeSuggestions } from "./resume-suggestions";`.
+  - Placed `<ResumeSuggestions gaps={gaps} />` inside a `motion.div` (fade-in, delay 0.15, ease [0.22, 1, 0.36, 1], `mt-6`) AFTER the "Other open gaps" section and BEFORE the `<GapDeepDive />` modal — matching the surrounding animation pattern.
+  - The `gaps` variable is already destructured from the store at the top of GapsView — no additional plumbing needed.
+- Did NOT modify globals.css, page.tsx, interview-view.tsx, export-results.tsx, shell.tsx, home-view.tsx, match-view.tsx (per constraints).
+- Accessibility: collapsible trigger has `aria-expanded` + `aria-controls`; each copy button has a descriptive `aria-label` (e.g. "Copy suggestion for System Design"); focus-visible rings on all interactive elements; semantic heading hierarchy.
+- TypeScript strict: no `any`, no unused vars. All types pulled from `@/lib/types`.
+- Ran `cd /home/z/my-project && bun run lint` → 0 errors, 0 warnings.
+- Verified dev server log: `✓ Compiled in Nms` with no errors after the edit — hot reload picked up both the new file and the gaps-view import change cleanly.
+
+Stage Summary:
+- Created: `/home/z/my-project/src/components/hiremind/resume-suggestions.tsx`
+- Modified: `/home/z/my-project/src/components/hiremind/gaps-view.tsx` (added import + one `<ResumeSuggestions />` motion.div block)
+- Lint status: PASS (0 errors, 0 warnings)
+- Key decisions:
+  1. Inlined `CATEGORY_BADGE` locally rather than importing from gaps-view — matches the existing `gap-deep-dive.tsx` precedent ("kept locally so the modal is portable / not coupled to gaps-view internal exports") and keeps the component self-contained.
+  2. Added a separate `LEVEL_BADGE` for candidate-level labels (color-coded to match the gap-confidence zones used elsewhere) so the level is visible at a glance without needing to read the suggestion text.
+  3. Hidden the entire panel when `suggestions.length === 0` (all gaps already strong) instead of showing an empty "0 actionable" collapsible — cleaner UX, no dead UI.
+  4. Used `React.useCallback` for the copy handler + `React.useMemo` for `deriveSuggestions` to keep the card list referentially stable across parent re-renders.
+  5. Copy button uses ghost styling (no border, muted text → foreground on hover) so it doesn't compete visually with the suggestion text — the text is the primary content.
+
+---
+
+Task ID: 7-a
+Agent: full-stack-developer (Question Bank Modal)
+Task: Build Interview Question Bank modal with filter/search, wire into page.tsx, add keyboard shortcut 'q', add entry button in interview-view.
+
+Work Log:
+- Read worklog.md Round 6 + Round 7 sections to understand current project state (stable, 9 views + modals, premium styling utilities already in place).
+- Read reference files: about-modal.tsx (Dialog pattern), achievement-gallery.tsx (full-screen modal with stagger), page.tsx (custom event wiring), use-keyboard-shortcuts.ts (keyboard shortcut pattern), engine.ts lines 243-341 (QUESTION_BANK source — 18 competencies, 47 questions, categories: system_design/backend/devops/cloud/ml/languages/communication), types.ts (InterviewQuestion shape), interview-view.tsx (difficulty picker + Begin interview button location).
+- Scanned globals.css for existing utilities: confirmed `no-scrollbar`, `custom-scrollbar-dark`, and global `::-webkit-scrollbar` styling. Did NOT modify globals.css per constraint.
+- Created `/home/z/my-project/src/components/hiremind/question-bank-modal.tsx` (~360 LOC):
+  - `"use client"` component with signature `QuestionBankModal({ open, onClose })`.
+  - Uses shadcn `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription` (DialogOverlay is auto-rendered by DialogContent per shadcn implementation).
+  - Flattens `QUESTION_BANK` into a module-level `ALL_ENTRIES` array (memoized once) + computes `TOTAL_QUESTIONS` / `TOTAL_COMPETENCIES` for the stats summary.
+  - Modal layout: `flex flex-col max-h-[85vh]` with `DialogHeader` (title + description + close button), sticky filter bar (`sticky top-0 z-10 backdrop-blur-xl bg-background/80`), scrollable question list (`flex-1 min-h-0 overflow-y-auto`), and footer (note + buttons).
+  - Filter bar: `Input` with Search icon, difficulty toggle buttons (All/Easy/Medium/Hard) in a secondary-grouped pill row, category pill buttons (All/Systems/Backend/ML/DevOps/Cloud/Communication) with `no-scrollbar` horizontal scroll, and a stats summary line showing `X of TOTAL questions across Y of TOTAL skills` (with conditional `of TOTAL` when filters active).
+  - Question list grouped by competency (preserving QUESTION_BANK insertion order via `Object.keys(QUESTION_BANK).filter`), each section header shows competency name + category badge + question count. Each question row shows the question text + difficulty badge (color-coded easy=success / medium=warning / hard=critical) + mode badge (Tech=accent-blue / HR=warning).
+  - Framer Motion staggered fade-in for sections (`sectionVariants` with custom index → delay `i * 0.04`, capped at 0.4s).
+  - Empty state: friendly icon + message + "Clear all filters" button.
+  - Footer: note about adaptive question selection + "Reset filters" (conditional, only shown when filters active) + "Close" + "Start interview" buttons. "Start interview" closes the modal and dispatches `hm-navigate-interview` custom event (deferred via `setTimeout(..., 0)` so close transition starts cleanly).
+  - Inlined `CATEGORY_BADGE` + `CategoryBadge` helper locally (matches `gap-deep-dive.tsx` precedent — keeps modal portable / decoupled from gaps-view internal exports).
+  - Filters reset to defaults 250ms after the modal closes (after the close transition) so reopening starts fresh.
+  - Accessibility: proper ARIA via Dialog primitives, `aria-pressed` on toggle buttons, `role="group"` + `aria-label` on filter groups, `aria-label` on close button, `DialogDescription` (sr-only) for screen readers. Escape to close handled by Radix Dialog.
+- Modified `/home/z/my-project/src/app/page.tsx`:
+  - Added `import { QuestionBankModal } from "@/components/hiremind/question-bank-modal";`
+  - Added `const [showQuestionBank, setShowQuestionBank] = React.useState(false);` next to existing modal state.
+  - Added `useEffect` listening for `hm-show-question-bank` event → sets state to `true` (same pattern as showAchievements/showAbout).
+  - Added a separate `useEffect` listening for `hm-navigate-interview` event → calls `useHireMind.getState().setView("interview")` AND `setShowQuestionBank(false)` so the user lands on a clean interview screen after clicking "Start interview" in the question bank.
+  - Rendered `<QuestionBankModal open={showQuestionBank} onClose={() => setShowQuestionBank(false)} />` next to `<AboutModal>` in the JSX.
+- Modified `/home/z/my-project/src/hooks/use-keyboard-shortcuts.ts`:
+  - Added `Library` to lucide imports? No — not needed in this file (it's only icons in the hook).
+  - Added a new `if (key === "q")` block right after the `g` shortcut block: `e.preventDefault(); document.dispatchEvent(new CustomEvent("hm-show-question-bank")); return;`.
+- Modified `/home/z/my-project/src/components/hiremind/interview-view.tsx`:
+  - Added `Library` icon to the lucide-react imports.
+  - Replaced the standalone `<Button>Begin interview</Button>` block with a `flex flex-wrap items-center justify-center gap-3` row containing the existing "Begin interview" primary button + a new `variant="ghost"` secondary "Browse questions" button (`h-12 px-5 text-muted-foreground hover:text-foreground gap-1.5`, with `Library` icon) that dispatches `hm-show-question-bank`.
+- Ran `bun run lint` → 0 errors, 0 warnings.
+- Verified dev server stable (read recent `dev.log` entries — `✓ Compiled in ...ms` lines, all `200` responses, no runtime errors).
+
+Stage Summary:
+- Created: `src/components/hiremind/question-bank-modal.tsx` (~360 LOC)
+- Modified: `src/app/page.tsx` (+16 LOC: import + state + 2 useEffects + 1 JSX render), `src/hooks/use-keyboard-shortcuts.ts` (+7 LOC: 'q' shortcut block), `src/components/hiremind/interview-view.tsx` (+10 LOC: Library import + "Browse questions" button in a flex-wrap row)
+- Lint status: PASS (0 errors, 0 warnings)
+- Key decisions:
+  1. Followed the spec's category list strictly (All/Systems/Backend/ML/DevOps/Cloud/Communication) — Python questions (category=`languages`) appear under "All" and are searchable by text but not under a specific category filter. This matches the spec verbatim.
+  2. Used `flex-1 min-h-0 overflow-y-auto` for the question list scroll container (instead of a fixed `max-h-[55vh]`) so the layout is robust across viewport sizes — the modal's `max-h-[85vh]` caps total height and the list flexes to fill remaining space. This naturally results in ~55vh on a typical desktop viewport.
+  3. Sticky filter bar uses `sticky top-0` inside the scroll container (not as a sibling outside), so the filter bar stays pinned while the question list scrolls under it. This matches the spec's "sticky top inside content" requirement.
+  4. Deferred the `hm-navigate-interview` dispatch with `setTimeout(..., 0)` after `onClose()` so the Dialog's close transition can start cleanly before the view switches underneath.
+  5. Reset filters 250ms after modal closes (after the close transition completes) so reopening shows the full bank by default. Avoids visual jank during the close transition.
+  6. Conditional "of TOTAL" in the stats summary — only shows "X of TOTAL" when filters are active, keeping the default state clean ("47 questions across 18 skills").
+  7. Added a "Reset filters" ghost button in the footer that only appears when any filter is active — gives users a quick escape hatch without cluttering the default footer.
+  8. Inlined `CATEGORY_BADGE` + `DIFFICULTY_BADGE` locally rather than importing from gaps-view — matches the existing `gap-deep-dive.tsx` precedent ("kept locally so the modal is portable / not coupled to gaps-view internal exports") and avoids touching gaps-view.tsx (which another agent owns).
+
+---
+
+## Round 7 — Three-Section Handover Summary (FINAL)
+
+### 1. Current Project Status (Assessment)
+
+- **Stability**: ✅ Dev server stable, all routes 200, zero runtime errors.
+- **Lint**: ✅ `bun run lint` returns 0 errors, 0 warnings.
+- **QA (agent-browser)**: ✅ End-to-end demo flow re-verified after all changes — home (grid-fade + shine-line textures) → candidate → match (spotlight card + stagger-fade grid) → gaps (resume suggestions panel expanded, 6 actionable items with copy buttons) → interview (question bank modal opened via 'q' shortcut, search filter verified) → evaluation → readiness (gradient-border-anim on score card, animated) → roadmap.
+- **Overflow bug (P0)**: ✅ FIXED — body scrollWidth now equals clientWidth at 1280px (was 1423→1280). Theme toggle button confirmed visible at right=1248.
+- **New features verified**: ✅ Question Bank modal (47 questions, 18 competencies, search + difficulty + category filters), Resume Suggestions (6 deterministic suggestions with copy), Export dropdown (Copy Markdown / Download .md / Download .json).
+- **New CSS utilities verified in DOM**: ✅ `hm-spotlight-card` (match score, template cards), `hm-gradient-border-anim` (readiness score, animating), `hm-stagger-fade` (match competency grid), `hm-shine-line` (home hero badge), `hm-grid-fade` (home hero texture).
+- **Dark mode**: ✅ No regressions (tested via theme toggle).
+- **Build**: Not run (per project rules — only `bun run lint`).
+
+### 2. Goals / Completed Modifications / Verification
+
+**P0 Bug Fix — Header horizontal overflow:**
+- Root cause: Header inner div (`max-w-6xl` = 1152px) contained logo (159px) + 8-button desktop nav (660px) + right cluster (476px with text labels) = 1359px → 207px overflow → right-side buttons clipped/invisible.
+- Fix: (a) Changed header container `max-w-6xl` → `max-w-7xl` (1280px). (b) Changed text label breakpoints: "Start over" `sm:inline`→`2xl:inline`, "Search commands…" `lg:inline`→`2xl:inline`, kbd `sm:inline-flex`→`2xl:inline-flex`. (c) Desktop nav breakpoint kept at `lg:flex` (1024px+), mobile nav at `lg:hidden`. (d) Added defensive `overflow-x: hidden` to body in globals.css.
+- Verification: `document.body.scrollWidth` (1280) === `clientWidth` (1280); theme button `getBoundingClientRect().right` = 1248 ≤ viewport 1280. ✅
+
+**New Features (3):**
+
+| # | Feature | Component | Entry Point | Verification |
+|---|---------|-----------|-------------|--------------|
+| 1 | Interview Question Bank | `question-bank-modal.tsx` (new, ~360 LOC) | 'q' keyboard shortcut + "Browse questions" button in interview-view + wired in page.tsx | Opened via 'q', searched "cache" → only Caching competency showed ✅ |
+| 2 | Resume Improvement Suggestions | `resume-suggestions.tsx` (new) | Collapsible panel in gaps-view after "Other open gaps" | Expanded, 6 suggestions shown with copy buttons, deterministic text per candidateLevel ✅ |
+| 3 | Export format dropdown | `export-results.tsx` (enhanced) | Replaces "Export results" button in readiness-view | Dropdown opened, 3 items: Copy Markdown / Download .md / Download .json ✅ |
+
+**New CSS Utilities (5) + Integration:**
+
+| Utility | Effect | Integrated In |
+|---------|--------|---------------|
+| `hm-spotlight-card` | Mouse-follow radial spotlight glow (via --mx/--my CSS vars) | job-template-picker (cards), match-view (score card) |
+| `hm-gradient-border-anim` | Rotating conic-gradient border (@property + fallback) | readiness-view (score card) |
+| `hm-stagger-fade` | Staggered fade+slide-up for list items (nth-child delays) | match-view (competency grid) |
+| `hm-shine-line` | Light sweep across element (5s loop) | home-view (hero badge) |
+| `hm-grid-fade` | Subtle grid texture with radial mask fade | home-view (hero background) |
+
+All new utilities respect `prefers-reduced-motion: reduce` (animations disabled, transforms reset).
+
+**New Keyboard Shortcut:**
+- `q` — Toggle Interview Question Bank modal
+
+### 3. Unresolved Issues / Risks / Priority Recommendations
+
+**No critical issues.** Minor observations:
+
+1. **Question Bank shows ALL bank questions, not session-specific**: The modal shows the full QUESTION_BANK (47 questions across 18 competencies). It doesn't pre-filter to the user's specific gaps. This is intentional (transparency about the full bank) but could be enhanced with a "Show only my gaps" toggle. **Low priority** — current design is more transparent.
+
+2. **Export JSON includes raw internal types**: The JSON export serializes the full session objects (candidate, match, gaps, etc.) which include internal fields. This is fine for technical users but could be confusing. **Low priority** — could add a "cleaned" JSON variant with only user-facing fields.
+
+3. **Gradient border animation uses @property**: The `hm-gradient-border-anim` uses CSS `@property --hm-gradient-angle` for smooth angle animation. A `@supports` fallback rotates the whole pseudo-element via `transform: rotate()`, but this is slightly less elegant (rotates the gradient position rather than the angle). Modern browsers (Chrome 85+, Firefox 128+, Safari 16.4+) support @property. **No action needed** — graceful fallback in place.
+
+4. **Spotlight mouse-follow is desktop-only**: The `hm-spotlight-card` mouse-follow only works with a mouse (onMouseMove). On touch devices, the spotlight shows centered (default --mx: 50%, --my: 0%) on hover via :hover. This is acceptable — touch users get a static glow. **No action needed**.
+
+**Next Phase Recommendations (Priority Order):**
+
+1. **P1 — Session comparison timeline**: Visual timeline showing score progression across multiple sessions (the compare view currently shows deltas but no timeline visualization).
+2. **P2 — Question Bank "Practice mode"**: Let users answer bank questions outside the interview for practice, without affecting their session score.
+3. **P3 — Resume Suggestions "Apply" action**: Add a button to each resume suggestion that pre-fills the resume text field with a template entry.
+4. **P4 — Performance**: Lazy-load heavy components (SkillRadar, SkillHeatmap, QuestionBankModal) with React.lazy() + Suspense to reduce initial bundle.
+5. **P5 — Accessibility audit**: Run a full axe-core audit on the new modals and dropdown to ensure WCAG AA compliance.
+
+### Round 7 — Files Modified
+
+**New files (2):**
+- `src/components/hiremind/question-bank-modal.tsx` (Task 7-a)
+- `src/components/hiremind/resume-suggestions.tsx` (Task 7-b)
+
+**Modified files (7):**
+- `src/app/globals.css` — 5 new CSS utilities + reduced-motion rules + body overflow-x:hidden
+- `src/components/hiremind/shell.tsx` — header max-w-7xl, label breakpoints 2xl, nav breakpoint lg
+- `src/app/page.tsx` — QuestionBankModal state + event listeners (Task 7-a)
+- `src/hooks/use-keyboard-shortcuts.ts` — 'q' shortcut (Task 7-a)
+- `src/components/hiremind/interview-view.tsx` — "Browse questions" button (Task 7-a)
+- `src/components/hiremind/gaps-view.tsx` — ResumeSuggestions integration (Task 7-b)
+- `src/components/hiremind/export-results.tsx` — export dropdown with JSON/MD (Task 7-c)
+- `src/components/hiremind/home-view.tsx` — grid-fade + shine-line (Task 7-d)
+- `src/components/hiremind/job-template-picker.tsx` — spotlight-card + mouse-follow (Task 7-d)
+- `src/components/hiremind/match-view.tsx` — spotlight-card on score + stagger-fade grid (Task 7-d)
+- `src/components/hiremind/readiness-view.tsx` — gradient-border-anim on score (Task 7-d)
+

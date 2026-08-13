@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useHireMind } from "@/lib/store";
 import { PriorityPill, CompetencyBar } from "./shell";
 import { GapDeepDive } from "./gap-deep-dive";
+import { ResumeSuggestions } from "./resume-suggestions";
 import type { CompetencyCategory, SkillGap, SkillLevel } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { SkillConfidenceMeter } from "./skill-confidence-meter";
@@ -506,6 +507,16 @@ export function GapsView() {
           </div>
         </motion.div>
       )}
+
+      {/* Resume improvement suggestions — derived from the detected gaps. */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+        className="mt-6"
+      >
+        <ResumeSuggestions gaps={gaps} />
+      </motion.div>
 
       {/* Skill Gap Deep-Dive modal — controlled by deepDiveGap state. */}
       <GapDeepDive

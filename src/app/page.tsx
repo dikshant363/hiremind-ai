@@ -18,6 +18,7 @@ import { CommandPalette } from "@/components/hiremind/command-palette";
 import { OnboardingTooltip } from "@/components/hiremind/onboarding-tooltip";
 import { AchievementGallery } from "@/components/hiremind/achievement-gallery";
 import { AboutModal } from "@/components/hiremind/about-modal";
+import { QuestionBankModal } from "@/components/hiremind/question-bank-modal";
 import { FlowProgress } from "@/components/hiremind/flow-progress";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -37,6 +38,9 @@ export default function Home() {
 
   // About modal state
   const [showAbout, setShowAbout] = React.useState(false);
+
+  // Question bank modal state
+  const [showQuestionBank, setShowQuestionBank] = React.useState(false);
 
   // Hydrate from URL hash on initial mount
   const hydratedRef = React.useRef(false);
@@ -88,6 +92,25 @@ export default function Home() {
     const handler = () => setShowAbout(true);
     document.addEventListener("hm-show-about", handler);
     return () => document.removeEventListener("hm-show-about", handler);
+  }, []);
+
+  // Listen for question bank modal open event (from interview-view button + 'q' keyboard shortcut)
+  useEffect(() => {
+    const handler = () => setShowQuestionBank(true);
+    document.addEventListener("hm-show-question-bank", handler);
+    return () => document.removeEventListener("hm-show-question-bank", handler);
+  }, []);
+
+  // Listen for "Start interview" CTA from question bank modal — navigate to
+  // interview view AND close the question bank modal so the user lands on a
+  // clean interview screen.
+  useEffect(() => {
+    const handler = () => {
+      setShowQuestionBank(false);
+      useHireMind.getState().setView("interview");
+    };
+    document.addEventListener("hm-navigate-interview", handler);
+    return () => document.removeEventListener("hm-navigate-interview", handler);
   }, []);
 
   // ─── Achievement detection ───
@@ -228,6 +251,7 @@ export default function Home() {
       <CommandPalette />
       <AchievementGallery open={showAchievements} onClose={() => setShowAchievements(false)} />
       <AboutModal open={showAbout} onClose={() => setShowAbout(false)} />
+      <QuestionBankModal open={showQuestionBank} onClose={() => setShowQuestionBank(false)} />
       {view === "home" && <OnboardingTooltip />}
     </>
   );

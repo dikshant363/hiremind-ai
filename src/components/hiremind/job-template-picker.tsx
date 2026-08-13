@@ -109,10 +109,22 @@ const JobTemplateCard = React.memo(function JobTemplateCard({
   const Icon = ICON_MAP[template.icon] ?? BrainCircuit;
   const style = CATEGORY_STYLES[template.category];
 
+  // Mouse-follow spotlight — updates CSS custom properties --mx/--my on the
+  // card so the radial glow tracks the cursor. Wrapped in a stable callback
+  // so React doesn't re-create the handler each render.
+  const handleMouseMove = React.useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    e.currentTarget.style.setProperty("--mx", `${x}%`);
+    e.currentTarget.style.setProperty("--my", `${y}%`);
+  }, []);
+
   return (
     <motion.button
       type="button"
       onClick={() => onSelect(template)}
+      onMouseMove={handleMouseMove}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
@@ -125,7 +137,7 @@ const JobTemplateCard = React.memo(function JobTemplateCard({
       aria-label={`Use ${template.title} template`}
       title={`${template.title} — click to pre-fill`}
       className={cn(
-        "group hm-template-card hm-card-lift relative flex flex-col text-left",
+        "group hm-template-card hm-card-lift hm-spotlight-card relative flex flex-col text-left",
         "p-3 rounded-xl",
         "bg-card border border-border/60",
         "transition-[transform,border-color,box-shadow] duration-200 ease-out",

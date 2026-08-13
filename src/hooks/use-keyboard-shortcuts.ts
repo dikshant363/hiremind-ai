@@ -140,6 +140,13 @@ export function useKeyboardShortcuts() {
         document.dispatchEvent(new CustomEvent("hm-show-about"));
         return;
       }
+
+      // q: Show question bank
+      if (key === "q") {
+        e.preventDefault();
+        document.dispatchEvent(new CustomEvent("hm-show-question-bank"));
+        return;
+      }
     },
     [
       view,

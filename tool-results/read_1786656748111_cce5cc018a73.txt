@@ -1,0 +1,786 @@
+     1→"use client";
+     2→
+     3→/**
+     4→ * HIREMIND AI — Skill Gap Deep-Dive Modal
+     5→ *
+     6→ * Opens when a user clicks any gap card in the gaps view. Shows deterministic,
+     7→ * genuinely-useful learning resources, warm-up interview questions, a progress
+     8→ * trajectory bar, and clear CTAs — all derived from the gap's category,
+     9→ * importance, candidateLevel and priorityScore. No AI calls.
+    10→ */
+    11→
+    12→import * as React from "react";
+    13→import { motion } from "framer-motion";
+    14→import {
+    15→  BookOpen,
+    16→  Wrench,
+    17→  GraduationCap,
+    18→  MessageSquareQuote,
+    19→  TrendingUp,
+    20→  Target,
+    21→  Clock,
+    22→  ArrowRight,
+    23→  Sparkles,
+    24→  ListChecks,
+    25→} from "lucide-react";
+    26→import { Dialog, DialogContent, DialogDescription } from "@/components/ui/dialog";
+    27→import { Button } from "@/components/ui/button";
+    28→import { PriorityPill } from "./shell";
+    29→import { useHireMind } from "@/lib/store";
+    30→import { toast } from "sonner";
+    31→import type { CompetencyCategory, SkillGap } from "@/lib/types";
+    32→import { cn } from "@/lib/utils";
+    33→
+    34→/* ---------------------------------------------------------------------------
+    35→ * Category badge (kept locally so the modal is portable / not coupled to
+    36→ * gaps-view internal exports). Styling mirrors gaps-view exactly.
+    37→ * ------------------------------------------------------------------------- */
+    38→const CATEGORY_BADGE: Record<CompetencyCategory, { label: string; cls: string }> = {
+    39→  system_design: { label: "Systems", cls: "bg-accent-blue/15 text-accent-blue-foreground" },
+    40→  backend: { label: "Backend", cls: "bg-success/15 text-success-foreground" },
+    41→  frontend: { label: "Frontend", cls: "bg-chart-3/15 text-chart-3" },
+    42→  data: { label: "Data", cls: "bg-warning/15 text-warning-foreground" },
+    43→  ml: { label: "ML", cls: "bg-accent-blue/15 text-accent-blue-foreground" },
+    44→  cloud: { label: "Cloud", cls: "bg-chart-4/15 text-chart-4" },
+    45→  devops: { label: "DevOps", cls: "bg-chart-5/15 text-chart-5" },
+    46→  languages: { label: "Lang", cls: "bg-chart-2/15 text-chart-2" },
+    47→  communication: { label: "Comm", cls: "bg-success/15 text-success-foreground" },
+    48→  domain: { label: "Domain", cls: "bg-muted text-muted-foreground" },
+    49→};
+    50→
+    51→function CategoryBadge({ category }: { category: CompetencyCategory }) {
+    52→  const cfg = CATEGORY_BADGE[category] ?? CATEGORY_BADGE.domain;
+    53→  return (
+    54→    <span
+    55→      className={cn(
+    56→        "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+    57→        cfg.cls
+    58→      )}
+    59→    >
+    60→      {cfg.label}
+    61→    </span>
+    62→  );
+    63→}
+    64→
+    65→/* ---------------------------------------------------------------------------
+    66→ * Deterministic maps — drive every numeric / textual value in this modal.
+    67→ * No AI calls; everything is derived from the gap's fields.
+    68→ * ------------------------------------------------------------------------- */
+    69→const CANDIDATE_LEVEL_PCT: Record<string, number> = {
+    70→  unknown: 5,
+    71→  weak: 25,
+    72→  moderate: 55,
+    73→  strong: 85,
+    74→};
+    75→
+    76→const IMPORTANCE_PCT: Record<string, number> = {
+    77→  critical: 95,
+    78→  high: 80,
+    79→  medium: 60,
+    80→  low: 40,
+    81→};
+    82→
+    83→const TIME_TO_CLOSE: Record<SkillGap["priority"], string> = {
+    84→  critical: "2–4 weeks",
+    85→  high: "1–2 weeks",
+    86→  medium: "3–5 days",
+    87→  low: "1–2 days",
+    88→};
+    89→
+    90→/* ---------------------------------------------------------------------------
+    91→ * LEARNING_RESOURCES — keyed by CompetencyCategory.
+    92→ * Every entry is a real, verifiable book / course / project. 2–3 items each.
+    93→ * ------------------------------------------------------------------------- */
+    94→const LEARNING_RESOURCES: Record<
+    95→  CompetencyCategory,
+    96→  { readings: string[]; projects: string[]; courses: string[] }
+    97→> = {
+    98→  system_design: {
+    99→    readings: [
+   100→      "Designing Data-Intensive Applications — Kleppmann",
+   101→      "System Design Interview — Alex Xu, Vol. 1",
+   102→      "The System Design Primer (github.com/donnemartin/system-design-primer)",
+   103→    ],
+   104→    projects: [
+   105→      "Design a URL shortener end-to-end (storage, caching, encoding)",
+   106→      "Sketch a notification fan-out system for 10M users",
+   107→      "Implement a rate limiter (token bucket) in your language of choice",
+   108→    ],
+   109→    courses: [
+   110→      "Grokking the System Design Interview — DesignGurus",
+   111→      "MIT 6.824: Distributed Systems (free lecture notes)",
+   112→    ],
+   113→  },
+   114→  backend: {
+   115→    readings: [
+   116→      "Designing Data-Intensive Applications — Kleppmann, Ch. 6–7 (Partitioning & Transactions)",
+   117→      "Clean Architecture — Robert C. Martin",
+   118→      "The Twelve-Factor App (12factor.net)",
+   119→    ],
+   120→    projects: [
+   121→      "Build an idempotent REST API for payments with retry semantics",
+   122→      "Implement a job queue with dead-letter handling and exponential backoff",
+   123→      "Add optimistic concurrency control to a CRUD service using ETags",
+   124→    ],
+   125→    courses: [
+   126→      "MIT 6.5840 (was 6.824) Distributed Systems labs — Raft + KV store",
+   127→      "Backend Engineering with Hussein Nasser — YouTube series",
+   128→    ],
+   129→  },
+   130→  frontend: {
+   131→    readings: [
+   132→      "Refactoring UI — Wieruch & Schoger",
+   133→      "Frontend System Design — greatfrontend.com/system-design",
+   134→      "Web Performance in Action — Jeremy Wagner",
+   135→    ],
+   136→    projects: [
+   137→      "Build a virtualized list rendering 10K rows at 60fps",
+   138→      "Implement an accessible autocomplete with full keyboard nav + ARIA",
+   139→      "Create a data grid with sorting, filtering, and pagination",
+   140→    ],
+   141→    courses: [
+   142→      "Total TypeScript — Matt Pocock",
+   143→      "Epic React — Kent C. Dodds",
+   144→    ],
+   145→  },
+   146→  data: {
+   147→    readings: [
+   148→      "The Data Warehouse Toolkit — Kimball & Ross",
+   149→      "Designing Data-Intensive Applications — Kleppmann, Ch. 3 (Storage)",
+   150→      "Fundamentals of Data Engineering — Reis & Housley",
+   151→    ],
+   152→    projects: [
+   153→      "Build an incremental CDC pipeline from Postgres to a columnar store",
+   154→      "Model a star schema for an e-commerce funnel and write the ELT",
+   155→      "Implement a slow-changing-dimension (SCD2) loader with dbt",
+   156→    ],
+   157→    courses: [
+   158→      "DataTalks.Club Data Engineering Zoomcamp (free)",
+   159→      "Stanford CS246: Mining Massive Datasets",
+   160→    ],
+   161→  },
+   162→  ml: {
+   163→    readings: [
+   164→      "Hands-On Machine Learning — Géron (3rd ed.)",
+   165→      "Designing Machine Learning Systems — Chip Huyen",
+   166→      "Pattern Recognition and Machine Learning — Bishop",
+   167→    ],
+   168→    projects: [
+   169→      "Ship a fine-tuned text classifier with a serving endpoint + monitoring",
+   170→      "Build a feature-store PoC with online/offline parity",
+   171→      "Implement a RAG pipeline with offline + online evals",
+   172→    ],
+   173→    courses: [
+   174→      "Deep Learning Specialization — Andrew Ng (DeepLearning.AI)",
+   175→      "Full Stack Deep Learning (fullstackdeeplearning.com)",
+   176→    ],
+   177→  },
+   178→  cloud: {
+   179→    readings: [
+   180→      "AWS Well-Architected Framework (docs.aws.amazon.com/wellarchitected)",
+   181→      "Cloud Native Patterns — Jonathan Boccara",
+   182→      "Azure Architecture Center — Cloud Design Patterns",
+   183→    ],
+   184→    projects: [
+   185→      "Terraform a multi-AZ VPC + managed DB and deploy a stateless service",
+   186→      "Implement blue/green deployments with traffic shifting",
+   187→      "Design a cost-optimized storage strategy with lifecycle rules",
+   188→    ],
+   189→    courses: [
+   190→      "AWS Certified Solutions Architect — Associate (Adrian Cantrill)",
+   191→      "Google Cloud Solutions Architect learning path (cloud.google.com/training)",
+   192→    ],
+   193→  },
+   194→  devops: {
+   195→    readings: [
+   196→      "Site Reliability Engineering — Beyer et al. (Google, free online)",
+   197→      "The Phoenix Project — Kim, Behr & Spafford",
+   198→      "Accelerate — Forsgren, Humble & Kim",
+   199→    ],
+   200→    projects: [
+   201→      "Set up a CI/CD pipeline with tests, SBOM, and staged rollout",
+   202→      "Build an observability stack: metrics (Prometheus), traces (OTel), logs (Loki)",
+   203→      "Define SLOs + error budgets and a burn-rate alerting policy",
+   204→    ],
+   205→    courses: [
+   206→      "Kubernetes Fundamentals — KodeKloud / CNCF",
+   207→      "Linux Foundation LFS261: CI/CD",
+   208→    ],
+   209→  },
+   210→  languages: {
+   211→    readings: [
+   212→      "Effective Java — Joshua Bloch (or Effective Go / Effective TypeScript)",
+   213→      "Crafting Interpreters — Robert Nystrom (craftinginterpreters.com)",
+   214→      "Programming Language Pragmatics — Michael Scott",
+   215→    ],
+   216→    projects: [
+   217→      "Implement a small interpreter: lexer, parser, evaluator",
+   218→      "Port a non-trivial algorithm between two languages you use",
+   219→      "Write idiomatic stdlib helpers and benchmark vs. a naive impl",
+   220→    ],
+   221→    courses: [
+   222→      "MIT 6.S081 Operating Systems (Rust / C labs)",
+   223→      "Exercism track for your target language (mentored code review)",
+   224→    ],
+   225→  },
+   226→  communication: {
+   227→    readings: [
+   228→      "Articulating Design Decisions — Tom Greever",
+   229→      "Cracking the PM Interview — McDowell & Bavaro",
+   230→      "Thanks for the Feedback — Stone & Heen",
+   231→    ],
+   232→    projects: [
+   233→      "Write a 1-page ADR for a real technical decision you made",
+   234→      "Record a 5-min Loom explaining your system to a non-engineer",
+   235→      "Run a mock stakeholder Q&A and ship the FAQ doc afterwards",
+   236→    ],
+   237→    courses: [
+   238→      "Stanford GSB Strategic Communication (online short course)",
+   239→      "Tech Interview Handbook — Communication chapter (free)",
+   240→    ],
+   241→  },
+   242→  domain: {
+   243→    readings: [
+   244→      "Domain-Driven Design Distilled — Vaughn Vernon",
+   245→      "The Mom Test — Rob Fitzpatrick (talking to users / domain experts)",
+   246→      "Continuous Discovery Habits — Teresa Torres",
+   247→    ],
+   248→    projects: [
+   249→      "Run 3 user-expert interviews and distill a domain glossary",
+   250→      "Map the end-to-end business process you support and annotate bottlenecks",
+   251→      "Write a one-pager on the regulatory constraints of your domain",
+   252→    ],
+   253→    courses: [
+   254→      "DDD Europe learning track (dddeurope.com/learning)",
+   255→      "Pluralsight: Domain-Driven Design in Practice — Vladimir Khorikov",
+   256→    ],
+   257→  },
+   258→};
+   259→
+   260→/* ---------------------------------------------------------------------------
+   261→ * WARMUP_QUESTIONS — 3 deterministic interview warm-up questions per
+   262→ * category. Used to prime the user before they click "Test this skill".
+   263→ * ------------------------------------------------------------------------- */
+   264→const WARMUP_QUESTIONS: Record<CompetencyCategory, string[]> = {
+   265→  system_design: [
+   266→    "Walk me through how you'd design a rate limiter for a public API.",
+   267→    "How would you partition a database that needs to handle 10K writes/sec?",
+   268→    "Explain the tradeoffs between eventual consistency and strong consistency.",
+   269→  ],
+   270→  backend: [
+   271→    "How would you design an idempotent API for processing payments?",
+   272→    "Walk me through your approach to retries, dead-letter queues, and backpressure.",
+   273→    "When would you pick serializable vs. read-committed transaction isolation?",
+   274→  ],
+   275→  frontend: [
+   276→    "How would you build a list that renders 10K rows smoothly at 60fps?",
+   277→    "Describe how you'd make an autocomplete fully accessible (keyboard + ARIA).",
+   278→    "Walk me through your state-management strategy in a large React app.",
+   279→  ],
+   280→  data: [
+   281→    "Design a CDC pipeline moving data from Postgres to a warehouse in near-real-time.",
+   282→    "When would you use a star schema vs. a snowflake schema, and why?",
+   283→    "How do you ensure online and offline feature parity in a feature store?",
+   284→  ],
+   285→  ml: [
+   286→    "Walk me through how you'd productionize and monitor a text classifier.",
+   287→    "How would you design a RAG pipeline with offline + online evals?",
+   288→    "How would you detect and mitigate data drift in a deployed model?",
+   289→  ],
+   290→  cloud: [
+   291→    "Design a multi-AZ architecture that survives a single AZ failure.",
+   292→    "How do you decide between managed services and self-hosting for a new component?",
+   293→    "Walk me through a cost-optimization plan for a compute-heavy workload.",
+   294→  ],
+   295→  devops: [
+   296→    "How would you design a CI/CD pipeline with safe, staged rollouts?",
+   297→    "Define an SLO, an error budget, and a burn-rate alerting policy.",
+   298→    "Walk me through your observability stack: metrics, logs, and traces.",
+   299→  ],
+   300→  languages: [
+   301→    "Pick a language you're strong in — what are its top three footguns?",
+   302→    "How would you implement a small interpreter (lexer, parser, evaluator)?",
+   303→    "Explain how memory management / GC works in your main language.",
+   304→  ],
+   305→  communication: [
+   306→    "Tell me about a time you explained a complex technical tradeoff to a non-engineer.",
+   307→    "Walk me through how you'd write a decision record (ADR) for a real choice you made.",
+   308→    "How do you handle pushback when stakeholders disagree on a technical direction?",
+   309→  ],
+   310→  domain: [
+   311→    "Tell me about a business constraint in your domain that shaped a technical decision.",
+   312→    "How would you build a ubiquitous-language glossary with domain experts?",
+   313→    "Describe a time you misunderstood a domain and how you corrected course.",
+   314→  ],
+   315→};
+   316→
+   317→/* ---------------------------------------------------------------------------
+   318→ * Section heading — small icon + title + caption block
+   319→ * ------------------------------------------------------------------------- */
+   320→function SectionHeading({
+   321→  icon: Icon,
+   322→  title,
+   323→  caption,
+   324→}: {
+   325→  icon: React.ComponentType<{ className?: string }>;
+   326→  title: string;
+   327→  caption?: string;
+   328→}) {
+   329→  return (
+   330→    <div className="flex items-start gap-2.5 mb-3">
+   331→      <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-md bg-accent-blue/10 text-accent-blue-foreground shrink-0">
+   332→        <Icon className="h-3.5 w-3.5" />
+   333→      </span>
+   334→      <div className="min-w-0">
+   335→        <h3 className="text-[13px] font-semibold text-foreground">{title}</h3>
+   336→        {caption && <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">{caption}</p>}
+   337→      </div>
+   338→    </div>
+   339→  );
+   340→}
+   341→
+   342→/* ---------------------------------------------------------------------------
+   343→ * Snapshot tile — small stat card used in the 4-up grid
+   344→ * ------------------------------------------------------------------------- */
+   345→function SnapshotTile({
+   346→  icon: Icon,
+   347→  label,
+   348→  value,
+   349→  sublabel,
+   350→}: {
+   351→  icon: React.ComponentType<{ className?: string }>;
+   352→  label: string;
+   353→  value: string;
+   354→  sublabel?: string;
+   355→}) {
+   356→  return (
+   357→    <div className="hm-stat-tile p-3.5">
+   358→      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">
+   359→        <Icon className="h-3 w-3" />
+   360→        <span>{label}</span>
+   361→      </div>
+   362→      <div className="text-[14px] font-semibold text-foreground capitalize leading-tight">{value}</div>
+   363→      {sublabel && <div className="text-[11px] text-muted-foreground mt-0.5">{sublabel}</div>}
+   364→    </div>
+   365→  );
+   366→}
+   367→
+   368→/* ---------------------------------------------------------------------------
+   369→ * Progress trajectory — horizontal track with three nodes (Current / Target /
+   370→ * Mastery) + an "You need to grow ~X points" delta callout.
+   371→ * ------------------------------------------------------------------------- */
+   372→function ProgressTrajectory({ gap }: { gap: SkillGap }) {
+   373→  const currentPct = CANDIDATE_LEVEL_PCT[gap.candidateLevel] ?? 5;
+   374→  const targetPct = IMPORTANCE_PCT[gap.importance] ?? 50;
+   375→  const masteryPct = 95;
+   376→  const delta = targetPct - currentPct;
+   377→
+   378→  // Sort nodes by position so chips read left-to-right along the bar.
+   379→  const nodes = [
+   380→    { label: "Current", value: currentPct, color: "var(--muted-foreground)" },
+   381→    { label: "Target", value: targetPct, color: "var(--accent-blue)" },
+   382→    { label: "Mastery", value: masteryPct, color: "var(--success)" },
+   383→  ].sort((a, b) => a.value - b.value);
+   384→
+   385→  return (
+   386→    <div className="space-y-3">
+   387→      {/* Bar + node markers */}
+   388→      <div className="relative h-5">
+   389→        {/* Track */}
+   390→        <div className="absolute top-1/2 left-0 right-0 h-1.5 -translate-y-1/2 rounded-full bg-muted overflow-hidden">
+   391→          <motion.div
+   392→            className="h-full rounded-full"
+   393→            style={{
+   394→              background:
+   395→                "linear-gradient(90deg, var(--muted-foreground), var(--accent-blue))",
+   396→            }}
+   397→            initial={{ width: 0 }}
+   398→            animate={{ width: `${targetPct}%` }}
+   399→            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
+   400→          />
+   401→        </div>
+   402→        {/* Node dots */}
+   403→        {nodes.map((n, i) => (
+   404→          <motion.div
+   405→            key={n.label}
+   406→            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2"
+   407→            style={{ left: `${n.value}%` }}
+   408→            initial={{ opacity: 0, scale: 0.5 }}
+   409→            animate={{ opacity: 1, scale: 1 }}
+   410→            transition={{ duration: 0.35, delay: 0.35 + i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+   411→          >
+   412→            <div
+   413→              className="h-3.5 w-3.5 rounded-full border-2 border-background"
+   414→              style={{ background: n.color, boxShadow: `0 0 0 1px ${n.color}` }}
+   415→            />
+   416→          </motion.div>
+   417→        ))}
+   418→      </div>
+   419→
+   420→      {/* Chip row — Current / Target / Mastery */}
+   421→      <div className="flex items-center justify-between gap-2 flex-wrap">
+   422→        {nodes.map((n) => (
+   423→          <div key={n.label} className="flex items-center gap-1.5">
+   424→            <span
+   425→              className="h-2 w-2 rounded-full shrink-0"
+   426→              style={{ background: n.color }}
+   427→            />
+   428→            <span className="text-[11px] text-muted-foreground">{n.label}</span>
+   429→            <span className="text-[11px] font-semibold tabular-nums text-foreground">
+   430→              {n.value}%
+   431→            </span>
+   432→          </div>
+   433→        ))}
+   434→      </div>
+   435→
+   436→      {/* Delta callout */}
+   437→      <motion.div
+   438→        className="hm-insight-callout flex items-start gap-2 px-3 py-2"
+   439→        initial={{ opacity: 0, y: 6 }}
+   440→        animate={{ opacity: 1, y: 0 }}
+   441→        transition={{ duration: 0.4, delay: 0.55, ease: [0.22, 1, 0.36, 1] }}
+   442→      >
+   443→        <TrendingUp className="h-3.5 w-3.5 text-accent-blue-foreground shrink-0 mt-0.5" />
+   444→        <span className="text-[12px] text-foreground/85 leading-relaxed">
+   445→          {delta > 0 ? (
+   446→            <>
+   447→              You need to grow{" "}
+   448→              <span className="font-semibold text-foreground">~{delta} points</span>{" "}
+   449→              to reach the target bar for this role.
+   450→            </>
+   451→          ) : (
+   452→            <>
+   453→              You're already at or past the target bar — focus on{" "}
+   454→              <span className="font-semibold text-foreground">depth & fluency</span>{" "}
+   455→              under interview pressure.
+   456→            </>
+   457→          )}
+   458→        </span>
+   459→      </motion.div>
+   460→    </div>
+   461→  );
+   462→}
+   463→
+   464→/* ---------------------------------------------------------------------------
+   465→ * Resource list row — single bullet item with an icon
+   466→ * ------------------------------------------------------------------------- */
+   467→function ResourceRow({
+   468→  icon: Icon,
+   469→  text,
+   470→}: {
+   471→  icon: React.ComponentType<{ className?: string }>;
+   472→  text: string;
+   473→}) {
+   474→  return (
+   475→    <li className="flex items-start gap-2 text-[12px] text-foreground/85 leading-relaxed">
+   476→      <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
+   477→      <span>{text}</span>
+   478→    </li>
+   479→  );
+   480→}
+   481→
+   482→/* ---------------------------------------------------------------------------
+   483→ * Staggered entrance variants
+   484→ * ------------------------------------------------------------------------- */
+   485→const containerStagger = {
+   486→  hidden: {},
+   487→  show: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
+   488→};
+   489→
+   490→const fadeUp = {
+   491→  hidden: { opacity: 0, y: 12 },
+   492→  show: {
+   493→    opacity: 1,
+   494→    y: 0,
+   495→    transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] as const },
+   496→  },
+   497→};
+   498→
+   499→/* ---------------------------------------------------------------------------
+   500→ * GapDeepDive — the modal component
+   501→ * ------------------------------------------------------------------------- */
+   502→export function GapDeepDive({
+   503→  gap,
+   504→  open,
+   505→  onOpenChange,
+   506→}: {
+   507→  gap: SkillGap | null;
+   508→  open: boolean;
+   509→  onOpenChange: (open: boolean) => void;
+   510→}) {
+   511→  const { startInterview, loading, loadingStep } = useHireMind();
+   512→
+   513→  // Keep a "rendered gap" so the modal can play its exit animation even after
+   514→  // the parent nulls out the gap prop on close. Without this, the dialog
+   515→  // content would unmount abruptly mid-exit-transition.
+   516→  const [renderedGap, setRenderedGap] = React.useState<SkillGap | null>(null);
+   517→  React.useEffect(() => {
+   518→    if (gap) setRenderedGap(gap);
+   519→    // Intentionally do NOT clear when gap becomes null — the next non-null
+   520→    // gap will overwrite renderedGap on the next open.
+   521→  }, [gap]);
+   522→
+   523→  const displayGap = gap ?? renderedGap;
+   524→
+   525→  const handleStartInterview = React.useCallback(async () => {
+   526→    onOpenChange(false);
+   527→    // Defer the actual interview start a tick so the modal close animation
+   528→    // can begin without the view swap racing it.
+   529→    setTimeout(() => {
+   530→      void startInterview();
+   531→    }, 80);
+   532→  }, [onOpenChange, startInterview]);
+   533→
+   534→  const handleAddToRoadmap = React.useCallback(() => {
+   535→    toast("Already in your roadmap", {
+   536→      description:
+   537→        "Your roadmap is auto-generated from your skill gaps — no need to add it manually.",
+   538→    });
+   539→  }, []);
+   540→
+   541→  if (!displayGap) {
+   542→    // Render an inert Dialog so Radix keeps the close transition wired even
+   543→    // when there is nothing to show.
+   544→    return (
+   545→      <Dialog open={open} onOpenChange={onOpenChange}>
+   546→        <DialogContent className="sr-only" aria-hidden />
+   547→      </Dialog>
+   548→    );
+   549→  }
+   550→
+   551→  const g = displayGap;
+   552→  const resources = LEARNING_RESOURCES[g.category] ?? LEARNING_RESOURCES.domain;
+   553→  const questions = WARMUP_QUESTIONS[g.category] ?? WARMUP_QUESTIONS.domain;
+   554→  const impactPct = Math.round((g.priorityScore ?? 0) * 100);
+   555→
+   556→  return (
+   557→    <Dialog open={open} onOpenChange={onOpenChange}>
+   558→      <DialogContent
+   559→        className="flex flex-col gap-0 p-0 overflow-hidden max-h-[90vh] sm:max-h-[85vh] w-full max-w-[calc(100%-1rem)] sm:max-w-2xl lg:max-w-3xl rounded-xl"
+   560→        aria-describedby={undefined}
+   561→      >
+   562→        <DialogDescription className="sr-only">
+   563→          Detailed learning resources, warm-up questions, and a progress trajectory for closing the {displayGap.competency} skill gap.
+   564→        </DialogDescription>
+   565→        {/* Scrollable content area */}
+   566→        <motion.div
+   567→          variants={containerStagger}
+   568→          initial="hidden"
+   569→          animate="show"
+   570→          className="overflow-y-auto hm-scrollbar flex-1 min-h-0"
+   571→        >
+   572→          {/* ── Header ─────────────────────────────────────────────────── */}
+   573→          <motion.div
+   574→            variants={fadeUp}
+   575→            className="relative p-5 sm:p-7 pb-4 border-b border-border/60"
+   576→          >
+   577→            {/* Soft accent glow */}
+   578→            <div
+   579→              className="absolute -top-16 -right-12 h-48 w-48 rounded-full opacity-[0.08] pointer-events-none"
+   580→              style={{
+   581→                background:
+   582→                  "radial-gradient(circle, var(--accent-blue), transparent 70%)",
+   583→              }}
+   584→            />
+   585→            <div className="relative">
+   586→              <div className="text-[10px] font-semibold text-accent-blue-foreground uppercase tracking-widest mb-2">
+   587→                Close the gap
+   588→              </div>
+   589→              <div className="flex items-center gap-2 mb-2 flex-wrap">
+   590→                <CategoryBadge category={g.category} />
+   591→                <PriorityPill priority={g.priority} />
+   592→              </div>
+   593→              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight leading-tight">
+   594→                {g.competency}
+   595→              </h2>
+   596→            </div>
+   597→          </motion.div>
+   598→
+   599→          {/* ── Snapshot grid ─────────────────────────────────────────── */}
+   600→          <motion.div
+   601→            variants={fadeUp}
+   602→            className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 p-5 sm:p-7 pb-4"
+   603→          >
+   604→            <SnapshotTile
+   605→              icon={Target}
+   606→              label="Current level"
+   607→              value={g.candidateLevel}
+   608→              sublabel="Your evidence today"
+   609→            />
+   610→            <SnapshotTile
+   611→              icon={TrendingUp}
+   612→              label="Required"
+   613→              value={g.importance}
+   614→              sublabel="For this role"
+   615→            />
+   616→            <SnapshotTile
+   617→              icon={Sparkles}
+   618→              label="Impact score"
+   619→              value={`${impactPct}%`}
+   620→              sublabel="Priority weight"
+   621→            />
+   622→            <SnapshotTile
+   623→              icon={Clock}
+   624→              label="Est. time to close"
+   625→              value={TIME_TO_CLOSE[g.priority]}
+   626→              sublabel="Focused study"
+   627→            />
+   628→          </motion.div>
+   629→
+   630→          {/* ── Why this matters ──────────────────────────────────────── */}
+   631→          <motion.div variants={fadeUp} className="px-5 sm:px-7 pb-5">
+   632→            <SectionHeading
+   633→              icon={Target}
+   634→              title="Why this matters"
+   635→              caption="The reasoning behind this gap, in plain language."
+   636→            />
+   637→            <div className="hm-insight-callout px-4 py-3 text-[12px] text-foreground/85 leading-relaxed">
+   638→              {g.reason}
+   639→            </div>
+   640→          </motion.div>
+   641→
+   642→          {/* ── Learning resources ────────────────────────────────────── */}
+   643→          <motion.div variants={fadeUp} className="px-5 sm:px-7 pb-5">
+   644→            <SectionHeading
+   645→              icon={BookOpen}
+   646→              title="Learning resources"
+   647→              caption="Curated readings, hands-on projects, and structured courses for this category."
+   648→            />
+   649→            <div className="space-y-4">
+   650→              {/* Readings */}
+   651→              <div>
+   652→                <div className="flex items-center gap-1.5 mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+   653→                  <BookOpen className="h-3 w-3" />
+   654→                  <span>Readings</span>
+   655→                </div>
+   656→                <ul className="space-y-1.5">
+   657→                  {resources.readings.map((r) => (
+   658→                    <ResourceRow key={r} icon={BookOpen} text={r} />
+   659→                  ))}
+   660→                </ul>
+   661→              </div>
+   662→              {/* Projects */}
+   663→              <div>
+   664→                <div className="flex items-center gap-1.5 mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+   665→                  <Wrench className="h-3 w-3" />
+   666→                  <span>Hands-on projects</span>
+   667→                </div>
+   668→                <ul className="space-y-1.5">
+   669→                  {resources.projects.map((p) => (
+   670→                    <ResourceRow key={p} icon={Wrench} text={p} />
+   671→                  ))}
+   672→                </ul>
+   673→              </div>
+   674→              {/* Courses */}
+   675→              <div>
+   676→                <div className="flex items-center gap-1.5 mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+   677→                  <GraduationCap className="h-3 w-3" />
+   678→                  <span>Courses</span>
+   679→                </div>
+   680→                <ul className="space-y-1.5">
+   681→                  {resources.courses.map((c) => (
+   682→                    <ResourceRow key={c} icon={GraduationCap} text={c} />
+   683→                  ))}
+   684→                </ul>
+   685→              </div>
+   686→            </div>
+   687→          </motion.div>
+   688→
+   689→          {/* ── Warm-up questions ─────────────────────────────────────── */}
+   690→          <motion.div variants={fadeUp} className="px-5 sm:px-7 pb-5">
+   691→            <SectionHeading
+   692→              icon={MessageSquareQuote}
+   693→              title="Suggested warm-up questions"
+   694→              caption="Say each one out loud before you click “Test this skill.”"
+   695→            />
+   696→            <ol className="space-y-2">
+   697→              {questions.map((q, i) => (
+   698→                <li
+   699→                  key={q}
+   700→                  className="hm-card-hover rounded-lg border border-border/60 bg-secondary/40 px-3 py-2.5 flex items-start gap-2.5"
+   701→                >
+   702→                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-accent-blue/10 text-accent-blue-foreground text-[10px] font-bold shrink-0 mt-0.5">
+   703→                    {i + 1}
+   704→                  </span>
+   705→                  <span className="text-[12px] text-foreground/85 leading-relaxed">
+   706→                    {q}
+   707→                  </span>
+   708→                </li>
+   709→              ))}
+   710→            </ol>
+   711→          </motion.div>
+   712→
+   713→          {/* ── Progress trajectory ───────────────────────────────────── */}
+   714→          <motion.div variants={fadeUp} className="px-5 sm:px-7 pb-5">
+   715→            <SectionHeading
+   716→              icon={TrendingUp}
+   717→              title="Progress trajectory"
+   718→              caption="From where you are now to role-ready, to mastery."
+   719→            />
+   720→            <div className="hm-card p-4">
+   721→              <ProgressTrajectory gap={g} />
+   722→            </div>
+   723→          </motion.div>
+   724→
+   725→          {/* ── Bottom rail: small "Test this skill" inline CTA on mobile ── */}
+   726→          <motion.div
+   727→            variants={fadeUp}
+   728→            className="px-5 sm:px-7 pb-6 pt-1 flex items-center gap-2 text-[11px] text-muted-foreground"
+   729→          >
+   730→            <ListChecks className="h-3.5 w-3.5 shrink-0" />
+   731→            <span>
+   732→              Closing this gap typically raises your Job Match Index by{" "}
+   733→              <span className="font-semibold text-foreground">10–15 points</span>.
+   734→            </span>
+   735→          </motion.div>
+   736→        </motion.div>
+   737→
+   738→        {/* ── Sticky CTA footer ───────────────────────────────────────── */}
+   739→        <div className="border-t border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 p-3 sm:p-4 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 shrink-0">
+   740→          <Button
+   741→            variant="ghost"
+   742→            size="sm"
+   743→            onClick={() => onOpenChange(false)}
+   744→            className="text-muted-foreground"
+   745→          >
+   746→            Close
+   747→          </Button>
+   748→          <Button
+   749→            variant="outline"
+   750→            size="sm"
+   751→            onClick={handleAddToRoadmap}
+   752→            className="gap-1.5"
+   753→          >
+   754→            <Target className="h-3.5 w-3.5" />
+   755→            Add to my roadmap
+   756→          </Button>
+   757→          <motion.div
+   758→            whileHover={{ scale: 1.03 }}
+   759→            whileTap={{ scale: 0.97 }}
+   760→            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+   761→          >
+   762→            <Button
+   763→              size="sm"
+   764→              onClick={handleStartInterview}
+   765→              disabled={loading}
+   766→              className="gap-1.5"
+   767→            >
+   768→              {loading ? (
+   769→                <>
+   770→                  <Sparkles className="h-3.5 w-3.5 hm-thinking" />
+   771→                  {loadingStep || "Working…"}
+   772→                </>
+   773→              ) : (
+   774→                <>
+   775→                  Test this skill in the interview
+   776→                  <ArrowRight className="h-3.5 w-3.5" />
+   777→                </>
+   778→              )}
+   779→            </Button>
+   780→          </motion.div>
+   781→        </div>
+   782→      </DialogContent>
+   783→    </Dialog>
+   784→  );
+   785→}
+   786→

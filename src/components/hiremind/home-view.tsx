@@ -107,6 +107,11 @@ export function HomeView() {
             aria-hidden
             className="hm-hero-orb absolute -top-12 left-1/2 w-[520px] h-[360px] pointer-events-none"
           />
+          {/* Grid texture overlay — premium dotted background that fades at edges */}
+          <div
+            aria-hidden
+            className="hm-grid-fade absolute inset-0 -z-[1] pointer-events-none opacity-60"
+          />
           {/* Floating help icon — top-right of hero, opens keyboard shortcuts / how-it-works panel */}
           <button
             type="button"
@@ -116,7 +121,7 @@ export function HomeView() {
           >
             <HelpCircle className="h-4 w-4" />
           </button>
-          <div className="hm-badge-premium hm-glass-panel relative inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium mb-6">
+          <div className="hm-shine-line hm-badge-premium hm-glass-panel relative inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium mb-6">
             <Sparkles className="h-3 w-3" />
             <span>Evidence-based job readiness · AI-assisted assessment</span>
           </div>

@@ -14,6 +14,14 @@ import type { MatchStatus } from "@/lib/types";
 
 export function MatchView() {
   const { match, setView } = useHireMind();
+  // Mouse-follow spotlight for the score card — updates --mx/--my CSS vars.
+  const handleScoreMouseMove = React.useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    e.currentTarget.style.setProperty("--mx", `${x}%`);
+    e.currentTarget.style.setProperty("--my", `${y}%`);
+  }, []);
   if (!match) return null;
 
   const tone =
@@ -61,7 +69,8 @@ export function MatchView() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="hm-card hm-card-hover hm-glass-panel p-5 sm:p-7 lg:col-span-2 flex flex-col items-center justify-center text-center relative"
+          onMouseMove={handleScoreMouseMove}
+          className="hm-card hm-card-hover hm-glass-panel hm-spotlight-card p-5 sm:p-7 lg:col-span-2 flex flex-col items-center justify-center text-center relative"
         >
           <motion.div
             initial={{ scale: 0.9 }}
@@ -135,7 +144,7 @@ export function MatchView() {
           <h3 className="text-[13px] font-semibold">Your profile vs. target role</h3>
           <span className="text-[11px] text-muted-foreground">{match.rows.length} competencies</span>
         </div>
-        <div className="grid gap-x-4 sm:gap-x-8 gap-y-3 sm:gap-y-4 md:grid-cols-2">
+        <div className="hm-stagger-fade grid gap-x-4 sm:gap-x-8 gap-y-3 sm:gap-y-4 md:grid-cols-2">
           {match.rows.map((row) => {
             const score =
               row.candidateLevel === "strong"

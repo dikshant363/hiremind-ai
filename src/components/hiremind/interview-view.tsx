@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Send, SkipForward, Wand2, CheckCircle2, MessageSquareQuote, Zap, Flame, Mountain, Gauge, RotateCcw, ChevronDown, Star } from "lucide-react";
+import { Sparkles, Send, SkipForward, Wand2, CheckCircle2, MessageSquareQuote, Zap, Flame, Mountain, Gauge, RotateCcw, ChevronDown, Star, Library } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useHireMind } from "@/lib/store";
@@ -213,7 +213,7 @@ export function InterviewView() {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-7"
+            className="mt-7 flex flex-wrap items-center justify-center gap-3"
           >
             <Button
               size="lg"
@@ -231,6 +231,15 @@ export function InterviewView() {
                   Begin {difficulty === "auto" ? "adaptive " : ""}interview →
                 </>
               )}
+            </Button>
+            <Button
+              variant="ghost"
+              size="lg"
+              className="h-12 px-5 text-muted-foreground hover:text-foreground gap-1.5"
+              onClick={() => document.dispatchEvent(new CustomEvent("hm-show-question-bank"))}
+            >
+              <Library className="h-4 w-4" />
+              Browse questions
             </Button>
           </motion.div>
           <p className="mt-4 text-xs text-muted-foreground">
