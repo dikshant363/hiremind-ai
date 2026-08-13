@@ -9,6 +9,8 @@ const SHORTCUTS = [
   { keys: "d", action: "Load demo candidate (Home) or scripted answer (Interview)" },
   { keys: "p", action: "Toggle presentation mode" },
   { keys: "t", action: "Toggle dark/light theme" },
+  { keys: "a", action: "Toggle achievement gallery" },
+  { keys: "g", action: "Show About modal" },
   { keys: "Esc", action: "Go back to Home view" },
   { keys: "?", action: "Show this shortcut reference" },
 ];

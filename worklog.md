@@ -1,6 +1,6 @@
 # HIREMIND AI — Worklog / Handover
 
-> **Last updated**: Round 5 (cron-review) — QA pass + 4 new features + premium styling polish
+> **Last updated**: Round 5b (task 5-b) — Premium CSS styling enhancements + view polish
 
 ## Current Project Status: STABLE + Premium + Feature-Rich + Print-Ready
 
@@ -2797,3 +2797,327 @@ Stage Summary:
   7. Compact variant is wrapped in a subtle warning-tinted container so it reads as a distinct summary, not a continuation of the "Weaknesses identified" pill.
 - **Cross-component state sharing verified**: a bookmark written from `interview-view.tsx` is immediately visible in `bookmarked-questions.tsx` (both compact on the complete state and full on the readiness view) because they all subscribe to the same module-level store via `useSyncExternalStore`. No prop drilling, no React context needed.
 - Lint clean; dev server stable; ready for the next task.
+
+---
+Task ID: 4-a
+Agent: full-stack-developer
+Task: Add Flow Progress Indicator component
+
+Work Log:
+- Created `/src/components/hiremind/flow-progress.tsx` — new FlowProgress component
+- Implements 6-step horizontal stepper: Resume → Match → Gaps → Interview → Readiness → Roadmap
+- View-to-step mapping: candidate=1, match=2, gaps=3, interview/evaluation=4, readiness=5, roadmap=6
+- Hidden on "home" and "compare" views (returns null when step=0)
+- Desktop: full stepper with circles, labels, and connector lines
+- Mobile: dots-only layout (no labels) for compact display
+- Completed steps: success-green circle with animated Check icon (spring entrance)
+- Current step: accent-blue highlighted circle with radial glow effect
+- Future steps: dimmed/muted with reduced opacity
+- Connector lines: gradient-filled for completed, partial-fill for active, dashed for future
+- Glassmorphism: backdrop-blur-xl + bg-background/60 container
+- Smooth Framer Motion transitions: AnimatePresence for mount/unmount, layoutId for glow, spring for checkmarks
+- Integrated into page.tsx: imported FlowProgress and rendered between SiteHeader and <main>
+- Lint passes with zero errors
+- Dev server stable, no runtime errors
+
+Stage Summary:
+- Flow progress indicator added with 6-step visual stepper
+- Premium Apple-inspired glassmorphism design with accent-blue glow on active step
+- Mobile responsive with dot-only view on small screens
+- Smooth Framer Motion transitions on step changes
+- Connector lines with gradient fills and dashed future indicators
+
+---
+Task ID: 4-c
+Agent: full-stack-developer
+Task: Add Interview Insights Panel
+
+Work Log:
+- Created `/home/z/my-project/src/components/hiremind/interview-insights-panel.tsx` with 5 sections:
+  1. Performance Trend — CSS bar chart of overall scores per question with hover tooltips, average score, and trend indicator
+  2. Time Analysis — average/fastest/slowest answer times estimated from answer length, with color-coded cards and icons (Timer, Zap, TimerOff)
+  3. Skill Coverage — colored pills for each tested competency (green=strong, amber=moderate, red=weak), sorted by level, with count summary
+  4. Strengths & Weaknesses — top 2 strongest and top 2 weakest evaluation dimensions with score percentages
+  5. Improvement Quick Tips — 2-3 actionable tips derived from the weakest dimensions, with numbered badges
+- Integrated `InterviewInsightsPanel` into `evaluation-view.tsx` — conditionally rendered only when `interview.status === "complete"`, placed after the per-answer `InterviewInsights` component
+- Glassmorphism design using `hm-glass-chip` CSS utility for frosted card backgrounds
+- Expandable panel with chevron toggle (ChevronUp/ChevronDown) via AnimatePresence
+- framer-motion entrance animations on all sections and sub-elements
+- Lint passes with 0 errors, dev server stable
+
+Stage Summary:
+- Interview insights panel with performance trend, time analysis, skill coverage, strengths/weaknesses, quick tips
+- Shown after interview completion as an expandable glassmorphism panel
+- Reads purely from store state (interview evaluations) — no new API calls
+
+---
+Task ID: 4-b
+Agent: full-stack-developer
+Task: Add Achievement Gallery Panel
+
+Work Log:
+- Created `/src/components/hiremind/achievement-gallery.tsx` — premium dark-themed full-screen modal with glassmorphism cards
+  - Responsive grid layout (1/2/3 cols for mobile/tablet/desktop)
+  - Unlocked cards: full color with amber icon, title, description, unlock date, shimmer/glow effect
+  - Locked cards: desaturated/dimmed with lock icon overlay and "Keep exploring to unlock" teaser
+  - Progress summary bar at top: "X of Y achievements unlocked" with animated progress fill
+  - Achievement categories (Getting Started, Interview, Scoring, Exploration) with color-coded tags
+  - Staggered entrance animations via Framer Motion
+  - Escape key and backdrop click to dismiss
+  - Custom dark scrollbar styling
+- Added Trophy icon button in `shell.tsx` header (next to Help button) that dispatches `hm-show-achievements` custom event
+- Added 'A' keyboard shortcut in `use-keyboard-shortcuts.ts` to toggle the gallery
+- Added 'A' shortcut entry to `shortcut-hint.tsx` overlay list
+- Integrated `<AchievementGallery>` in `page.tsx` with event listener for `hm-show-achievements`
+- Added `.custom-scrollbar-dark` CSS utility in `globals.css` for the gallery modal
+- Lint passes clean (0 errors, 0 warnings)
+
+Stage Summary:
+- Achievement gallery modal with premium dark glassmorphism design
+- Grid of unlocked/locked achievements with category tags and progress bar
+- Trophy button in header (amber pulse dot for discoverability)
+- Keyboard shortcut 'A' to toggle, Escape to close
+- Fully responsive (1/2/3 columns), staggered Framer Motion animations
+
+---
+
+### Task 5-a — Skill Confidence Meter (Round 6)
+
+**Agent**: code
+**Date**: 2025-07-03
+
+#### What was done
+
+1. **Created `/home/z/my-project/src/components/hiremind/skill-confidence-meter.tsx`**
+   - Premium semicircular gauge (speedometer-style) rendered with SVG
+   - Half-circle arc with 3 color zones: Red (0–30%), Amber (30–60%), Green (60–100%)
+   - Animated needle that springs from 0 to target value on mount (framer-motion spring)
+   - Active fill arc that animates with `pathLength` transition
+   - Percentage label centered in the gauge
+   - Tick marks at 0%, 50%, 100%
+   - Subtle glow effect behind the gauge that changes color based on zone
+   - Confidence zone labels: "Low confidence", "Moderate confidence", "High confidence"
+   - Detail text derived from the `level` prop (strong/moderate/weak/unknown)
+   - Compact size: 120px wide × 74px tall
+   - Props: `SkillConfidenceMeterProps { skill, confidence (0..1), level, detail? }`
+
+2. **Integrated into GapsView (`gaps-view.tsx`)**
+   - Added `deriveConfidence()` helper that derives confidence from a `SkillGap`:
+     - Uses `priorityScore` (impact) as base confidence proxy
+     - Modulates by `candidateLevel`: unknown → 0.45×, weak → 0.65×, moderate → 0.85×, strong → 0.95×
+     - Floors at 0.05, caps at 1.0
+   - **Hero gap section**: SkillConfidenceMeter displayed alongside the ImpactMeter in a flex row, with a "Confidence" label and Gauge icon
+   - **OtherGapCard (compact)**: Inline confidence badge showing percentage with zone-colored pill (red/amber/green) and Gauge icon
+   - **OtherGapCard (expanded)**: Full SkillConfidenceMeter gauge rendered alongside contextual explanation text that varies by level (unknown → "No direct evidence found…", weak → "Limited evidence…", etc.)
+   - Imported `Gauge` icon from lucide-react and `SkillConfidenceMeter` from the new component file
+   - Added `SkillLevel` to the type imports
+
+#### Verification
+
+- `bun run lint` — 0 errors, 0 warnings
+- Dev server log — no errors, all routes 200
+- SVG arc math verified: angle mapping 0→π (left), 1→0 (right), needle and fill arcs animate correctly
+
+#### Files changed
+
+- `src/components/hiremind/skill-confidence-meter.tsx` — **NEW**
+- `src/components/hiremind/gaps-view.tsx` — **MODIFIED** (import SkillConfidenceMeter, deriveConfidence, hero + OtherGapCard integration)
+
+---
+
+## Task 5-c: Enhance SiteFooter + About/Info Modal
+
+**Date**: Round 5-c
+
+### Changes Made
+
+#### 1. SiteFooter Enhancement (`src/components/hiremind/shell.tsx`)
+- Added version badge "v1.0" (pill with `bg-primary/12` styling)
+- Added three feature pills: "Adaptive Interview", "Deterministic Scoring", "Evidence-Based" — each using `hm-glass-chip` utility
+- Added animated gradient line at top of footer (`hm-footer-gradient-line`) — flowing gradient with `hm-footer-gradient-slide` animation (8s linear infinite), respects `prefers-reduced-motion`
+- Kept existing disclaimer text (merged into bottom row)
+- Added "About" link that dispatches `hm-show-about` custom event
+- Added "Keyboard shortcuts" link that dispatches `hm-show-shortcuts` custom event
+- Responsive layout: stacks vertically on mobile, row on desktop
+- Footer remains sticky to bottom with `mt-auto`
+
+#### 2. About Modal Component (`src/components/hiremind/about-modal.tsx`)
+- Glassmorphism card with `bg-background/80 backdrop-blur-2xl`
+- HireMind AI logo (BrainCircuit icon) + name + version "v1.0.0" badge
+- Description paragraph explaining HireMind's purpose
+- Core Intelligence Loop horizontal flow: Resume → Intelligence → Match → Gaps → Interview → Evaluation → Readiness → Roadmap
+  - Each step is a colored dot with label, connected by gradient lines
+  - Framer Motion staggered entrance (custom variants with 60ms stagger)
+- Tech stack badges: Next.js, TypeScript, Tailwind CSS, Prisma, Zustand, Framer Motion
+  - Each uses `hm-badge-sheen` + `hm-glass-chip` utilities
+  - Staggered entrance animation
+- Philosophy section in bordered card: "AI understands; application logic decides..."
+- Disclaimer: "Prototype indices — assessment support, not a hiring verdict."
+- Close button (X) and Escape key (via Dialog from shadcn/ui)
+- Accessible `DialogTitle` and `DialogDescription` (sr-only)
+
+#### 3. CSS Utilities (`src/app/globals.css`)
+- `.hm-footer-gradient-line`: animated gradient line (accent-blue → success → warning colors) with `background-size: 200%` sliding animation
+- `@keyframes hm-footer-gradient-slide`: 8s linear infinite background position shift
+- Added to `prefers-reduced-motion: reduce` block to disable animation
+
+#### 4. Keyboard Shortcut (`src/hooks/use-keyboard-shortcuts.ts`)
+- Added `g` key: dispatches `hm-show-about` custom event
+- Added to shortcut-hint overlay listing
+
+#### 5. Page Integration (`src/app/page.tsx`)
+- Added `showAbout` state
+- Event listener for `hm-show-about` (sets `showAbout` to true)
+- Renders `<AboutModal open={showAbout} onClose={() => setShowAbout(false)} />`
+
+### Verification
+- ✅ `bun run lint` — 0 errors, 0 warnings
+- ✅ Dev server stable, no runtime errors
+- ✅ Reduced motion respected for gradient line
+- ✅ Responsive layout verified (stack on mobile, row on desktop)
+- ✅ Keyboard shortcut `g` opens about modal
+- ✅ Footer "About" link opens about modal
+- ✅ Footer "Keyboard shortcuts" link opens shortcut overlay
+
+---
+
+## Round 5b — Task 5-b: Premium CSS Styling Enhancements
+
+**Date**: 2025-07-11
+**Agent**: main
+
+### Summary
+
+Added 8 new premium CSS utility classes to `globals.css` and applied them across 5 component files for enhanced visual polish.
+
+### New CSS Utilities Added (globals.css)
+
+| Utility | Purpose |
+|---------|---------|
+| `.hm-confetti-burst` | Confetti dot-pattern burst animation for high score celebrations |
+| `.hm-score-reveal` | Scale+blur reveal animation for score appearances |
+| `.hm-glass-panel` | Glassmorphism frosted panel (backdrop blur + saturate + border) |
+| `.hm-float-label` | Gentle 3s vertical float animation |
+| `.hm-pulse-ring` | Expanding pulse ring border for attention-drawing elements |
+| `.hm-text-shimmer` | Animated gradient shimmer sweep on text |
+| `.hm-card-lift` | Hover lift with enhanced shadow for cards |
+| `.hm-typing-cursor` | Blinking pipe cursor appended after text |
+
+All new utilities respect `prefers-reduced-motion: reduce` — animations are disabled and transforms reset.
+
+### View Enhancements
+
+1. **home-view.tsx**:
+   - Added `hm-glass-panel` to hero trust badge (`.hm-badge-premium`)
+   - Replaced `hm-text-gradient-premium` with `hm-text-shimmer` on "readiness." hero text
+
+2. **job-template-picker.tsx**:
+   - Added `hm-card-lift` to template cards for hover lift effect
+
+3. **match-view.tsx**:
+   - Added `hm-glass-panel` to the score card container
+   - Added `hm-score-reveal` wrapper around ScoreRing
+   - Added `hm-card-lift` to the "Why this score" card
+
+4. **interview-view.tsx**:
+   - Added `hm-typing-cursor` to the interview question heading
+   - Added conditional `hm-pulse-ring` to the Submit button when enabled
+
+5. **answer-coach.tsx**:
+   - Added `hm-glass-panel` to the answer coach panel
+
+6. **readiness-view.tsx**:
+   - Added `hm-score-reveal` to the readiness score ring container
+   - Added `hm-glass-panel` to the readiness dimensions card
+
+7. **session-summary.tsx**:
+   - Added `hm-card-lift` to the session summary card
+
+### Verification
+
+- ✅ `bun run lint` — 0 errors, 0 warnings
+- ✅ Dev server stable, no runtime errors
+- ✅ Existing functionality preserved — only CSS class additions, no behavior changes
+- ✅ `prefers-reduced-motion` respected for all new animations
+
+---
+
+# Round 6 — Comprehensive Feature & Styling Enhancement
+
+> **Last updated**: Round 6 (cron-review) — 6 new features + 8 new CSS utilities + premium styling polish
+
+## Current Project Status: STABLE + Premium + Feature-Rich + Flow-Aware
+
+All P0–P6 features working. Round 6 QA passed with **zero bugs**. Added six high-impact new features and eight premium CSS utilities with view-level integration. The app now has a flow progress indicator, achievement gallery, interview insights panel, skill confidence meters, about modal, and enhanced footer. Premium styling includes glassmorphism panels, score reveal animations, card hover lifts, typing cursor, text shimmer, pulse rings, and confetti burst utilities.
+
+### Round 6 — Three-Section Handover Summary
+
+#### 1. Current Project Status (Assessment)
+
+- **Stability**: ✅ Dev server stable, all routes 200, zero runtime errors.
+- **Lint**: ✅ `bun run lint` returns 0 errors, 0 warnings.
+- **QA (agent-browser)**: ✅ End-to-end demo flow verified — home → demo load → candidate → match → gaps (confidence meters) → interview (flow progress indicator) → evaluation (insights panel) → readiness → roadmap → compare. Also verified: Achievement Gallery (A key), About modal (G key), enhanced footer with feature pills.
+- **Dark mode**: ✅ No regressions.
+- **Mobile (375px)**: ✅ Responsive, no overflow. Flow progress shows dots-only on mobile.
+- **Accessibility**: ✅ All new modals use Dialog with proper ARIA. Keyboard shortcuts documented.
+- **Build**: Not run (per project rules — only `bun run lint`).
+
+#### 2. Goals / Completed Modifications / Verification
+
+**New Features (6):**
+
+| # | Feature | Component | Description |
+|---|---------|-----------|-------------|
+| 1 | Flow Progress Indicator | `flow-progress.tsx` | 6-step horizontal stepper (Resume → Match → Gaps → Interview → Readiness → Roadmap) with glassmorphism, animated transitions, mobile dots-only mode. Hidden on home/compare. |
+| 2 | Achievement Gallery | `achievement-gallery.tsx` | Full-screen modal with grid of unlocked/locked achievements, progress summary, category tags, staggered animations. Trophy button in header + 'A' keyboard shortcut. |
+| 3 | Interview Insights Panel | `interview-insights-panel.tsx` | Expandable panel with 5 sections: Performance Trend (CSS bar chart), Time Analysis, Skill Coverage pills, Strengths & Weaknesses, Improvement Quick Tips. Shown after interview completion. |
+| 4 | Skill Confidence Meter | `skill-confidence-meter.tsx` | Semicircular SVG gauge with animated needle, 3 color zones, glow effect, tick marks. Integrated into Gaps view for hero gap and other gap cards. |
+| 5 | About Modal | `about-modal.tsx` | Glassmorphism modal with core intelligence loop visualization (8-step flow), tech stack badges, philosophy section. 'G' keyboard shortcut. |
+| 6 | Enhanced Footer | `shell.tsx` | Version badge (v1.0), 3 feature pills, animated gradient top border, About + Keyboard shortcuts links. |
+
+**New CSS Utilities (8):**
+
+| Utility | Effect |
+|---------|--------|
+| `hm-confetti-burst` | Dot-pattern burst animation for celebrations |
+| `hm-score-reveal` | Scale+blur→sharp reveal for score appearances |
+| `hm-glass-panel` | Frosted glass (backdrop blur + saturate + border) |
+| `hm-float-label` | Gentle 3s vertical float |
+| `hm-pulse-ring` | Expanding pulse ring border |
+| `hm-text-shimmer` | Animated gradient shimmer on text |
+| `hm-card-lift` | Hover lift with enhanced shadow |
+| `hm-typing-cursor` | Blinking pipe cursor after text |
+
+**View-Level Styling Enhancements:**
+
+- **home-view.tsx**: `hm-glass-panel` on hero badge, `hm-text-shimmer` on "readiness." heading
+- **job-template-picker.tsx**: `hm-card-lift` on template cards
+- **match-view.tsx**: `hm-glass-panel` on score card, `hm-score-reveal` on ScoreRing, `hm-card-lift` on components card
+- **interview-view.tsx**: `hm-typing-cursor` on question heading, `hm-pulse-ring` on Submit button
+- **answer-coach.tsx**: `hm-glass-panel` on coach panel
+- **readiness-view.tsx**: `hm-score-reveal` on score ring, `hm-glass-panel` on dimensions card
+- **session-summary.tsx**: `hm-card-lift` on session summary card
+- **gaps-view.tsx**: `SkillConfidenceMeter` integrated for hero gap and other gap cards
+
+**New Keyboard Shortcuts:**
+- `A` — Toggle Achievement Gallery
+- `G` — Toggle About Modal
+
+#### 3. Unresolved Issues / Risks / Priority Recommendations
+
+**No critical issues.** Minor observations:
+
+1. **Overlay blocking during interview**: When achievement toasts fire during the interview, they can briefly cover the "Scripted answer" button. This is cosmetic only — the toast auto-dismisses in ~3s. **Recommendation**: Consider using `toast.dismiss()` or positioning toasts at bottom-center during interview view.
+
+2. **Achievement Gallery shows all locked initially**: In a fresh session, no achievements are unlocked yet, so the gallery shows 0/9 unlocked. This is by design but could feel underwhelming. **Recommendation**: Add a "Getting Started" achievement that unlocks on first page visit.
+
+3. **Flow Progress doesn't show on Compare view**: By design (compare is cross-session), but users might expect some indicator. **Low priority**.
+
+**Next Phase Recommendations (Priority Order):**
+
+1. **P0 — Session Export Enhancement**: Add JSON/Markdown export options alongside the existing PDF report
+2. **P1 — Interview Question Bank**: Browse all possible interview questions by category before starting
+3. **P2 — Comparative Timeline**: Visual timeline showing score progression across multiple sessions
+4. **P3 — Resume Builder Suggestions**: Actionable suggestions for what to add to the resume based on gaps
+5. **P4 — Dark Mode Premium Polish**: Ensure all new glassmorphism/glow effects are optimized for dark mode
+6. **P5 — Performance**: Lazy-load heavy components (SkillRadar, SkillHeatmap) with React.lazy()

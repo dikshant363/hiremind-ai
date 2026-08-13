@@ -16,6 +16,9 @@ import { LoadingOverlay } from "@/components/hiremind/loading-overlay";
 import { ShortcutHint } from "@/components/hiremind/shortcut-hint";
 import { CommandPalette } from "@/components/hiremind/command-palette";
 import { OnboardingTooltip } from "@/components/hiremind/onboarding-tooltip";
+import { AchievementGallery } from "@/components/hiremind/achievement-gallery";
+import { AboutModal } from "@/components/hiremind/about-modal";
+import { FlowProgress } from "@/components/hiremind/flow-progress";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useEffect } from "react";
@@ -28,6 +31,12 @@ export default function Home() {
   const { showHints, setShowHints } = useKeyboardShortcuts();
   const { unlock, mounted: achievementsMounted } = useAchievements();
   const { setTheme, theme } = useTheme();
+
+  // Achievement gallery state
+  const [showAchievements, setShowAchievements] = React.useState(false);
+
+  // About modal state
+  const [showAbout, setShowAbout] = React.useState(false);
 
   // Hydrate from URL hash on initial mount
   const hydratedRef = React.useRef(false);
@@ -66,6 +75,20 @@ export default function Home() {
     document.addEventListener("hm-show-shortcuts", handler);
     return () => document.removeEventListener("hm-show-shortcuts", handler);
   }, [setShowHints]);
+
+  // Listen for achievement gallery toggle event (from header button + keyboard shortcut)
+  useEffect(() => {
+    const handler = () => setShowAchievements((v) => !v);
+    document.addEventListener("hm-show-achievements", handler);
+    return () => document.removeEventListener("hm-show-achievements", handler);
+  }, []);
+
+  // Listen for about modal toggle event (from footer link + keyboard shortcut)
+  useEffect(() => {
+    const handler = () => setShowAbout(true);
+    document.addEventListener("hm-show-about", handler);
+    return () => document.removeEventListener("hm-show-about", handler);
+  }, []);
 
   // ─── Achievement detection ───
   // Watch store state and unlock achievements as milestones are reached.
@@ -180,6 +203,7 @@ export default function Home() {
   return (
     <>
       <SiteHeader />
+      <FlowProgress />
       <main className="flex-1">
         <motion.div
           key={view}
@@ -202,6 +226,8 @@ export default function Home() {
       <LoadingOverlay />
       <ShortcutHint open={showHints} onClose={() => setShowHints(false)} />
       <CommandPalette />
+      <AchievementGallery open={showAchievements} onClose={() => setShowAchievements(false)} />
+      <AboutModal open={showAbout} onClose={() => setShowAbout(false)} />
       {view === "home" && <OnboardingTooltip />}
     </>
   );

@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
-import { Sun, Moon, BrainCircuit, RotateCcw, Monitor, HelpCircle, GitCompare, Search } from "lucide-react";
+import { Sun, Moon, BrainCircuit, RotateCcw, Monitor, HelpCircle, GitCompare, Search, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHireMind, type View } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -154,6 +154,17 @@ export function SiteHeader() {
           <Button
             variant="ghost"
             size="icon"
+            aria-label="Show achievements gallery"
+            onClick={() => document.dispatchEvent(new CustomEvent("hm-show-achievements"))}
+            className="h-8 w-8 relative group"
+          >
+            <Trophy className="h-4 w-4" />
+            {/* Subtle pulse dot to hint at discoverability */}
+            <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-amber-400 opacity-60 group-hover:opacity-0 transition-opacity" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             aria-label="Show keyboard shortcuts"
             onClick={() => document.dispatchEvent(new CustomEvent("hm-show-shortcuts"))}
             className="h-8 w-8 relative group"
@@ -214,18 +225,54 @@ export function SiteHeader() {
 
 export function SiteFooter() {
   return (
-    <footer className="hm-footer-hide mt-auto border-t border-border/60 bg-background/50 pb-safe">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8 py-6 sm:py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-[13px] text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <BrainCircuit className="h-3 w-3" />
-          </span>
-          <span>
-            <span className="text-foreground font-medium">HireMind AI</span> — Assessment support, not an unquestionable hiring verdict.
-          </span>
+    <footer className="hm-footer-hide mt-auto bg-background/50 pb-safe relative overflow-hidden">
+      {/* Animated gradient line at the top */}
+      <div className="hm-footer-gradient-line" />
+
+      <div className="mx-auto max-w-6xl px-5 sm:px-8 py-4 sm:py-5 flex flex-col gap-3 text-[13px] text-muted-foreground">
+        {/* Top row: brand + version + pills */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary text-primary-foreground">
+              <BrainCircuit className="h-3 w-3" />
+            </span>
+            <span className="text-foreground font-medium">HireMind AI</span>
+            <span className="inline-flex items-center rounded-full bg-primary/12 text-primary-foreground px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider">
+              v1.0
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="hm-glass-chip inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-medium">
+              Adaptive Interview
+            </span>
+            <span className="hm-glass-chip inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-medium">
+              Deterministic Scoring
+            </span>
+            <span className="hm-glass-chip inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-medium">
+              Evidence-Based
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-4">
-          <span>Prototype indices · AI-assisted evaluation</span>
+
+        {/* Bottom row: disclaimer + links */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-t border-border/40 pt-3">
+          <span>
+            Assessment support, not an unquestionable hiring verdict. Prototype indices · AI-assisted evaluation.
+          </span>
+          <div className="flex items-center gap-3 text-[12px]">
+            <button
+              onClick={() => document.dispatchEvent(new CustomEvent("hm-show-about"))}
+              className="hover:text-foreground transition-colors underline-offset-4 hover:underline cursor-pointer"
+            >
+              About
+            </button>
+            <button
+              onClick={() => document.dispatchEvent(new CustomEvent("hm-show-shortcuts"))}
+              className="hover:text-foreground transition-colors underline-offset-4 hover:underline cursor-pointer"
+            >
+              Keyboard shortcuts
+            </button>
+          </div>
         </div>
       </div>
     </footer>

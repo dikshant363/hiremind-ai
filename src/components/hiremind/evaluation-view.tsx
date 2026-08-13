@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useHireMind } from "@/lib/store";
 import { CompetencyBar, AnimatedCounter, ScoreRing } from "./shell";
 import { InterviewInsights } from "./interview-insights";
+import { InterviewInsightsPanel } from "./interview-insights-panel";
 import { useInterviewTimer } from "./interview-timer";
 import type { AnswerEvaluation } from "@/lib/types";
 
@@ -179,6 +180,9 @@ export function EvaluationView() {
 
       {/* INTERVIEW INSIGHTS — premium post-answer visual breakdown */}
       <InterviewInsights />
+
+      {/* INTERVIEW INSIGHTS PANEL — comprehensive post-interview analytics (only when complete) */}
+      {isComplete && <InterviewInsightsPanel />}
 
       {/* THE WOW MOMENT — what happens next */}
       <AnimatePresence>

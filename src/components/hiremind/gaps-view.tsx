@@ -2,13 +2,14 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Target, Sparkles, ListChecks, Plus, ChevronDown, Lightbulb, BookOpen } from "lucide-react";
+import { ArrowRight, Target, Sparkles, ListChecks, Plus, ChevronDown, Lightbulb, BookOpen, Gauge } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHireMind } from "@/lib/store";
 import { PriorityPill, CompetencyBar } from "./shell";
 import { GapDeepDive } from "./gap-deep-dive";
-import type { CompetencyCategory, SkillGap } from "@/lib/types";
+import type { CompetencyCategory, SkillGap, SkillLevel } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { SkillConfidenceMeter } from "./skill-confidence-meter";
 
 /* ---------------------------------------------------------------------------
  * Category badge config
@@ -74,8 +75,31 @@ function ImpactMeter({ score, priority }: { score: number; priority: SkillGap["p
 }
 
 /* ---------------------------------------------------------------------------
- * Gap Comparison — "Your level vs Required level" bars
+ * Confidence derivation — how confident are we about each gap assessment?
  * ------------------------------------------------------------------------- */
+function deriveConfidence(gap: SkillGap): { confidence: number; level: "strong" | "moderate" | "weak" | "unknown" } {
+  const impactScore = gap.priorityScore ?? 0;
+  const level = gap.candidateLevel;
+
+  // Evidence-based multipliers: more evidence → higher confidence in our assessment
+  const evidenceMultiplier: Record<SkillLevel, number> = {
+    unknown: 0.45,   // no evidence → we're unsure
+    weak: 0.65,      // minimal evidence → somewhat unsure
+    moderate: 0.85,  // decent evidence → fairly confident
+    strong: 0.95,    // strong evidence → very confident
+  };
+
+  // Base confidence from impact (how important the gap is)
+  // then modulated by how much evidence we have
+  const mult = evidenceMultiplier[level] ?? 0.5;
+  const confidence = Math.max(0.05, Math.min(1, impactScore * mult + (1 - mult) * 0.15));
+
+  return {
+    confidence,
+    level: level === "unknown" ? "unknown" : level === "weak" ? "weak" : level === "moderate" ? "moderate" : "strong",
+  };
+}
+
 const CANDIDATE_LEVEL_PCT: Record<string, number> = {
   unknown: 0.05,
   weak: 0.25,
@@ -90,6 +114,9 @@ const IMPORTANCE_PCT: Record<string, number> = {
   low: 0.4,
 };
 
+/* ---------------------------------------------------------------------------
+ * Gap Comparison — "Your level vs Required level" bars
+ * ------------------------------------------------------------------------- */
 function GapComparison({ gap }: { gap: SkillGap }) {
   const yourPct = CANDIDATE_LEVEL_PCT[gap.candidateLevel] ?? 0.05;
   const reqPct = IMPORTANCE_PCT[gap.importance] ?? 0.5;
@@ -189,6 +216,20 @@ function OtherGapCard({
             {g.candidateLevel} · {g.importance}
           </div>
           <CompetencyBar label="" value={severityValue} status={barStatus} index={index} />
+          {/* Inline confidence indicator */}
+          {(() => {
+            const { confidence: gapConf } = deriveConfidence(g);
+            const pct = Math.round(gapConf * 100);
+            const zoneColor = gapConf < 0.3 ? "bg-critical/20 text-critical-foreground" : gapConf < 0.6 ? "bg-warning/20 text-warning-foreground" : "bg-success/20 text-success-foreground";
+            return (
+              <div className="flex items-center gap-1.5 mt-2">
+                <Gauge className="h-3 w-3 text-muted-foreground/60" />
+                <span className={cn("inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-semibold tabular-nums", zoneColor)}>
+                  {pct}%
+                </span>
+              </div>
+            );
+          })()}
         </div>
         <div className="flex flex-col items-end gap-1.5 shrink-0">
           <PriorityPill priority={g.priority} />
@@ -222,8 +263,37 @@ function OtherGapCard({
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden"
           >
-            <div className="pt-3 mt-3 border-t border-border/60 text-[12px] text-muted-foreground leading-relaxed">
-              {g.reason}
+            <div className="pt-3 mt-3 border-t border-border/60">
+              <div className="text-[12px] text-muted-foreground leading-relaxed mb-3">
+                {g.reason}
+              </div>
+              {/* Confidence gauge for this gap */}
+              {(() => {
+                const { confidence: gapConf, level: gapLvl } = deriveConfidence(g);
+                return (
+                  <div className="flex items-start gap-3">
+                    <SkillConfidenceMeter
+                      skill={g.competency}
+                      confidence={gapConf}
+                      level={gapLvl}
+                    />
+                    <div className="flex-1 min-w-0 pt-2">
+                      <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1">
+                        <Gauge className="h-3 w-3" /> Assessment confidence
+                      </div>
+                      <div className="text-[11px] text-muted-foreground leading-relaxed">
+                        {gapLvl === "unknown"
+                          ? "No direct evidence found. Gap inferred from job requirements only."
+                          : gapLvl === "weak"
+                          ? "Limited evidence available. Consider adding more detail to improve accuracy."
+                          : gapLvl === "moderate"
+                          ? "Partial evidence supports this assessment. Further validation recommended."
+                          : "Strong evidence supports this gap assessment with high reliability."}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </motion.div>
         )}
@@ -289,14 +359,36 @@ export function GapsView() {
           <h2 className="text-3xl sm:text-5xl font-semibold tracking-tight">{top.competency}</h2>
           <p className="mt-3 text-sm text-muted-foreground max-w-xl leading-relaxed">{top.reason}</p>
 
-          {/* Impact meter */}
+          {/* Impact meter + Confidence gauge */}
           <motion.div
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-5 max-w-sm"
+            className="mt-5 flex flex-col sm:flex-row items-start gap-4"
           >
-            <ImpactMeter score={top.priorityScore} priority={top.priority} />
+            <div className="max-w-sm flex-1">
+              <ImpactMeter score={top.priorityScore} priority={top.priority} />
+            </div>
+            {(() => {
+              const { confidence: topConf, level: topLvl } = deriveConfidence(top);
+              return (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                  className="flex flex-col items-center gap-1"
+                >
+                  <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                    <Gauge className="h-3 w-3" /> Confidence
+                  </div>
+                  <SkillConfidenceMeter
+                    skill={top.competency}
+                    confidence={topConf}
+                    level={topLvl}
+                  />
+                </motion.div>
+              );
+            })()}
           </motion.div>
 
           {/* Stat tiles */}

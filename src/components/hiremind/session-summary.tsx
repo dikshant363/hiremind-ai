@@ -176,7 +176,7 @@ export function SessionSummary() {
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden"
           >
-            <div className="hm-card p-5 mt-3">
+            <div className="hm-card hm-card-lift p-5 mt-3">
               <div className="flex items-center gap-2 mb-3">
                 <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
                   <Clock className="h-3 w-3" />

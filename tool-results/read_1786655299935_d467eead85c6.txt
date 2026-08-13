@@ -1,0 +1,751 @@
+     1→     1→"use client";
+     2→     2→
+     3→     3→import * as React from "react";
+     4→     4→import { motion } from "framer-motion";
+     5→     5→import {
+     6→     6→  ArrowRight,
+     7→     7→  Sparkles,
+     8→     8→  AlertOctagon,
+     9→     9→  ArrowRightCircle,
+    10→    10→  Compass,
+    11→    11→  Target,
+    12→    12→  ListChecks,
+    13→    13→  MessageSquare,
+    14→    14→  ShieldCheck,
+    15→    15→  GitBranch,
+    16→    16→  TrendingUp,
+    17→    17→  TrendingDown,
+    18→    18→  CheckCircle2,
+    19→    19→  AlertTriangle,
+    20→    20→  LayoutGrid,
+    21→    21→  RotateCcw,
+    22→    22→  Link2,
+    23→    23→} from "lucide-react";
+    24→    24→import { Button } from "@/components/ui/button";
+    25→    25→import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+    26→    26→import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+    27→    27→import { useHireMind } from "@/lib/store";
+    28→    28→import { toast } from "sonner";
+    29→    29→import { ScoreRing, CompetencyBar, AnimatedCounter } from "./shell";
+    30→    30→import { SessionSummary } from "./session-summary";
+    31→    31→import { ExportResults } from "./export-results";
+    32→    32→import { InterviewTimeline } from "./interview-timeline";
+    33→    33→import { BookmarkedQuestions } from "./bookmarked-questions";
+    34→    34→import type { SkillLevel } from "@/lib/types";
+    35→    35→
+    36→    36→/** Map a 0..1 dimension score onto the smooth color scale:
+    37→    37→ * <0.30 critical · 0.30–0.50 warning · 0.50–0.70 accent-blue · >0.70 success. */
+    38→    38→function scoreToStatus(score: number): "matched" | "weak" | "gap" | "accent" {
+    39→    39→  if (score >= 0.7) return "matched";
+    40→    40→  if (score >= 0.5) return "accent";
+    41→    41→  if (score >= 0.3) return "weak";
+    42→    42→  return "gap";
+    43→    43→}
+    44→    44→
+    45→    45→/** A short human explanation of what each readiness dimension represents. */
+    46→    46→const DIMENSION_EXPLANATIONS: Record<string, string> = {
+    47→    47→  "Job alignment":
+    48→    48→    "Derived from your Prototype Job Match Index — how well your resume maps to required + preferred competencies for this role.",
+    49→    49→  "Required competency coverage":
+    50→    50→    "Share of must-have competencies you have demonstrated. Missing required skills cap this score hard.",
+    51→    51→  "Interview evidence":
+    52→    52→    "Average depth, technical accuracy and clarity across your adaptive interview answers. Empty if you skipped the interview.",
+    53→    53→  "Technical readiness":
+    54→    54→    "Aggregate of job alignment plus demonstrated depth from the interview — a forward-looking signal.",
+    55→    55→  Communication:
+    56→    56→    "How clearly and structurally your interview answers were framed. Heavily weighted by the evaluation rubric.",
+    57→    57→};
+    58→    58→
+    59→    59→export function ReadinessView() {
+    60→    60→  const { readiness, interview, gaps, computeReadiness, loading, loadingStep, setView, startInterview } = useHireMind();
+    61→    61→
+    62→    62→  // Look up past sessions to derive a trend vs the most recent prior readiness index.
+    63→    63→  const [trend, setTrend] = React.useState<{ delta: number; label: string } | null>(null);
+    64→    64→  React.useEffect(() => {
+    65→    65→    if (!readiness) return;
+    66→    66→    let cancelled = false;
+    67→    67→    (async () => {
+    68→    68→      try {
+    69→    69→        const res = await fetch("/api/session?list=true");
+    70→    70→        if (!res.ok) return;
+    71→    71→        const data = await res.json();
+    72→    72→        const sessions: { readinessIndex: number | null }[] = data.sessions || [];
+    73→    73→        // The list is ordered newest-first; the *previous* session is at index 1
+    74→    74→        // (index 0 is the current session that just produced this readiness score).
+    75→    75→        const prior = sessions.find((s) => typeof s.readinessIndex === "number" && s.readinessIndex !== readiness.index);
+    76→    76→        if (!prior || prior.readinessIndex === null) return;
+    77→    77→        const delta = readiness.index - prior.readinessIndex;
+    78→    78→        if (!cancelled && delta !== 0) {
+    79→    79→          setTrend({
+    80→    80→            delta,
+    81→    81→            label: delta > 0 ? `↑${delta} vs last session` : `↓${Math.abs(delta)} vs last session`,
+    82→    82→          });
+    83→    83→        }
+    84→    84→      } catch {
+    85→    85→        /* ignore — trend is purely informational */
+    86→    86→      }
+    87→    87→    })();
+    88→    88→    return () => {
+    89→    89→      cancelled = true;
+    90→    90→    };
+    91→    91→  }, [readiness]);
+    92→    92→
+    93→    93→  // If readiness hasn't been computed yet, prompt to compute
+    94→    94→  if (!readiness) {
+    95→    95→    return (
+    96→    96→      <div className="mx-auto max-w-3xl px-4 sm:px-8 py-10 sm:py-14 text-center">
+    97→    97→        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+    98→    98→          {/* Vibrant Compass icon with subtle gradient background — more confident than a faint Sparkles */}
+    99→    99→          <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-accent-blue/20 to-chart-5/15 text-accent-blue-foreground ring-1 ring-accent-blue/20 shadow-sm">
+   100→   100→            <Compass className="h-7 w-7" />
+   101→   101→          </span>
+   102→   102→          <h1 className="mt-5 text-2xl sm:text-3xl font-semibold tracking-tight">Calculate your job readiness.</h1>
+   103→   103→          <p className="mt-3 text-sm text-foreground/70 max-w-md mx-auto leading-relaxed">
+   104→   104→            We&rsquo;ll combine your match index, interview evidence and identified weaknesses into a transparent Prototype Job Readiness Index.
+   105→   105→          </p>
+   106→   106→          <div className="mt-6">
+   107→   107→            <Button size="lg" className={`h-12 px-7 gap-2${loading ? " hm-glow-pulse" : ""}`} onClick={computeReadiness} disabled={loading}>
+   108→   108→              {loading ? (
+   109→   109→                <>
+   110→   110→                  <Sparkles className="h-4 w-4 hm-thinking" /> {loadingStep || "Working…"}
+   111→   111→                </>
+   112→   112→              ) : (
+   113→   113→                <>Calculate readiness</>
+   114→   114→              )}
+   115→   115→            </Button>
+   116→   116→          </div>
+   117→   117→
+   118→   118→          {/* "What we calculate" preview — shows the dimensions before computing */}
+   119→   119→          <motion.div
+   120→   120→            initial={{ opacity: 0, y: 12 }}
+   121→   121→            animate={{ opacity: 1, y: 0 }}
+   122→   122→            transition={{ duration: 0.5, delay: 0.15 }}
+   123→   123→            className="mt-10 grid sm:grid-cols-3 gap-3 text-left"
+   124→   124→          >
+   125→   125→            {[
+   126→   126→              { icon: <Target className="h-4 w-4" />, title: "Job alignment", body: "How well your evidence maps to required + preferred competencies." },
+   127→   127→              { icon: <ListChecks className="h-4 w-4" />, title: "Required coverage", body: "Share of must-have competencies you have demonstrated." },
+   128→   128→              { icon: <MessageSquare className="h-4 w-4" />, title: "Interview evidence", body: "Depth and clarity from your adaptive interview answers." },
+   129→   129→            ].map((item, i) => (
+   130→   130→              <motion.div
+   131→   131→                key={item.title}
+   132→   132→                initial={{ opacity: 0, y: 10 }}
+   133→   133→                animate={{ opacity: 1, y: 0 }}
+   134→   134→                transition={{ duration: 0.4, delay: 0.2 + i * 0.08 }}
+   135→   135→                className="hm-elevated rounded-xl p-4"
+   136→   136→              >
+   137→   137→                <div className="flex items-center gap-2 mb-1.5">
+   138→   138→                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-accent-blue/10 text-accent-blue-foreground">
+   139→   139→                    {item.icon}
+   140→   140→                  </span>
+   141→   141→                  <h4 className="text-[13px] font-semibold">{item.title}</h4>
+   142→   142→                </div>
+   143→   143→                <p className="text-[12px] text-muted-foreground leading-relaxed">{item.body}</p>
+   144→   144→              </motion.div>
+   145→   145→            ))}
+   146→   146→          </motion.div>
+   147→   147→
+   148→   148→          {/* Trust feature row — reduces the empty space below the button */}
+   149→   149→          <div className="mt-10 pt-6 border-t border-border/60 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[11px] text-muted-foreground">
+   150→   150→            <span className="inline-flex items-center gap-1.5">
+   151→   151→              <ShieldCheck className="h-3.5 w-3.5 text-accent-blue-foreground" />
+   152→   152→              Honest by design
+   153→   153→            </span>
+   154→   154→            <span className="inline-flex items-center gap-1.5">
+   155→   155→              <Sparkles className="h-3.5 w-3.5 text-accent-blue-foreground" />
+   156→   156→              Explainable scores
+   157→   157→            </span>
+   158→   158→            <span className="inline-flex items-center gap-1.5">
+   159→   159→              <GitBranch className="h-3.5 w-3.5 text-accent-blue-foreground" />
+   160→   160→              Adaptive, not static
+   161→   161→            </span>
+   162→   162→          </div>
+   163→   163→        </motion.div>
+   164→   164→      </div>
+   165→   165→    );
+   166→   166→  }
+   167→   167→
+   168→   168→  const tone =
+   169→   169→    readiness.band === "strong"
+   170→   170→      ? "success"
+   171→   171→      : readiness.band === "good"
+   172→   172→      ? "success"
+   173→   173→      : readiness.band === "fair"
+   174→   174→      ? "warning"
+   175→   175→      : "critical";
+   176→   176→
+   177→   177→  // The biggest gap drives the recommended-next-action CTA copy.
+   178→   178→  const topGap = gaps && gaps.length > 0 ? gaps[0] : null;
+   179→   179→  const recommendationFocus = topGap?.competency ?? "your top gap";
+   180→   180→
+   181→   181→  // Look up priority level for each blocker name (blockers are just competency strings).
+   182→   182→  const priorityByCompetency = new Map<string, "critical" | "high" | "medium" | "low">();
+   183→   183→  if (gaps) for (const g of gaps) priorityByCompetency.set(g.competency, g.importance);
+   184→   184→
+   185→   185→  const trendPill = trend ? (
+   186→   186→    <span
+   187→   187→      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+   188→   188→        trend.delta > 0
+   189→   189→          ? "bg-success/15 text-success-foreground"
+   190→   190→          : "bg-critical/15 text-critical-foreground"
+   191→   191→      }`}
+   192→   192→    >
+   193→   193→      {trend.delta > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+   194→   194→      {trend.label}
+   195→   195→    </span>
+   196→   196→  ) : null;
+   197→   197→
+   198→   198→  return (
+   199→   199→    <div className="mx-auto max-w-5xl px-4 sm:px-8 py-8 sm:py-14">
+   200→   200→      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+   201→   201→        <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Job Readiness</div>
+   202→   202→        <div className="flex items-center gap-3">
+   203→   203→          <h1 className="text-2xl sm:text-4xl font-semibold tracking-tight">Where do you stand?</h1>
+   204→   204→          <Tooltip delayDuration={200}>
+   205→   205→            <TooltipTrigger asChild>
+   206→   206→              <Button
+   207→   207→                variant="ghost"
+   208→   208→                size="sm"
+   209→   209→                className="h-7 px-2 gap-1.5 text-muted-foreground hover:text-foreground"
+   210→   210→                onClick={() => {
+   211→   211→                  navigator.clipboard.writeText(window.location.href).then(() => {
+   212→   212→                    toast("Session link copied to clipboard");
+   213→   213→                  });
+   214→   214→                }}
+   215→   215→              >
+   216→   216→                <Link2 className="h-3.5 w-3.5" />
+   217→   217→                <span className="text-[11px]">Share</span>
+   218→   218→              </Button>
+   219→   219→            </TooltipTrigger>
+   220→   220→            <TooltipContent side="bottom">Copy link to share this session</TooltipContent>
+   221→   221→          </Tooltip>
+   222→   222→        </div>
+   223→   223→        <p className="mt-2 text-sm text-muted-foreground max-w-xl">
+   224→   224→          This is a Prototype Job Readiness Index — assessment support, not a hiring verdict. It aggregates your match, required coverage and interview evidence.
+   225→   225→        </p>
+   226→   226→      </motion.div>
+   227→   227→
+   228→   228→      <div className="mt-6 sm:mt-8 grid gap-4 lg:grid-cols-5">
+   229→   229→        <motion.div
+   230→   230→          initial={{ opacity: 0, y: 8, scale: 0.95 }}
+   231→   231→          animate={{ opacity: 1, y: 0, scale: 1 }}
+   232→   232→          transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+   233→   233→          className="hm-card hm-card-hover p-4 sm:p-6 lg:col-span-2 flex flex-col items-center justify-center text-center overflow-visible"
+   234→   234→        >
+   235→   235→          <ScoreRing
+   236→   236→            value={readiness.index}
+   237→   237→            label="Prototype Job Readiness Index"
+   238→   238→            caption={readiness.headline}
+   239→   239→            tone={tone as "neutral" | "success" | "warning" | "critical"}
+   240→   240→            delay={200}
+   241→   241→            labelExtra={trendPill}
+   242→   242→          />
+   243→   243→        </motion.div>
+   244→   244→
+   245→   245→        <motion.div
+   246→   246→          initial={{ opacity: 0, y: 8 }}
+   247→   247→          animate={{ opacity: 1, y: 0 }}
+   248→   248→          transition={{ duration: 0.5, delay: 0.1 }}
+   249→   249→          className="hm-card hm-card-hover p-4 sm:p-6 lg:col-span-3 overflow-visible"
+   250→   250→        >
+   251→   251→          <h3 className="text-[13px] font-semibold mb-4">Readiness dimensions</h3>
+   252→   252→          <div className="space-y-5">
+   253→   253→            {readiness.dimensions.map((d, i) => {
+   254→   254→              const status = scoreToStatus(d.score);
+   255→   255→              const explanation =
+   256→   256→                DIMENSION_EXPLANATIONS[d.label] ?? "This dimension contributes to your overall Job Readiness Index.";
+   257→   257→              return (
+   258→   258→                <Tooltip key={d.label} delayDuration={120}>
+   259→   259→                  <TooltipTrigger asChild>
+   260→   260→                    <div className="group cursor-help rounded-md -mx-1 px-1 py-0.5 transition-colors hover:bg-secondary/40">
+   261→   261→                      {/* Label + score on a single aligned row */}
+   262→   262→                      <div className="grid grid-cols-[1fr_auto] gap-x-3 items-center mb-1.5">
+   263→   263→                        <span className="text-[13px] font-medium">{d.label}</span>
+   264→   264→                        <span className="text-[13px] font-semibold tabular-nums hm-num-tabular text-right">
+   265→   265→                          <AnimatedCounter value={Math.round(d.score * 100)} delay={0.2 + i * 0.08} duration={900} />
+   266→   266→                        </span>
+   267→   267→                      </div>
+   268→   268→                      {/* Bar spans full width below */}
+   269→   269→                      <CompetencyBar label="" value={d.score} status={status} index={i} />
+   270→   270→                      <div className="mt-1 text-[11px] text-foreground/80 leading-relaxed">{d.detail}</div>
+   271→   271→                    </div>
+   272→   272→                  </TooltipTrigger>
+   273→   273→                  <TooltipContent side="top" className="max-w-xs text-left leading-relaxed font-normal">
+   274→   274→                    <span className="block">
+   275→   275→                      <span className="font-semibold">{d.label}</span>
+   276→   276→                      <br />
+   277→   277→                      {explanation}
+   278→   278→                    </span>
+   279→   279→                  </TooltipContent>
+   280→   280→                </Tooltip>
+   281→   281→              );
+   282→   282→            })}
+   283→   283→          </div>
+   284→   284→        </motion.div>
+   285→   285→      </div>
+   286→   286→
+   287→   287→      {/* INSIGHTS TABS — deeper breakdown of strengths, watch-outs, coverage */}
+   288→   288→      <InsightsTabs />
+   289→   289→
+   290→   290→      {/* Critical blockers + next best action */}
+   291→   291→      <div className="mt-4 grid gap-3 sm:gap-4 sm:grid-cols-2">
+   292→   292→        <motion.div
+   293→   293→          initial={{ opacity: 0, y: 8 }}
+   294→   294→          animate={{ opacity: 1, y: 0 }}
+   295→   295→          transition={{ duration: 0.5, delay: 0.15 }}
+   296→   296→          // overflow-visible + min-h-fit so the card grows naturally and never clips the last list item
+   297→   297→          className="hm-card p-4 sm:p-6 min-h-fit overflow-visible"
+   298→   298→        >
+   299→   299→          <div className="flex items-center gap-2.5 mb-4">
+   300→   300→            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-critical/15 text-critical-foreground">
+   301→   301→              <AlertOctagon className="h-5 w-5" />
+   302→   302→            </span>
+   303→   303→            <h3 className="text-[13px] font-semibold">Critical blockers</h3>
+   304→   304→          </div>
+   305→   305→          {readiness.criticalBlockers.length > 0 ? (
+   306→   306→            <ul className="space-y-3">
+   307→   307→              {readiness.criticalBlockers.map((b, i) => {
+   308→   308→                const priority = priorityByCompetency.get(b) ?? "critical";
+   309→   309→                const priorityLabel =
+   310→   310→                  priority === "critical"
+   311→   311→                    ? "Critical"
+   312→   312→                    : priority === "high"
+   313→   313→                    ? "High"
+   314→   314→                    : priority === "medium"
+   315→   315→                    ? "Medium"
+   316→   316→                    : "Low";
+   317→   317→                return (
+   318→   318→                  <motion.li
+   319→   319→                    key={b}
+   320→   320→                    initial={{ opacity: 0, x: -6 }}
+   321→   321→                    animate={{ opacity: 1, x: 0 }}
+   322→   322→                    transition={{ duration: 0.3, delay: 0.3 + i * 0.08 }}
+   323→   323→                    className="group flex items-start gap-3"
+   324→   324→                  >
+   325→   325→                    <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-critical/15 text-critical-foreground">
+   326→   326→                      <span className="h-1.5 w-1.5 rounded-full bg-critical animate-pulse" />
+   327→   327→                    </span>
+   328→   328→                    <div className="flex-1 min-w-0">
+   329→   329→                      <div className="flex items-baseline gap-2 flex-wrap">
+   330→   330→                        <span className="text-[13px] font-semibold text-foreground">{b}</span>
+   331→   331→                        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+   332→   332→                          {priorityLabel} priority
+   333→   333→                        </span>
+   334→   334→                      </div>
+   335→   335→                      <button
+   336→   336→                        onClick={() => setView("gaps")}
+   337→   337→                        className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-medium text-accent-blue-foreground opacity-0 -translate-y-0.5 transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0 hover:underline"
+   338→   338→                      >
+   339→   339→                        View in Skill Gaps <ArrowRight className="h-3 w-3" />
+   340→   340→                      </button>
+   341→   341→                    </div>
+   342→   342→                  </motion.li>
+   343→   343→                );
+   344→   344→              })}
+   345→   345→            </ul>
+   346→   346→          ) : (
+   347→   347→            <p className="text-[13px] text-muted-foreground">No critical blockers — well done.</p>
+   348→   348→          )}
+   349→   349→        </motion.div>
+   350→   350→
+   351→   351→        <motion.div
+   352→   352→          initial={{ opacity: 0, y: 8 }}
+   353→   353→          animate={{ opacity: 1, y: 0 }}
+   354→   354→          transition={{ duration: 0.5, delay: 0.2 }}
+   355→   355→          className="hm-card p-4 sm:p-6 min-h-fit overflow-visible"
+   356→   356→        >
+   357→   357→          <div className="flex items-center gap-2.5 mb-4">
+   358→   358→            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-accent-blue/15 text-accent-blue-foreground">
+   359→   359→              <ArrowRightCircle className="h-5 w-5" />
+   360→   360→            </span>
+   361→   361→            <h3 className="text-[13px] font-semibold">Your next best action</h3>
+   362→   362→          </div>
+   363→   363→          <p className="text-[14px] text-foreground leading-relaxed">{readiness.nextBestAction}</p>
+   364→   364→          <div className="flex flex-wrap gap-2 mt-4">
+   365→   365→            <Button className="gap-2" onClick={() => setView("roadmap")}>
+   366→   366→              Open my roadmap <ArrowRight className="h-4 w-4" />
+   367→   367→            </Button>
+   368→   368→            <Button
+   369→   369→              variant="outline"
+   370→   370→              className="gap-2"
+   371→   371→              onClick={() => startInterview()}
+   372→   372→              disabled={loading}
+   373→   373→            >
+   374→   374→              {loading ? <Sparkles className="h-4 w-4 hm-thinking" /> : <RotateCcw className="h-4 w-4" />}
+   375→   375→              Retake interview
+   376→   376→            </Button>
+   377→   377→          </div>
+   378→   378→          <div className="mt-3">
+   379→   379→            <ExportResults />
+   380→   380→          </div>
+   381→   381→        </motion.div>
+   382→   382→      </div>
+   383→   383→
+   384→   384→      {/* Recommended next action card — targets the biggest gap with a focused interview CTA */}
+   385→   385→      {topGap && (
+   386→   386→        <motion.div
+   387→   387→          initial={{ opacity: 0, y: 8 }}
+   388→   388→          animate={{ opacity: 1, y: 0 }}
+   389→   389→          transition={{ duration: 0.5, delay: 0.25 }}
+   390→   390→          className="hm-card hm-card-hover p-4 sm:p-6 mt-4 overflow-visible"
+   391→   391→        >
+   392→   392→          <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+   393→   393→            <div className="flex items-start gap-3 flex-1 min-w-0">
+   394→   394→              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-blue/15 text-accent-blue-foreground">
+   395→   395→                <Target className="h-5 w-5" />
+   396→   396→              </span>
+   397→   397→              <div className="min-w-0">
+   398→   398→                <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
+   399→   399→                  Recommended next action
+   400→   400→                </div>
+   401→   401→                <div className="text-[14px] font-semibold text-foreground">
+   402→   402→                  Start a focused interview on {recommendationFocus}
+   403→   403→                </div>
+   404→   404→                <p className="mt-1 text-[12px] text-foreground/80 leading-relaxed">
+   405→   405→                  Your adaptive interview will open with a question targeting your highest-impact gap. Three to seven questions, calibrated to your level.
+   406→   406→                </p>
+   407→   407→              </div>
+   408→   408→            </div>
+   409→   409→            <div className="shrink-0">
+   410→   410→              <Button
+   411→   411→                className="gap-2 h-11 px-5"
+   412→   412→                onClick={() => {
+   413→   413→                  if (interview && interview.status !== "complete") {
+   414→   414→                    setView("interview");
+   415→   415→                  } else {
+   416→   416→                    startInterview();
+   417→   417→                  }
+   418→   418→                }}
+   419→   419→              >
+   420→   420→                Start focused interview <ArrowRight className="h-4 w-4" />
+   421→   421→              </Button>
+   422→   422→            </div>
+   423→   423→          </div>
+   424→   424→        </motion.div>
+   425→   425→      )}
+   426→   426→
+   427→   427→      {/* Interview evidence summary */}
+   428→   428→      {interview && interview.evaluations.length > 0 && (
+   429→   429→        <motion.div
+   430→   430→          initial={{ opacity: 0, y: 8 }}
+   431→   431→          animate={{ opacity: 1, y: 0 }}
+   432→   432→          transition={{ duration: 0.5, delay: 0.3 }}
+   433→   433→          className="hm-card p-4 sm:p-6 mt-4 overflow-visible"
+   434→   434→        >
+   435→   435→          <h3 className="text-[13px] font-semibold mb-3">Interview evidence ({interview.evaluations.length} answered)</h3>
+   436→   436→          <div className="space-y-2">
+   437→   437→            {interview.competencyStates
+   438→   438→              .filter((c) => c.interviewLevel !== "unknown")
+   439→   439→              .map((c) => (
+   440→   440→                <div key={c.competency} className="flex items-center justify-between text-[13px]">
+   441→   441→                  <div>
+   442→   442→                    <span className="font-medium">{c.competency}</span>
+   443→   443→                    <span className="ml-2 text-[11px] text-muted-foreground capitalize">
+   444→   444→                      resume: {c.resumeLevel} → interview: {c.interviewLevel}
+   445→   445→                    </span>
+   446→   446→                  </div>
+   447→   447→                  <span className="text-[11px] text-muted-foreground capitalize">{c.status}</span>
+   448→   448→                </div>
+   449→   449→              ))}
+   450→   450→          </div>
+   451→   451→        </motion.div>
+   452→   452→      )}
+   453→   453→
+   454→   454→      {/* Interview journey — full adaptive timeline */}
+   455→   455→      <InterviewTimeline />
+   456→   456→
+   457→   457→      {/* Bookmarked questions — review the questions the user starred
+   458→   458→          during the interview. Renders even when empty (shows the empty
+   459→   459→          state with the star icon) so the section is always discoverable. */}
+   460→   460→      <BookmarkedQuestions variant="full" />
+   461→   461→
+   462→   462→      {/* Session Summary */}
+   463→   463→      <SessionSummary />
+   464→   464→    </div>
+   465→   465→  );
+   466→   466→}
+   467→   467→
+   468→   468→/* ============================================================================
+   469→   469→ * InsightsTabs — tabbed section with Strengths / Watch-outs / Coverage.
+   470→   470→ * Renders after the readiness dimensions grid. All derived from existing
+   471→   471→ * store state (gaps, interview, match) — no API calls.
+   472→   472→ * ==========================================================================*/
+   473→   473→
+   474→   474→const LEVEL_INTENSITY: Record<SkillLevel, { label: string; bg: string; text: string; dot: string }> = {
+   475→   475→  strong: {
+   476→   476→    label: "Strong",
+   477→   477→    bg: "bg-success/12",
+   478→   478→    text: "text-success-foreground",
+   479→   479→    dot: "bg-success",
+   480→   480→  },
+   481→   481→  moderate: {
+   482→   482→    label: "Moderate",
+   483→   483→    bg: "bg-accent-blue/10",
+   484→   484→    text: "text-accent-blue-foreground",
+   485→   485→    dot: "bg-accent-blue",
+   486→   486→  },
+   487→   487→  weak: {
+   488→   488→    label: "Weak",
+   489→   489→    bg: "bg-warning/12",
+   490→   490→    text: "text-warning-foreground",
+   491→   491→    dot: "bg-warning",
+   492→   492→  },
+   493→   493→  unknown: {
+   494→   494→    label: "Unknown",
+   495→   495→    bg: "bg-muted/60",
+   496→   496→    text: "text-muted-foreground",
+   497→   497→    dot: "bg-muted-foreground/50",
+   498→   498→  },
+   499→   499→};
+   500→   500→
+   501→   501→function InsightsTabs() {
+   502→   502→  const { gaps, interview, match } = useHireMind();
+   503→   503→  const [tab, setTab] = React.useState("strengths");
+   504→   504→
+   505→   505→  // Derive strengths: competencies whose current level is strong or moderate,
+   506→   506→  // or that have interview evidence with high overall scores.
+   507→   507→  const strengths: { name: string; reason: string }[] = [];
+   508→   508→  const watchOuts: { name: string; reason: string }[] = [];
+   509→   509→
+   510→   510→  if (interview) {
+   511→   511→    for (const c of interview.competencyStates) {
+   512→   512→      if (c.current === "strong") {
+   513→   513→        strengths.push({
+   514→   514→          name: c.competency,
+   515→   515→          reason:
+   516→   516→            c.interviewLevel !== "unknown"
+   517→   517→              ? `Demonstrated in interview (resume: ${c.resumeLevel}).`
+   518→   518→              : `Strong resume signal — not yet verified in interview.`,
+   519→   519→        });
+   520→   520→      } else if (c.current === "moderate" && c.interviewLevel !== "unknown") {
+   521→   521→        strengths.push({
+   522→   522→          name: c.competency,
+   523→   523→          reason: `Solid interview evidence (resume: ${c.resumeLevel} → interview: ${c.interviewLevel}).`,
+   524→   524→        });
+   525→   525→      } else if (c.status === "gap" || c.current === "unknown" || c.current === "weak") {
+   526→   526→        watchOuts.push({
+   527→   527→          name: c.competency,
+   528→   528→          reason:
+   529→   529→            c.notes ||
+   530→   530→            (c.interviewLevel === "unknown"
+   531→   531→              ? "No interview evidence yet — unverified."
+   532→   532→              : "Low scores in this area."),
+   533→   533→        });
+   534→   534→      }
+   535→   535→    }
+   536→   536→  }
+   537→   537→
+   538→   538→  // Augment watch-outs from gaps list (if not already present)
+   539→   539→  if (gaps) {
+   540→   540→    for (const g of gaps) {
+   541→   541→      if (watchOuts.find((w) => w.name === g.competency)) continue;
+   542→   542→      if (g.importance === "critical" || g.importance === "high") {
+   543→   543→        watchOuts.push({
+   544→   544→          name: g.competency,
+   545→   545→          reason: g.reason,
+   546→   546→        });
+   547→   547→      }
+   548→   548→    }
+   549→   549→  }
+   550→   550→
+   551→   551→  // Augment strengths from match rows (matched competencies not in competencyStates)
+   552→   552→  if (match) {
+   553→   553→    for (const r of match.rows) {
+   554→   554→      if (r.status === "matched" && !strengths.find((s) => s.name === r.competency)) {
+   555→   555→        strengths.push({
+   556→   556→          name: r.competency,
+   557→   557→          reason: r.evidence
+   558→   558→            ? `Resume evidence: "${r.evidence.slice(0, 80)}${r.evidence.length > 80 ? "…" : ""}"`
+   559→   559→            : "Aligned with job requirements.",
+   560→   560→        });
+   561→   561→      }
+   562→   562→    }
+   563→   563→  }
+   564→   564→
+   565→   565→  // Cap each list at 6 items for layout stability
+   566→   566→  const topStrengths = strengths.slice(0, 6);
+   567→   567→  const topWatchOuts = watchOuts.slice(0, 6);
+   568→   568→
+   569→   569→  return (
+   570→   570→    <motion.div
+   571→   571→      initial={{ opacity: 0, y: 8 }}
+   572→   572→      animate={{ opacity: 1, y: 0 }}
+   573→   573→      transition={{ duration: 0.5, delay: 0.18 }}
+   574→   574→      className="hm-card hm-card-hover mt-4 p-4 sm:p-6 overflow-visible"
+   575→   575→    >
+   576→   576→      <div className="flex items-center gap-2.5 mb-4">
+   577→   577→        <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-accent-blue/15 text-accent-blue-foreground">
+   578→   578→          <LayoutGrid className="h-5 w-5" />
+   579→   579→        </span>
+   580→   580→        <div>
+   581→   581→          <h3 className="text-[13px] font-semibold">Insights</h3>
+   582→   582→          <div className="text-[11px] text-muted-foreground">A deeper breakdown of your readiness signals</div>
+   583→   583→        </div>
+   584→   584→      </div>
+   585→   585→
+   586→   586→      <Tabs value={tab} onValueChange={setTab}>
+   587→   587→        <TabsList className="mb-4">
+   588→   588→          <TabsTrigger value="strengths" className="gap-1.5">
+   589→   589→            <CheckCircle2 className="h-3 w-3" />
+   590→   590→            Strengths
+   591→   591→            <span className="ml-1 rounded bg-success/15 text-success-foreground px-1 text-[9px] font-semibold leading-none py-0.5">
+   592→   592→              {topStrengths.length}
+   593→   593→            </span>
+   594→   594→          </TabsTrigger>
+   595→   595→          <TabsTrigger value="watchouts" className="gap-1.5">
+   596→   596→            <AlertTriangle className="h-3 w-3" />
+   597→   597→            Watch-outs
+   598→   598→            <span className="ml-1 rounded bg-warning/15 text-warning-foreground px-1 text-[9px] font-semibold leading-none py-0.5">
+   599→   599→              {topWatchOuts.length}
+   600→   600→            </span>
+   601→   601→          </TabsTrigger>
+   602→   602→          <TabsTrigger value="coverage" className="gap-1.5">
+   603→   603→            <LayoutGrid className="h-3 w-3" />
+   604→   604→            Coverage
+   605→   605→          </TabsTrigger>
+   606→   606→        </TabsList>
+   607→   607→
+   608→   608→        {/* Strengths tab */}
+   609→   609→        <TabsContent value="strengths">
+   610→   610→          {topStrengths.length > 0 ? (
+   611→   611→            <ul className="grid sm:grid-cols-2 gap-2.5">
+   612→   612→              {topStrengths.map((s, i) => (
+   613→   613→                <motion.li
+   614→   614→                  key={s.name}
+   615→   615→                  initial={{ opacity: 0, y: 6 }}
+   616→   616→                  animate={{ opacity: 1, y: 0 }}
+   617→   617→                  transition={{ duration: 0.3, delay: i * 0.05 }}
+   618→   618→                  className="flex items-start gap-2.5 rounded-xl border border-success/25 bg-success/5 p-3"
+   619→   619→                >
+   620→   620→                  <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-success/15 text-success-foreground">
+   621→   621→                    <CheckCircle2 className="h-3 w-3" />
+   622→   622→                  </span>
+   623→   623→                  <div className="min-w-0">
+   624→   624→                    <div className="text-[13px] font-semibold text-foreground leading-tight">{s.name}</div>
+   625→   625→                    <div className="mt-0.5 text-[11px] text-muted-foreground leading-relaxed">{s.reason}</div>
+   626→   626→                  </div>
+   627→   627→                </motion.li>
+   628→   628→              ))}
+   629→   629→            </ul>
+   630→   630→          ) : (
+   631→   631→            <p className="text-[13px] text-muted-foreground py-6 text-center">
+   632→   632→              No standout strengths detected yet. Run the interview to gather evidence.
+   633→   633→            </p>
+   634→   634→          )}
+   635→   635→        </TabsContent>
+   636→   636→
+   637→   637→        {/* Watch-outs tab */}
+   638→   638→        <TabsContent value="watchouts">
+   639→   639→          {topWatchOuts.length > 0 ? (
+   640→   640→            <ul className="grid sm:grid-cols-2 gap-2.5">
+   641→   641→              {topWatchOuts.map((w, i) => (
+   642→   642→                <motion.li
+   643→   643→                  key={w.name}
+   644→   644→                  initial={{ opacity: 0, y: 6 }}
+   645→   645→                  animate={{ opacity: 1, y: 0 }}
+   646→   646→                  transition={{ duration: 0.3, delay: i * 0.05 }}
+   647→   647→                  className="flex items-start gap-2.5 rounded-xl border border-warning/25 bg-warning/5 p-3"
+   648→   648→                >
+   649→   649→                  <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-warning/15 text-warning-foreground">
+   650→   650→                    <AlertTriangle className="h-3 w-3" />
+   651→   651→                  </span>
+   652→   652→                  <div className="min-w-0">
+   653→   653→                    <div className="text-[13px] font-semibold text-foreground leading-tight">{w.name}</div>
+   654→   654→                    <div className="mt-0.5 text-[11px] text-muted-foreground leading-relaxed">{w.reason}</div>
+   655→   655→                  </div>
+   656→   656→                </motion.li>
+   657→   657→              ))}
+   658→   658→            </ul>
+   659→   659→          ) : (
+   660→   660→            <p className="text-[13px] text-muted-foreground py-6 text-center">
+   661→   661→              No watch-outs detected. Your profile aligns well with the role requirements.
+   662→   662→            </p>
+   663→   663→          )}
+   664→   664→        </TabsContent>
+   665→   665→
+   666→   666→        {/* Coverage tab — heatmap grid */}
+   667→   667→        <TabsContent value="coverage">
+   668→   668→          <CoverageHeatmap />
+   669→   669→        </TabsContent>
+   670→   670→      </Tabs>
+   671→   671→    </motion.div>
+   672→   672→  );
+   673→   673→}
+   674→   674→
+   675→   675→/** Coverage heatmap — grid of competency cells. Each cell shows the competency
+   676→   676→ *  name, level, and required badge. Background tint + dot color reflect the
+   677→   677→ *  candidate's current level. */
+   678→   678→function CoverageHeatmap() {
+   679→   679→  const { match, interview } = useHireMind();
+   680→   680→
+   681→   681→  // Merge match rows with interview competency states so each cell shows the
+   682→   682→  // latest known level (interview evidence takes precedence over resume level).
+   683→   683→  const interviewLevels = new Map<string, SkillLevel>();
+   684→   684→  if (interview) {
+   685→   685→    for (const c of interview.competencyStates) {
+   686→   686→      interviewLevels.set(c.competency, c.current);
+   687→   687→    }
+   688→   688→  }
+   689→   689→
+   690→   690→  if (!match || match.rows.length === 0) {
+   691→   691→    return (
+   692→   692→      <p className="text-[13px] text-muted-foreground py-6 text-center">
+   693→   693→        Run an analysis to see your competency coverage.
+   694→   694→      </p>
+   695→   695→    );
+   696→   696→  }
+   697→   697→
+   698→   698→  const rows = match.rows;
+   699→   699→
+   700→   700→  return (
+   701→   701→    <div>
+   702→   702→      <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+   703→   703→        <div className="text-[11px] text-muted-foreground">
+   704→   704→          {rows.length} competencies · color shows your level · ring shows required
+   705→   705→        </div>
+   706→   706→        <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+   707→   707→          {(["strong", "moderate", "weak", "unknown"] as SkillLevel[]).map((lvl) => (
+   708→   708→            <span key={lvl} className="inline-flex items-center gap-1">
+   709→   709→              <span className={`inline-block h-2 w-2 rounded-sm ${LEVEL_INTENSITY[lvl].dot}`} />
+   710→   710→              {LEVEL_INTENSITY[lvl].label}
+   711→   711→            </span>
+   712→   712→          ))}
+   713→   713→        </div>
+   714→   714→      </div>
+   715→   715→      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+   716→   716→        {rows.map((r, i) => {
+   717→   717→          const level = interviewLevels.get(r.competency) ?? r.candidateLevel;
+   718→   718→          const intensity = LEVEL_INTENSITY[level];
+   719→   719→          return (
+   720→   720→            <motion.div
+   721→   721→              key={r.competency}
+   722→   722→              initial={{ opacity: 0, scale: 0.95 }}
+   723→   723→              animate={{ opacity: 1, scale: 1 }}
+   724→   724→              transition={{ duration: 0.3, delay: Math.min(i * 0.025, 0.4) }}
+   725→   725→              className={`relative rounded-lg border ${r.required ? "border-foreground/40" : "border-border/60"} ${intensity.bg} p-2.5 min-h-[68px] flex flex-col justify-between`}
+   726→   726→              title={`${r.competency} — ${intensity.label} (${r.importance} importance)`}
+   727→   727→            >
+   728→   728→              <div className="flex items-start justify-between gap-1">
+   729→   729→                <span className="text-[11px] font-semibold leading-tight line-clamp-2 text-foreground">
+   730→   730→                  {r.competency}
+   731→   731→                </span>
+   732→   732→                {r.required && (
+   733→   733→                  <span className="shrink-0 rounded bg-foreground/85 text-background px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider leading-none">
+   734→   734→                    Req
+   735→   735→                  </span>
+   736→   736→                )}
+   737→   737→              </div>
+   738→   738→              <div className="flex items-center gap-1.5 mt-1.5">
+   739→   739→                <span className={`inline-block h-1.5 w-1.5 rounded-full ${intensity.dot}`} />
+   740→   740→                <span className={`text-[10px] font-medium ${intensity.text}`}>
+   741→   741→                  {intensity.label}
+   742→   742→                </span>
+   743→   743→              </div>
+   744→   744→            </motion.div>
+   745→   745→          );
+   746→   746→        })}
+   747→   747→      </div>
+   748→   748→    </div>
+   749→   749→  );
+   750→   750→}
+   751→   751→

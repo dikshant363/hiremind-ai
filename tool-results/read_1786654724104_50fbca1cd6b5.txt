@@ -1,0 +1,720 @@
+     1→"use client";
+     2→
+     3→import * as React from "react";
+     4→import { motion } from "framer-motion";
+     5→import {
+     6→  Radar,
+     7→  TrendingUp,
+     8→  TrendingDown,
+     9→  Minus,
+    10→  Activity,
+    11→  Grid3x3,
+    12→  Clock,
+    13→  Zap,
+    14→  Gauge,
+    15→} from "lucide-react";
+    16→import type { AnswerEvaluation, InterviewState } from "@/lib/types";
+    17→import { useHireMind } from "@/lib/store";
+    18→
+    19→/* ============================================================================
+    20→ * Interview Insights — premium post-answer visual breakdown.
+    21→ *
+    22→ * Shown after each evaluation in the evaluation view. Renders four sections:
+    23→ *   A. Competency Radar Chart (SVG)
+    24→ *   B. Trajectory Sparkline (SVG)
+    25→ *   C. Strength-Weakness Matrix (2x2)
+    26→ *   D. Time Analysis (horizontal bars)
+    27→ *
+    28→ * All derived purely from the deterministic evaluation + competency state
+    29→ * already in the store. No new API calls.
+    30→ * ==========================================================================*/
+    31→
+    32→const REQUIRED_THRESHOLD = 70; // 0-100 — the "passing" polygon outline
+    33→
+    34→/** Five evaluation dimensions, mapped from the four numeric scores.
+    35→ *  "Problem Solving" is a synthetic blend of depth + technical accuracy so we
+    36→ *  get a fifth axis for a proper pentagon. */
+    37→const RADAR_AXES = [
+    38→  { key: "technicalAccuracy", label: "Technical" },
+    39→  { key: "relevance", label: "Relevance" },
+    40→  { key: "depth", label: "Depth" },
+    41→  { key: "communication", label: "Communication" },
+    42→  { key: "problemSolving", label: "Problem Solving" },
+    43→] as const;
+    44→
+    45→type RadarKey = (typeof RADAR_AXES)[number]["key"];
+    46→
+    47→function average(nums: number[]): number {
+    48→  if (nums.length === 0) return 0;
+    49→  return nums.reduce((a, b) => a + b, 0) / nums.length;
+    50→}
+    51→
+    52→/** Build radar dimension values from the cumulative evaluations. Each value
+    53→ *  is 0-100. */
+    54→function buildRadarValues(evals: AnswerEvaluation[]): Record<RadarKey, number> {
+    55→  const v: Record<RadarKey, number> = {
+    56→    technicalAccuracy: average(evals.map((e) => e.technicalAccuracy)) * 100,
+    57→    relevance: average(evals.map((e) => e.relevance)) * 100,
+    58→    depth: average(evals.map((e) => e.depth)) * 100,
+    59→    communication: average(evals.map((e) => e.communication)) * 100,
+    60→    problemSolving:
+    61→      average(
+    62→        evals.map((e) => (e.technicalAccuracy * 0.5 + e.depth * 0.5))
+    63→      ) * 100,
+    64→  };
+    65→  return v;
+    66→}
+    67→
+    68→/** Estimate minutes spent per answer from character count assuming ~30 wpm
+    69→ *  and ~5 chars/word -> ~150 chars/min. */
+    70→function estimateMinutes(text: string): number {
+    71→  const chars = text.trim().length;
+    72→  if (chars === 0) return 0;
+    73→  return Math.max(0.3, Math.round((chars / 150) * 10) / 10);
+    74→}
+    75→
+    76→/** Build a smooth catmull-rom spline path string from a list of (x, y)
+    77→ *  points. Tension defaults to 0.5 for a gentle curve. */
+    78→function smoothPath(
+    79→  points: { x: number; y: number }[],
+    80→  tension = 0.5
+    81→): string {
+    82→  if (points.length === 0) return "";
+    83→  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+    84→  if (points.length === 2) return `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
+    85→
+    86→  let d = `M ${points[0].x} ${points[0].y}`;
+    87→  for (let i = 0; i < points.length - 1; i++) {
+    88→    const p0 = points[i - 1] ?? points[i];
+    89→    const p1 = points[i];
+    90→    const p2 = points[i + 1];
+    91→    const p3 = points[i + 2] ?? p2;
+    92→    const cp1x = p1.x + ((p2.x - p0.x) * tension) / 6;
+    93→    const cp1y = p1.y + ((p2.y - p0.y) * tension) / 6;
+    94→    const cp2x = p2.x - ((p3.x - p1.x) * tension) / 6;
+    95→    const cp2y = p2.y - ((p3.y - p1.y) * tension) / 6;
+    96→    d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+    97→  }
+    98→  return d;
+    99→}
+   100→
+   101→/* ----------------------------------------------------------------------------
+   102→ * A. Competency Radar Chart
+   103→ * ------------------------------------------------------------------------- */
+   104→
+   105→function CompetencyRadar({ values }: { values: Record<RadarKey, number> }) {
+   106→  const size = 280;
+   107→  const cx = size / 2;
+   108→  const cy = size / 2;
+   109→  const radius = size / 2 - 38; // leave room for labels
+   110→  const axes = RADAR_AXES;
+   111→  const n = axes.length;
+   112→
+   113→  // Pre-compute axis end points (used for both gridlines and labels)
+   114→  const axisEnds = axes.map((_, i) => {
+   115→    const angle = (Math.PI * 2 * i) / n - Math.PI / 2; // start at top
+   116→    return {
+   117→      x: cx + Math.cos(angle) * radius,
+   118→      y: cy + Math.sin(angle) * radius,
+   119→      angle,
+   120→    };
+   121→  });
+   122→
+   123→  // Build polygon points string at a given set of 0-100 values
+   124→  const polygonPoints = (vals: number[]): string =>
+   125→    vals
+   126→      .map((v, i) => {
+   127→        const r = (Math.max(0, Math.min(100, v)) / 100) * radius;
+   128→        const a = axisEnds[i].angle;
+   129→        return `${cx + Math.cos(a) * r},${cy + Math.sin(a) * r}`;
+   130→      })
+   131→      .join(" ");
+   132→
+   133→  const candidateVals = axes.map((a) => values[a.key]);
+   134→  const requiredVals = axes.map(() => REQUIRED_THRESHOLD);
+   135→
+   136→  // Concentric grid pentagons at 25/50/75/100
+   137→  const gridRings = [25, 50, 75, 100];
+   138→
+   139→  return (
+   140→    <div className="flex flex-col items-center">
+   141→      <div className="relative" style={{ width: size, height: size }}>
+   142→        <svg width={size} height={size} className="overflow-visible">
+   143→          {/* Grid rings (concentric pentagons) */}
+   144→          {gridRings.map((ring) => (
+   145→            <polygon
+   146→              key={ring}
+   147→              points={polygonPoints(axes.map(() => ring))}
+   148→              fill="none"
+   149→              stroke="var(--border)"
+   150→              strokeWidth={1}
+   151→              strokeDasharray={ring === 100 ? "0" : "3 4"}
+   152→              opacity={ring === 100 ? 0.8 : 0.45}
+   153→            />
+   154→          ))}
+   155→
+   156→          {/* Axis spokes */}
+   157→          {axisEnds.map((end, i) => (
+   158→            <line
+   159→              key={i}
+   160→              x1={cx}
+   161→              y1={cy}
+   162→              x2={end.x}
+   163→              y2={end.y}
+   164→              stroke="var(--border)"
+   165→              strokeWidth={1}
+   166→              opacity={0.55}
+   167→            />
+   168→          ))}
+   169→
+   170→          {/* Required threshold polygon (dashed outline) */}
+   171→          <motion.polygon
+   172→            initial={{ opacity: 0, scale: 0.6 }}
+   173→            animate={{ opacity: 1, scale: 1 }}
+   174→            transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+   175→            points={polygonPoints(requiredVals)}
+   176→            fill="var(--muted-foreground)"
+   177→            fillOpacity={0.05}
+   178→            stroke="var(--muted-foreground)"
+   179→            strokeWidth={1.2}
+   180→            strokeDasharray="4 4"
+   181→            style={{ transformOrigin: `${cx}px ${cy}px` }}
+   182→          />
+   183→
+   184→          {/* Candidate polygon (filled) */}
+   185→          <motion.polygon
+   186→            initial={{ opacity: 0, scale: 0.3 }}
+   187→            animate={{ opacity: 1, scale: 1 }}
+   188→            transition={{
+   189→              duration: 0.9,
+   190→              delay: 0.25,
+   191→              ease: [0.22, 1, 0.36, 1],
+   192→              type: "spring",
+   193→              stiffness: 80,
+   194→              damping: 14,
+   195→            }}
+   196→            points={polygonPoints(candidateVals)}
+   197→            fill="var(--accent-blue)"
+   198→            fillOpacity={0.18}
+   199→            stroke="var(--accent-blue)"
+   200→            strokeWidth={2}
+   201→            strokeLinejoin="round"
+   202→            style={{ transformOrigin: `${cx}px ${cy}px` }}
+   203→          />
+   204→
+   205→          {/* Candidate vertex dots */}
+   206→          {candidateVals.map((v, i) => {
+   207→            const r = (Math.max(0, Math.min(100, v)) / 100) * radius;
+   208→            const a = axisEnds[i].angle;
+   209→            return (
+   210→              <motion.circle
+   211→                key={i}
+   212→                initial={{ opacity: 0, r: 0 }}
+   213→                animate={{ opacity: 1, r: 3.5 }}
+   214→                transition={{ duration: 0.4, delay: 0.6 + i * 0.05 }}
+   215→                cx={cx + Math.cos(a) * r}
+   216→                cy={cy + Math.sin(a) * r}
+   217→                fill="var(--accent-blue)"
+   218→                stroke="var(--card)"
+   219→                strokeWidth={1.5}
+   220→              />
+   221→            );
+   222→          })}
+   223→
+   224→          {/* Axis labels */}
+   225→          {axes.map((axis, i) => {
+   226→            const labelR = radius + 20;
+   227→            const a = axisEnds[i].angle;
+   228→            const x = cx + Math.cos(a) * labelR;
+   229→            const y = cy + Math.sin(a) * labelR;
+   230→            const val = Math.round(values[axis.key]);
+   231→            return (
+   232→              <g key={axis.key}>
+   233→                <text
+   234→                  x={x}
+   235→                  y={y - 4}
+   236→                  textAnchor="middle"
+   237→                  className="fill-foreground"
+   238→                  style={{ fontSize: 10, fontWeight: 600 }}
+   239→                >
+   240→                  {axis.label}
+   241→                </text>
+   242→                <text
+   243→                  x={x}
+   244→                  y={y + 8}
+   245→                  textAnchor="middle"
+   246→                  className="fill-muted-foreground"
+   247→                  style={{ fontSize: 9, fontWeight: 500 }}
+   248→                >
+   249→                  {val}
+   250→                </text>
+   251→              </g>
+   252→            );
+   253→          })}
+   254→        </svg>
+   255→      </div>
+   256→      {/* Legend */}
+   257→      <div className="mt-3 flex items-center gap-4 text-[10px] text-muted-foreground">
+   258→        <span className="inline-flex items-center gap-1.5">
+   259→          <span className="inline-block h-2 w-2 rounded-sm bg-accent-blue" />
+   260→          Your score
+   261→        </span>
+   262→        <span className="inline-flex items-center gap-1.5">
+   263→          <span
+   264→            className="inline-block h-2 w-2 rounded-sm"
+   265→            style={{
+   266→              background: "transparent",
+   267→              border: "1px dashed var(--muted-foreground)",
+   268→            }}
+   269→          />
+   270→          Target ({REQUIRED_THRESHOLD})
+   271→        </span>
+   272→      </div>
+   273→    </div>
+   274→  );
+   275→}
+   276→
+   277→/* ----------------------------------------------------------------------------
+   278→ * B. Trajectory Sparkline
+   279→ * ------------------------------------------------------------------------- */
+   280→
+   281→function TrajectorySparkline({
+   282→  evals,
+   283→}: {
+   284→  evals: AnswerEvaluation[];
+   285→}) {
+   286→  const width = 220;
+   287→  const height = 56;
+   288→  const padX = 8;
+   289→  const padY = 10;
+   290→
+   291→  const points = evals.map((e, i) => {
+   292→    const x =
+   293→      evals.length === 1
+   294→        ? width / 2
+   295→        : padX + (i / (evals.length - 1)) * (width - padX * 2);
+   296→    const y =
+   297→      height - padY - (Math.round(e.overall * 100) / 100) * (height - padY * 2);
+   298→    return { x, y };
+   299→  });
+   300→
+   301→  const path = smoothPath(points);
+   302→  const areaPath =
+   303→    points.length > 0
+   304→      ? `${path} L ${points[points.length - 1].x} ${height - padY} L ${points[0].x} ${height - padY} Z`
+   305→      : "";
+   306→
+   307→  const trend =
+   308→    evals.length < 2
+   309→      ? { dir: "flat", label: "Baseline", icon: Minus }
+   310→      : evals[evals.length - 1].overall > evals[0].overall + 0.02
+   311→      ? { dir: "up", label: "Improving", icon: TrendingUp }
+   312→      : evals[evals.length - 1].overall < evals[0].overall - 0.02
+   313→      ? { dir: "down", label: "Declining", icon: TrendingDown }
+   314→      : { dir: "flat", label: "Steady", icon: Minus };
+   315→
+   316→  const TrendIcon = trend.icon;
+   317→  const trendColor =
+   318→    trend.dir === "up"
+   319→      ? "text-success-foreground"
+   320→      : trend.dir === "down"
+   321→      ? "text-critical-foreground"
+   322→      : "text-muted-foreground";
+   323→
+   324→  return (
+   325→    <div className="flex flex-col gap-2">
+   326→      {evals.length < 2 ? (
+   327→        <div
+   328→          className="flex items-center justify-center rounded-md border border-dashed border-border/60 bg-muted/30 px-3 py-3 text-[11px] text-muted-foreground"
+   329→          style={{ width, height }}
+   330→        >
+   331→          <span className="inline-flex items-center gap-1.5">
+   332→            <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent-blue" />
+   333→            Baseline established · trajectory appears after Q2
+   334→          </span>
+   335→        </div>
+   336→      ) : (
+   337→        <svg width={width} height={height} className="overflow-visible">
+   338→          <defs>
+   339→            <linearGradient id="hm-spark-area" x1="0" y1="0" x2="0" y2="1">
+   340→              <stop offset="0%" stopColor="var(--accent-blue)" stopOpacity={0.28} />
+   341→              <stop offset="100%" stopColor="var(--accent-blue)" stopOpacity={0} />
+   342→            </linearGradient>
+   343→          </defs>
+   344→          {/* Baseline at 50% */}
+   345→          <line
+   346→            x1={padX}
+   347→            x2={width - padX}
+   348→            y1={height / 2}
+   349→            y2={height / 2}
+   350→            stroke="var(--border)"
+   351→            strokeWidth={1}
+   352→            strokeDasharray="2 3"
+   353→            opacity={0.6}
+   354→          />
+   355→          {areaPath && (
+   356→            <motion.path
+   357→              initial={{ opacity: 0 }}
+   358→              animate={{ opacity: 1 }}
+   359→              transition={{ duration: 0.6, delay: 0.4 }}
+   360→              d={areaPath}
+   361→              fill="url(#hm-spark-area)"
+   362→            />
+   363→          )}
+   364→          {path && (
+   365→            <motion.path
+   366→              initial={{ pathLength: 0 }}
+   367→              animate={{ pathLength: 1 }}
+   368→              transition={{ duration: 0.9, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+   369→              d={path}
+   370→              fill="none"
+   371→              stroke="var(--accent-blue)"
+   372→              strokeWidth={2}
+   373→              strokeLinecap="round"
+   374→              strokeLinejoin="round"
+   375→            />
+   376→          )}
+   377→          {points.map((p, i) => (
+   378→            <motion.circle
+   379→              key={i}
+   380→              initial={{ opacity: 0, r: 0 }}
+   381→              animate={{ opacity: 1, r: 2.8 }}
+   382→              transition={{ duration: 0.3, delay: 0.5 + i * 0.08 }}
+   383→              cx={p.x}
+   384→              cy={p.y}
+   385→              fill="var(--card)"
+   386→              stroke="var(--accent-blue)"
+   387→              strokeWidth={1.8}
+   388→            />
+   389→          ))}
+   390→        </svg>
+   391→      )}
+   392→      <div className="flex items-center justify-between text-[10px]">
+   393→        <span className="text-muted-foreground">
+   394→          Q1{evals.length > 1 ? ` → Q${evals.length}` : " · baseline"}
+   395→        </span>
+   396→        <span className={`inline-flex items-center gap-1 font-medium ${trendColor}`}>
+   397→          <TrendIcon className="h-3 w-3" />
+   398→          {trend.label}
+   399→        </span>
+   400→      </div>
+   401→    </div>
+   402→  );
+   403→}
+   404→
+   405→/* ----------------------------------------------------------------------------
+   406→ * C. Strength-Weakness Matrix
+   407→ * ------------------------------------------------------------------------- */
+   408→
+   409→interface MatrixQuadrant {
+   410→  title: string;
+   411→  description: string;
+   412→  chips: string[];
+   413→  borderClass: string;
+   414→  chipClass: string;
+   415→  iconBg: string;
+   416→  iconColor: string;
+   417→  icon: React.ComponentType<{ className?: string }>;
+   418→}
+   419→
+   420→function StrengthWeaknessMatrix({
+   421→  interview,
+   422→  gaps,
+   423→}: {
+   424→  interview: InterviewState;
+   425→  gaps: { competency: string; importance: string }[] | null;
+   426→}) {
+   427→  // Build competency chips per quadrant from the deterministic state.
+   428→  const states = interview.competencyStates;
+   429→  const evaluatedCompetencies = new Set(
+   430→    interview.evaluations.map((e) => e.competency)
+   431→  );
+   432→
+   433→  const strongPracticed: string[] = [];
+   434→  const strongUnverified: string[] = [];
+   435→  const weakImproving: string[] = [];
+   436→  const criticalGaps: string[] = [];
+   437→
+   438→  for (const s of states) {
+   439→    if (
+   440→      (s.interviewLevel === "strong" || s.current === "strong") &&
+   441→      evaluatedCompetencies.has(s.competency)
+   442→    ) {
+   443→      strongPracticed.push(s.competency);
+   444→    } else if (
+   445→      (s.resumeLevel === "strong" || s.resumeLevel === "moderate") &&
+   446→      s.interviewLevel === "unknown"
+   447→    ) {
+   448→      strongUnverified.push(s.competency);
+   449→    } else if (
+   450→      (s.interviewLevel === "weak" || s.current === "weak") &&
+   451→      s.status !== "gap"
+   452→    ) {
+   453→      weakImproving.push(s.competency);
+   454→    } else if (s.status === "gap" || s.current === "unknown") {
+   455→      criticalGaps.push(s.competency);
+   456→    }
+   457→  }
+   458→
+   459→  // Pull from gaps list to round out critical gaps
+   460→  if (gaps) {
+   461→    for (const g of gaps) {
+   462→      if (criticalGaps.length < 3 && !criticalGaps.includes(g.competency)) {
+   463→        if (g.importance === "critical" || g.importance === "high") {
+   464→          criticalGaps.push(g.competency);
+   465→        }
+   466→      }
+   467→    }
+   468→  }
+   469→
+   470→  // Limit each quadrant to 3 chips; use em-dash placeholder when empty so the
+   471→  // 2x2 grid stays balanced.
+   472→  const take3 = (arr: string[]): string[] => {
+   473→    const out = arr.slice(0, 3);
+   474→    return out.length === 0 ? ["—"] : out;
+   475→  };
+   476→
+   477→  const quadrants: MatrixQuadrant[] = [
+   478→    {
+   479→      title: "Strong & Practiced",
+   480→      description: "Demonstrated well in the interview",
+   481→      chips: take3(strongPracticed),
+   482→      borderClass: "border-success/40",
+   483→      chipClass: "bg-success/10 text-success-foreground border-success/30",
+   484→      iconBg: "bg-success/15",
+   485→      iconColor: "text-success-foreground",
+   486→      icon: TrendingUp,
+   487→    },
+   488→    {
+   489→      title: "Strong but Unverified",
+   490→      description: "On resume, not yet asked",
+   491→      chips: take3(strongUnverified),
+   492→      borderClass: "border-accent-blue/40",
+   493→      chipClass: "bg-accent-blue/10 text-accent-blue-foreground border-accent-blue/30",
+   494→      iconBg: "bg-accent-blue/15",
+   495→      iconColor: "text-accent-blue-foreground",
+   496→      icon: Radar,
+   497→    },
+   498→    {
+   499→      title: "Weak but Improving",
+   500→      description: "Low scores, recent gains",
+   501→      chips: take3(weakImproving),
+   502→      borderClass: "border-warning/40",
+   503→      chipClass: "bg-warning/10 text-warning-foreground border-warning/30",
+   504→      iconBg: "bg-warning/15",
+   505→      iconColor: "text-warning-foreground",
+   506→      icon: Activity,
+   507→    },
+   508→    {
+   509→      title: "Critical Gaps",
+   510→      description: "Need urgent work",
+   511→      chips: take3(criticalGaps),
+   512→      borderClass: "border-critical/40",
+   513→      chipClass: "bg-critical/10 text-critical-foreground border-critical/30",
+   514→      iconBg: "bg-critical/15",
+   515→      iconColor: "text-critical-foreground",
+   516→      icon: Zap,
+   517→    },
+   518→  ];
+   519→
+   520→  return (
+   521→    <div className="grid grid-cols-2 gap-2.5">
+   522→      {quadrants.map((q, i) => {
+   523→        const Icon = q.icon;
+   524→        return (
+   525→          <motion.div
+   526→            key={q.title}
+   527→            initial={{ opacity: 0, scale: 0.95 }}
+   528→            animate={{ opacity: 1, scale: 1 }}
+   529→            transition={{ duration: 0.4, delay: 0.1 + i * 0.07, ease: [0.22, 1, 0.36, 1] }}
+   530→            className={`rounded-xl border ${q.borderClass} bg-card/60 p-3`}
+   531→          >
+   532→            <div className="flex items-start gap-2 mb-2">
+   533→              <span className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md ${q.iconBg} ${q.iconColor}`}>
+   534→                <Icon className="h-3 w-3" />
+   535→              </span>
+   536→              <div className="min-w-0">
+   537→                <div className="text-[11px] font-semibold leading-tight">{q.title}</div>
+   538→                <div className="text-[9px] text-muted-foreground leading-tight mt-0.5">{q.description}</div>
+   539→              </div>
+   540→            </div>
+   541→            <div className="flex flex-wrap gap-1">
+   542→              {q.chips.map((chip) => (
+   543→                <span
+   544→                  key={chip}
+   545→                  className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-medium leading-none ${q.chipClass}`}
+   546→                >
+   547→                  {chip}
+   548→                </span>
+   549→              ))}
+   550→            </div>
+   551→          </motion.div>
+   552→        );
+   553→      })}
+   554→    </div>
+   555→  );
+   556→}
+   557→
+   558→/* ----------------------------------------------------------------------------
+   559→ * D. Time Analysis
+   560→ * ------------------------------------------------------------------------- */
+   561→
+   562→function TimeAnalysis({ interview }: { interview: InterviewState }) {
+   563→  const minutes = interview.answers.map((a) => estimateMinutes(a.text));
+   564→  const maxMin = Math.max(1, ...minutes);
+   565→  const avg = minutes.length > 0 ? average(minutes) : 0;
+   566→
+   567→  const pace =
+   568→    avg >= 3
+   569→      ? { label: "Thoughtful", icon: Gauge, color: "text-success-foreground", bg: "bg-success/15" }
+   570→      : avg >= 1
+   571→      ? { label: "Quick", icon: Zap, color: "text-accent-blue-foreground", bg: "bg-accent-blue/15" }
+   572→      : { label: "Rushed", icon: Clock, color: "text-warning-foreground", bg: "bg-warning/15" };
+   573→
+   574→  const PaceIcon = pace.icon;
+   575→
+   576→  return (
+   577→    <div>
+   578→      <div className="space-y-2">
+   579→        {minutes.map((m, i) => {
+   580→          const widthPct = (m / maxMin) * 100;
+   581→          return (
+   582→            <motion.div
+   583→              key={i}
+   584→              initial={{ opacity: 0, x: -6 }}
+   585→              animate={{ opacity: 1, x: 0 }}
+   586→              transition={{ duration: 0.3, delay: i * 0.06 }}
+   587→              className="flex items-center gap-2"
+   588→            >
+   589→              <span className="text-[10px] font-medium text-muted-foreground w-6 shrink-0 tabular-nums">
+   590→                Q{i + 1}
+   591→              </span>
+   592→              <div className="flex-1 h-4 rounded bg-muted/60 overflow-hidden">
+   593→                <motion.div
+   594→                  initial={{ width: 0 }}
+   595→                  animate={{ width: `${widthPct}%` }}
+   596→                  transition={{ duration: 0.6, delay: 0.2 + i * 0.06, ease: [0.22, 1, 0.36, 1] }}
+   597→                  className="h-full rounded"
+   598→                  style={{
+   599→                    background:
+   600→                      m >= 3
+   601→                        ? "linear-gradient(90deg, var(--success), var(--accent-blue))"
+   602→                        : m >= 1
+   603→                        ? "linear-gradient(90deg, var(--accent-blue), var(--accent-blue))"
+   604→                        : "linear-gradient(90deg, var(--warning), var(--warning))",
+   605→                  }}
+   606→                />
+   607→              </div>
+   608→              <span className="text-[10px] text-muted-foreground w-12 text-right tabular-nums">
+   609→                {m}min
+   610→              </span>
+   611→            </motion.div>
+   612→          );
+   613→        })}
+   614→      </div>
+   615→      <div className="mt-3 flex items-center gap-2">
+   616→        <span className={`inline-flex items-center gap-1 rounded-full ${pace.bg} ${pace.color} px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider`}>
+   617→          <PaceIcon className="h-2.5 w-2.5" />
+   618→          {pace.label}
+   619→        </span>
+   620→        <span className="text-[10px] text-muted-foreground">
+   621→          avg {avg.toFixed(1)} min / answer
+   622→        </span>
+   623→      </div>
+   624→    </div>
+   625→  );
+   626→}
+   627→
+   628→/* ----------------------------------------------------------------------------
+   629→ * Main exported component
+   630→ * ------------------------------------------------------------------------- */
+   631→
+   632→export function InterviewInsights() {
+   633→  const { interview, gaps } = useHireMind();
+   634→
+   635→  if (!interview || interview.evaluations.length === 0) return null;
+   636→
+   637→  const evals = interview.evaluations;
+   638→  const radarValues = buildRadarValues(evals);
+   639→
+   640→  return (
+   641→    <motion.div
+   642→      initial={{ opacity: 0, y: 16 }}
+   643→      animate={{ opacity: 1, y: 0 }}
+   644→      transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+   645→      className="hm-card hm-card-hover mt-5 sm:mt-6 p-5 sm:p-8 relative overflow-visible"
+   646→    >
+   647→      <div className="flex items-center gap-2.5 mb-1">
+   648→        <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-accent-blue/12 text-accent-blue-foreground">
+   649→          <Grid3x3 className="h-4 w-4" />
+   650→        </span>
+   651→        <div>
+   652→          <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+   653→            Interview Insights
+   654→          </div>
+   655→          <h3 className="text-[15px] font-semibold tracking-tight">
+   656→            A deeper look at your performance
+   657→          </h3>
+   658→        </div>
+   659→      </div>
+   660→      <p className="text-[12px] text-muted-foreground mt-1 mb-5">
+   661→        Updated after each answer. All scores are deterministic aggregates — no raw model output.
+   662→      </p>
+   663→
+   664→      <div className="grid gap-5 lg:grid-cols-2">
+   665→        {/* A. Radar */}
+   666→        <div className="rounded-xl border border-border/60 bg-card/40 p-4">
+   667→          <div className="flex items-center gap-1.5 mb-3">
+   668→            <Radar className="h-3.5 w-3.5 text-accent-blue-foreground" />
+   669→            <h4 className="text-[12px] font-semibold">Competency Radar</h4>
+   670→          </div>
+   671→          <div className="flex justify-center">
+   672→            <CompetencyRadar values={radarValues} />
+   673→          </div>
+   674→        </div>
+   675→
+   676→        {/* B. Sparkline + D. Time analysis share a column */}
+   677→        <div className="flex flex-col gap-5">
+   678→          <div className="rounded-xl border border-border/60 bg-card/40 p-4">
+   679→            <div className="flex items-center justify-between mb-3">
+   680→              <div className="flex items-center gap-1.5">
+   681→                <Activity className="h-3.5 w-3.5 text-accent-blue-foreground" />
+   682→                <h4 className="text-[12px] font-semibold">Score Trajectory</h4>
+   683→              </div>
+   684→              <span className="text-[10px] text-muted-foreground">Overall %</span>
+   685→            </div>
+   686→            <div className="flex justify-center">
+   687→              <TrajectorySparkline evals={evals} />
+   688→            </div>
+   689→          </div>
+   690→
+   691→          <div className="rounded-xl border border-border/60 bg-card/40 p-4">
+   692→            <div className="flex items-center justify-between mb-3">
+   693→              <div className="flex items-center gap-1.5">
+   694→                <Clock className="h-3.5 w-3.5 text-accent-blue-foreground" />
+   695→                <h4 className="text-[12px] font-semibold">Time per Answer</h4>
+   696→              </div>
+   697→              <span className="text-[10px] text-muted-foreground">~30 wpm estimate</span>
+   698→            </div>
+   699→            <TimeAnalysis interview={interview} />
+   700→          </div>
+   701→        </div>
+   702→
+   703→        {/* C. Strength-Weakness Matrix — full width */}
+   704→        <div className="lg:col-span-2 rounded-xl border border-border/60 bg-card/40 p-4">
+   705→          <div className="flex items-center justify-between mb-3">
+   706→            <div className="flex items-center gap-1.5">
+   707→              <Grid3x3 className="h-3.5 w-3.5 text-accent-blue-foreground" />
+   708→              <h4 className="text-[12px] font-semibold">Strength-Weakness Matrix</h4>
+   709→            </div>
+   710→            <span className="text-[10px] text-muted-foreground">
+   711→              {interview.competencyStates.length} competencies tracked
+   712→            </span>
+   713→          </div>
+   714→          <StrengthWeaknessMatrix interview={interview} gaps={gaps} />
+   715→        </div>
+   716→      </div>
+   717→    </motion.div>
+   718→  );
+   719→}
+   720→

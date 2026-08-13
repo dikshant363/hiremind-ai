@@ -230,7 +230,7 @@ export function ReadinessView() {
           initial={{ opacity: 0, y: 8, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-          className="hm-card hm-card-hover p-4 sm:p-6 lg:col-span-2 flex flex-col items-center justify-center text-center overflow-visible"
+          className="hm-card hm-card-hover hm-score-reveal p-4 sm:p-6 lg:col-span-2 flex flex-col items-center justify-center text-center overflow-visible"
         >
           <ScoreRing
             value={readiness.index}
@@ -246,7 +246,7 @@ export function ReadinessView() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="hm-card hm-card-hover p-4 sm:p-6 lg:col-span-3 overflow-visible"
+          className="hm-card hm-card-hover hm-glass-panel p-4 sm:p-6 lg:col-span-3 overflow-visible"
         >
           <h3 className="text-[13px] font-semibold mb-4">Readiness dimensions</h3>
           <div className="space-y-5">

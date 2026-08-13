@@ -126,6 +126,20 @@ export function useKeyboardShortcuts() {
         document.dispatchEvent(new CustomEvent("hm-toggle-theme"));
         return;
       }
+
+      // a: Toggle achievements gallery
+      if (key === "a") {
+        e.preventDefault();
+        document.dispatchEvent(new CustomEvent("hm-show-achievements"));
+        return;
+      }
+
+      // g: Show about modal
+      if (key === "g") {
+        e.preventDefault();
+        document.dispatchEvent(new CustomEvent("hm-show-about"));
+        return;
+      }
     },
     [
       view,

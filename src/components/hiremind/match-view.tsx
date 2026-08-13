@@ -61,19 +61,21 @@ export function MatchView() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="hm-card hm-card-hover p-5 sm:p-7 lg:col-span-2 flex flex-col items-center justify-center text-center relative"
+          className="hm-card hm-card-hover hm-glass-panel p-5 sm:p-7 lg:col-span-2 flex flex-col items-center justify-center text-center relative"
         >
           <motion.div
             initial={{ scale: 0.9 }}
             animate={{ scale: 1 }}
             transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           >
-            <ScoreRing
-              value={match.index}
-              label="Prototype Job Match Index"
-              caption={match.headline}
-              tone={tone as "neutral" | "success" | "warning" | "critical"}
-            />
+            <div className="hm-score-reveal">
+              <ScoreRing
+                value={match.index}
+                label="Prototype Job Match Index"
+                caption={match.headline}
+                tone={tone as "neutral" | "success" | "warning" | "critical"}
+              />
+            </div>
           </motion.div>
           <div className="mt-4 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <Info className="h-3 w-3" />
@@ -86,7 +88,7 @@ export function MatchView() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="hm-card hm-card-hover p-5 sm:p-7 lg:col-span-3"
+          className="hm-card hm-card-hover hm-card-lift p-5 sm:p-7 lg:col-span-3"
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[13px] font-semibold">Why this score</h3>

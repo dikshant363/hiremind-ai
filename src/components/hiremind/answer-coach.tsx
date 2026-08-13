@@ -55,7 +55,7 @@ export function AnswerCoach({ answer }: { answer: string }) {
       : "bg-muted-foreground/50";
 
   return (
-    <div className="hm-card overflow-hidden">
+    <div className="hm-card hm-glass-panel overflow-hidden">
       {/* Header — always visible */}
       <button
         onClick={() => setCollapsed((v) => !v)}

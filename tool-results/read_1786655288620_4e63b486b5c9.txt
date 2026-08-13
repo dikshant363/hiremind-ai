@@ -1,0 +1,1879 @@
+     1→     1→@import "tailwindcss";
+     2→     2→@import "tw-animate-css";
+     3→     3→
+     4→     4→@custom-variant dark (&:is(.dark *));
+     5→     5→
+     6→     6→@theme inline {
+     7→     7→  --color-background: var(--background);
+     8→     8→  --color-foreground: var(--foreground);
+     9→     9→  --font-sans: var(--font-geist-sans);
+    10→    10→  --font-mono: var(--font-geist-mono);
+    11→    11→  --color-sidebar-ring: var(--sidebar-ring);
+    12→    12→  --color-sidebar-border: var(--sidebar-border);
+    13→    13→  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    14→    14→  --color-sidebar-accent: var(--sidebar-accent);
+    15→    15→  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    16→    16→  --color-sidebar-primary: var(--sidebar-primary);
+    17→    17→  --color-sidebar-foreground: var(--sidebar-foreground);
+    18→    18→  --color-sidebar: var(--sidebar);
+    19→    19→  --color-chart-5: var(--chart-5);
+    20→    20→  --color-chart-4: var(--chart-4);
+    21→    21→  --color-chart-3: var(--chart-3);
+    22→    22→  --color-chart-2: var(--chart-2);
+    23→    23→  --color-chart-1: var(--chart-1);
+    24→    24→  --color-ring: var(--ring);
+    25→    25→  --color-input: var(--input);
+    26→    26→  --color-border: var(--border);
+    27→    27→  --color-destructive: var(--destructive);
+    28→    28→  --color-accent-foreground: var(--accent-foreground);
+    29→    29→  --color-accent: var(--accent);
+    30→    30→  --color-muted-foreground: var(--muted-foreground);
+    31→    31→  --color-muted: var(--muted);
+    32→    32→  --color-secondary-foreground: var(--secondary-foreground);
+    33→    33→  --color-secondary: var(--secondary);
+    34→    34→  --color-primary-foreground: var(--primary-foreground);
+    35→    35→  --color-primary: var(--primary);
+    36→    36→  --color-popover-foreground: var(--popover-foreground);
+    37→    37→  --color-popover: var(--popover);
+    38→    38→  --color-card-foreground: var(--card-foreground);
+    39→    39→  --color-card: var(--card);
+    40→    40→  --radius-sm: calc(var(--radius) - 4px);
+    41→    41→  --radius-md: calc(var(--radius) - 2px);
+    42→    42→  --radius-lg: var(--radius);
+    43→    43→  --radius-xl: calc(var(--radius) + 4px);
+    44→    44→
+    45→    45→  /* HIREMIND semantic tokens — premium Apple-inspired palette */
+    46→    46→  --color-success: var(--success);
+    47→    47→  --color-success-foreground: var(--success-foreground);
+    48→    48→  --color-warning: var(--warning);
+    49→    49→  --color-warning-foreground: var(--warning-foreground);
+    50→    50→  --color-critical: var(--critical);
+    51→    51→  --color-critical-foreground: var(--critical-foreground);
+    52→    52→  --color-surface: var(--surface);
+    53→    53→  --color-surface-foreground: var(--surface-foreground);
+    54→    54→  --color-elevated: var(--elevated);
+    55→    55→  --color-elevated-foreground: var(--elevated-foreground);
+    56→    56→  --color-accent-blue: var(--accent-blue);
+    57→    57→  --color-accent-blue-foreground: var(--accent-blue-foreground);
+    58→    58→}
+    59→    59→
+    60→    60→/* LIGHT — warm-neutral "soft white" surface, deep charcoal text.
+    61→    61→   The accent is a restrained slate-blue (no neon indigo). */
+    62→    62→:root {
+    63→    63→  --radius: 0.875rem;
+    64→    64→
+    65→    65→  /* Surfaces — very light warm neutral, never pure #FFF */
+    66→    66→  --background: oklch(0.985 0.003 95);
+    67→    67→  --foreground: oklch(0.18 0.005 270);
+    68→    68→  --surface: oklch(1 0 0);
+    69→    69→  --surface-foreground: oklch(0.18 0.005 270);
+    70→    70→  --elevated: oklch(0.997 0.002 95);
+    71→    71→  --elevated-foreground: oklch(0.18 0.005 270);
+    72→    72→
+    73→    73→  --card: oklch(1 0 0);
+    74→    74→  --card-foreground: oklch(0.18 0.005 270);
+    75→    75→  --popover: oklch(1 0 0);
+    76→    76→  --popover-foreground: oklch(0.18 0.005 270);
+    77→    77→
+    78→    78→  /* Primary = charcoal (used sparingly for primary CTAs) */
+    79→    79→  --primary: oklch(0.22 0.01 270);
+    80→    80→  --primary-foreground: oklch(0.985 0.003 95);
+    81→    81→
+    82→    82→  --secondary: oklch(0.965 0.005 95);
+    83→    83→  --secondary-foreground: oklch(0.22 0.01 270);
+    84→    84→  --muted: oklch(0.962 0.005 95);
+    85→    85→  --muted-foreground: oklch(0.48 0.01 270);
+    86→    86→  --accent: oklch(0.955 0.008 95);
+    87→    87→  --accent-foreground: oklch(0.22 0.01 270);
+    88→    88→
+    89→    89→  /* Restrained slate-blue accent — only for important interactive elements */
+    90→    90→  --accent-blue: oklch(0.52 0.04 250);
+    91→    91→  --accent-blue-foreground: oklch(0.99 0.002 95);
+    92→    92→
+    93→    93→  /* Status — soft, never alarming */
+    94→    94→  --success: oklch(0.72 0.13 155);
+    95→    95→  --success-foreground: oklch(0.18 0.04 155);
+    96→    96→  --warning: oklch(0.78 0.13 75); /* refined amber — deeper, less muddy than gold */
+    97→    97→  --warning-foreground: oklch(0.27 0.06 75);
+    98→    98→  --critical: oklch(0.66 0.16 25);
+    99→    99→  --critical-foreground: oklch(0.18 0.05 25);
+   100→   100→
+   101→   101→  --destructive: oklch(0.66 0.16 25);
+   102→   102→  --border: oklch(0.92 0.004 95);
+   103→   103→  --input: oklch(0.93 0.004 95);
+   104→   104→  --ring: oklch(0.52 0.04 250);
+   105→   105→
+   106→   106→  --chart-1: oklch(0.52 0.04 250);     /* accent blue */
+   107→   107→  --chart-2: oklch(0.72 0.13 155);     /* success green */
+   108→   108→  --chart-3: oklch(0.78 0.13 75);      /* refined amber */
+   109→   109→  --chart-4: oklch(0.66 0.16 25);      /* critical red */
+   110→   110→  --chart-5: oklch(0.55 0.05 305);     /* soft violet */
+   111→   111→
+   112→   112→  --sidebar: oklch(0.985 0.003 95);
+   113→   113→  --sidebar-foreground: oklch(0.18 0.005 270);
+   114→   114→  --sidebar-primary: oklch(0.22 0.01 270);
+   115→   115→  --sidebar-primary-foreground: oklch(0.985 0.003 95);
+   116→   116→  --sidebar-accent: oklch(0.955 0.008 95);
+   117→   117→  --sidebar-accent-foreground: oklch(0.22 0.01 270);
+   118→   118→  --sidebar-border: oklch(0.92 0.004 95);
+   119→   119→  --sidebar-ring: oklch(0.52 0.04 250);
+   120→   120→}
+   121→   121→
+   122→   122→/* DARK — deep charcoal, slightly lighter elevated surfaces, soft white type */
+   123→   123→.dark {
+   124→   124→  --background: oklch(0.155 0.005 270);
+   125→   125→  --foreground: oklch(0.97 0.003 95);
+   126→   126→  --surface: oklch(0.185 0.006 270);
+   127→   127→  --surface-foreground: oklch(0.97 0.003 95);
+   128→   128→  --elevated: oklch(0.205 0.006 270);
+   129→   129→  --elevated-foreground: oklch(0.97 0.003 95);
+   130→   130→
+   131→   131→  --card: oklch(0.195 0.006 270);
+   132→   132→  --card-foreground: oklch(0.97 0.003 95);
+   133→   133→  --popover: oklch(0.205 0.006 270);
+   134→   134→  --popover-foreground: oklch(0.97 0.003 95);
+   135→   135→
+   136→   136→  --primary: oklch(0.96 0.003 95);
+   137→   137→  --primary-foreground: oklch(0.18 0.005 270);
+   138→   138→  --secondary: oklch(0.24 0.006 270);
+   139→   139→  --secondary-foreground: oklch(0.97 0.003 95);
+   140→   140→  --muted: oklch(0.23 0.006 270);
+   141→   141→  --muted-foreground: oklch(0.7 0.008 270);
+   142→   142→  --accent: oklch(0.25 0.008 270);
+   143→   143→  --accent-foreground: oklch(0.97 0.003 95);
+   144→   144→
+   145→   145→  --accent-blue: oklch(0.7 0.05 250);
+   146→   146→  --accent-blue-foreground: oklch(0.16 0.01 270);
+   147→   147→
+   148→   148→  --success: oklch(0.7 0.12 155);
+   149→   149→  --success-foreground: oklch(0.16 0.03 155);
+   150→   150→  --warning: oklch(0.78 0.13 75); /* refined amber — consistent with light mode */
+   151→   151→  --warning-foreground: oklch(0.18 0.05 75);
+   152→   152→  --critical: oklch(0.66 0.16 25);
+   153→   153→  --critical-foreground: oklch(0.18 0.05 25);
+   154→   154→
+   155→   155→  --destructive: oklch(0.66 0.16 25);
+   156→   156→  --border: oklch(1 0 0 / 8%);
+   157→   157→  --input: oklch(1 0 0 / 12%);
+   158→   158→  --ring: oklch(0.7 0.05 250);
+   159→   159→
+   160→   160→  --chart-1: oklch(0.7 0.05 250);
+   161→   161→  --chart-2: oklch(0.7 0.12 155);
+   162→   162→  --chart-3: oklch(0.78 0.13 75); /* match refined amber */
+   163→   163→  --chart-4: oklch(0.66 0.16 25);
+   164→   164→  --chart-5: oklch(0.65 0.06 305);
+   165→   165→
+   166→   166→  --sidebar: oklch(0.155 0.005 270);
+   167→   167→  --sidebar-foreground: oklch(0.97 0.003 95);
+   168→   168→  --sidebar-primary: oklch(0.96 0.003 95);
+   169→   169→  --sidebar-primary-foreground: oklch(0.18 0.005 270);
+   170→   170→  --sidebar-accent: oklch(0.24 0.006 270);
+   171→   171→  --sidebar-accent-foreground: oklch(0.97 0.003 95);
+   172→   172→  --sidebar-border: oklch(1 0 0 / 8%);
+   173→   173→  --sidebar-ring: oklch(0.7 0.05 250);
+   174→   174→}
+   175→   175→
+   176→   176→@layer base {
+   177→   177→  * {
+   178→   178→    @apply border-border outline-ring/50;
+   179→   179→  }
+   180→   180→  html {
+   181→   181→    -webkit-font-smoothing: antialiased;
+   182→   182→    text-rendering: optimizeLegibility;
+   183→   183→  }
+   184→   184→  body {
+   185→   185→    @apply bg-background text-foreground;
+   186→   186→    font-feature-settings: "ss01", "cv01", "cv03";
+   187→   187→    letter-spacing: -0.011em;
+   188→   188→  }
+   189→   189→
+   190→   190→  /* Headings — tight, premium letter spacing */
+   191→   191→  h1, h2, h3, h4 {
+   192→   192→    letter-spacing: -0.025em;
+   193→   193→  }
+   194→   194→
+   195→   195→  /* Custom scrollbar — ultra-subtle, premium */
+   196→   196→  ::-webkit-scrollbar {
+   197→   197→    width: 8px;
+   198→   198→    height: 8px;
+   199→   199→  }
+   200→   200→  ::-webkit-scrollbar-track {
+   201→   201→    background: transparent;
+   202→   202→  }
+   203→   203→  ::-webkit-scrollbar-thumb {
+   204→   204→    background: color-mix(in oklch, var(--muted-foreground) 18%, transparent);
+   205→   205→    border-radius: 999px;
+   206→   206→    border: 3px solid transparent;
+   207→   207→    background-clip: padding-box;
+   208→   208→  }
+   209→   209→  ::-webkit-scrollbar-thumb:hover {
+   210→   210→    background: color-mix(in oklch, var(--muted-foreground) 35%, transparent);
+   211→   211→    background-clip: padding-box;
+   212→   212→  }
+   213→   213→
+   214→   214→  /* Selection */
+   215→   215→  ::selection {
+   216→   216→    background: color-mix(in oklch, var(--accent-blue) 22%, transparent);
+   217→   217→  }
+   218→   218→
+   219→   219→  /* Smooth focus-visible ring transitions for all interactive elements */
+   220→   220→  button, a, input, textarea, select, [role="button"] {
+   221→   221→    transition: box-shadow 0.2s ease, outline 0.2s ease;
+   222→   222→  }
+   223→   223→  button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, [role="button"]:focus-visible {
+   224→   224→    box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent-blue) 15%, transparent);
+   225→   225→    outline: none;
+   226→   226→  }
+   227→   227→}
+   228→   228→
+   229→   229→@layer utilities {
+   230→   230→  /* Premium soft card surface with subtle depth — Round 4 refined shadow stack:
+   231→   231→     layered close + ambient shadow + 1px ring for crisp edge definition. */
+   232→   232→  .hm-card {
+   233→   233→    background: var(--card);
+   234→   234→    border: 1px solid var(--border);
+   235→   235→    border-radius: calc(var(--radius) + 6px);
+   236→   236→    box-shadow:
+   237→   237→      0 1px 3px -1px rgba(0, 0, 0, 0.06),
+   238→   238→      0 1px 2px -1px rgba(0, 0, 0, 0.04),
+   239→   239→      0 0 0 1px color-mix(in oklch, var(--border) 60%, transparent);
+   240→   240→    transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+   241→   241→  }
+   242→   242→  .hm-card:hover {
+   243→   243→    box-shadow:
+   244→   244→      0 8px 24px -8px rgba(0, 0, 0, 0.08),
+   245→   245→      0 4px 8px -4px rgba(0, 0, 0, 0.04);
+   246→   246→  }
+   247→   247→  /* Dark mode: deeper shadow values (rgba(0,0,0,0.3)) so depth is still perceptible
+   248→   248→     on dark surfaces; ring retained for crisp edge. */
+   249→   249→  .dark .hm-card {
+   250→   250→    box-shadow:
+   251→   251→      0 1px 3px -1px rgba(0, 0, 0, 0.3),
+   252→   252→      0 1px 2px -1px rgba(0, 0, 0, 0.2),
+   253→   253→      0 0 0 1px color-mix(in oklch, var(--border) 60%, transparent);
+   254→   254→  }
+   255→   255→  .dark .hm-card:hover {
+   256→   256→    box-shadow:
+   257→   257→      0 8px 24px -8px rgba(0, 0, 0, 0.3),
+   258→   258→      0 4px 8px -4px rgba(0, 0, 0, 0.25);
+   259→   259→  }
+   260→   260→
+   261→   261→  .hm-elevated {
+   262→   262→    background: var(--elevated);
+   263→   263→    border: 1px solid var(--border);
+   264→   264→    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+   265→   265→  }
+   266→   266→  .hm-elevated:hover {
+   267→   267→    box-shadow: 0 2px 8px color-mix(in oklch, var(--foreground) 4%, transparent);
+   268→   268→  }
+   269→   269→  .dark .hm-elevated:hover {
+   270→   270→    box-shadow: 0 2px 8px color-mix(in oklch, var(--foreground) 2%, transparent);
+   271→   271→  }
+   272→   272→
+   273→   273→  /* Soft inner section divider */
+   274→   274→  .hm-divider {
+   275→   275→    background: linear-gradient(
+   276→   276→      to right,
+   277→   277→      transparent,
+   278→   278→      color-mix(in oklch, var(--border) 90%, transparent),
+   279→   279→      transparent
+   280→   280→    );
+   281→   281→    height: 1px;
+   282→   282→  }
+   283→   283→  /* Dark mode: dividers need slightly more opacity to remain visible */
+   284→   284→  .dark .hm-divider {
+   285→   285→    background: linear-gradient(
+   286→   286→      to right,
+   287→   287→      transparent,
+   288→   288→      color-mix(in oklch, var(--border) 70%, var(--muted)),
+   289→   289→      transparent
+   290→   290→    );
+   291→   291→  }
+   292→   292→
+   293→   293→  /* Gradient text — used very sparingly for the hero number */
+   294→   294→  .hm-text-gradient {
+   295→   295→    background: linear-gradient(
+   296→   296→      180deg,
+   297→   297→      var(--foreground) 0%,
+   298→   298→      color-mix(in oklch, var(--foreground) 75%, var(--muted-foreground)) 100%
+   299→   299→    );
+   300→   300→    -webkit-background-clip: text;
+   301→   301→    background-clip: text;
+   302→   302→    -webkit-text-fill-color: transparent;
+   303→   303→  }
+   304→   304→  /* Dark mode: softer gradient to avoid jarring bright→dim on dark bg */
+   305→   305→  .dark .hm-text-gradient {
+   306→   306→    background: linear-gradient(
+   307→   307→      180deg,
+   308→   308→      var(--foreground) 0%,
+   309→   309→      color-mix(in oklch, var(--foreground) 82%, var(--muted-foreground)) 100%
+   310→   310→    );
+   311→   311→    -webkit-background-clip: text;
+   312→   312→    background-clip: text;
+   313→   313→    -webkit-text-fill-color: transparent;
+   314→   314→  }
+   315→   315→
+   316→   316→  /* Subtle ambient background — premium soft radial wash */
+   317→   317→  .hm-ambient {
+   318→   318→    background:
+   319→   319→      radial-gradient(60% 50% at 20% 10%, color-mix(in oklch, var(--accent-blue) 8%, transparent), transparent 60%),
+   320→   320→      radial-gradient(50% 50% at 90% 20%, color-mix(in oklch, var(--chart-5) 6%, transparent), transparent 60%),
+   321→   321→      var(--background);
+   322→   322→  }
+   323→   323→  /* Dark mode: slightly stronger ambient wash so gradients remain visible */
+   324→   324→  .dark .hm-ambient {
+   325→   325→    background:
+   326→   326→      radial-gradient(60% 50% at 20% 10%, color-mix(in oklch, var(--accent-blue) 12%, transparent), transparent 60%),
+   327→   327→      radial-gradient(50% 50% at 90% 20%, color-mix(in oklch, var(--chart-5) 10%, transparent), transparent 60%),
+   328→   328→      var(--background);
+   329→   329→  }
+   330→   330→
+   331→   331→  /* Calm "thinking" pulse for AI processing states */
+   332→   332→  .hm-thinking {
+   333→   333→    animation: hm-thinking 2.4s ease-in-out infinite;
+   334→   334→  }
+   335→   335→  @keyframes hm-thinking {
+   336→   336→    0%, 100% { opacity: 0.45; transform: translateY(0); }
+   337→   337→    50% { opacity: 1; transform: translateY(-2px); }
+   338→   338→  }
+   339→   339→
+   340→   340→  /* Soft fade-up reveal */
+   341→   341→  .hm-reveal {
+   342→   342→    animation: hm-reveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+   343→   343→  }
+   344→   344→  @keyframes hm-reveal {
+   345→   345→    from { opacity: 0; transform: translateY(10px); }
+   346→   346→    to { opacity: 1; transform: translateY(0); }
+   347→   347→  }
+   348→   348→
+   349→   349→  .hm-fade {
+   350→   350→    animation: hm-fade 0.4s ease both;
+   351→   351→  }
+   352→   352→  @keyframes hm-fade {
+   353→   353→    from { opacity: 0; }
+   354→   354→    to { opacity: 1; }
+   355→   355→  }
+   356→   356→
+   357→   357→  /* ─── Premium animation keyframes ─── */
+   358→   358→
+   359→   359→  /* Shimmer / shine sweep — subtle diagonal light sweep */
+   360→   360→  @keyframes hm-shimmer {
+   361→   361→    0% { transform: translateX(-100%) skewX(-15deg); }
+   362→   362→    100% { transform: translateX(200%) skewX(-15deg); }
+   363→   363→  }
+   364→   364→
+   365→   365→  /* Ring glow pulse — soft radiance behind score ring */
+   366→   366→  @keyframes hm-ring-glow {
+   367→   367→    0% { opacity: 0; transform: scale(0.92); }
+   368→   368→    30% { opacity: 0.6; transform: scale(1.04); }
+   369→   369→    60% { opacity: 0.3; transform: scale(1); }
+   370→   370→    100% { opacity: 0; transform: scale(0.98); }
+   371→   371→  }
+   372→   372→
+   373→   373→  /* Animated gradient border rotation */
+   374→   374→  @keyframes hm-gradient-spin {
+   375→   375→    0% { --hm-gradient-angle: 0deg; }
+   376→   376→    100% { --hm-gradient-angle: 360deg; }
+   377→   377→  }
+   378→   378→
+   379→   379→  /* Subtle floating dot drift — CSS-only particles */
+   380→   380→  @keyframes hm-float-1 {
+   381→   381→    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+   382→   382→    25% { transform: translate(12px, -18px) scale(1.1); opacity: 0.5; }
+   383→   383→    50% { transform: translate(-8px, -30px) scale(0.95); opacity: 0.35; }
+   384→   384→    75% { transform: translate(15px, -12px) scale(1.05); opacity: 0.45; }
+   385→   385→  }
+   386→   386→  @keyframes hm-float-2 {
+   387→   387→    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.25; }
+   388→   388→    33% { transform: translate(-15px, -22px) scale(1.08); opacity: 0.4; }
+   389→   389→    66% { transform: translate(10px, -14px) scale(0.92); opacity: 0.3; }
+   390→   390→  }
+   391→   391→  @keyframes hm-float-3 {
+   392→   392→    0%, 100% { transform: translate(0, 0); opacity: 0.2; }
+   393→   393→    50% { transform: translate(8px, -25px); opacity: 0.4; }
+   394→   394→  }
+   395→   395→
+   396→   396→  /* Typing indicator dots */
+   397→   397→  @keyframes hm-typing-dot {
+   398→   398→    0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+   399→   399→    30% { opacity: 1; transform: translateY(-3px); }
+   400→   400→  }
+   401→   401→
+   402→   402→  /* Typewriter reveal — character-by-character */
+   403→   403→  @keyframes hm-typewriter {
+   404→   404→    from { width: 0; }
+   405→   405→    to { width: 100%; }
+   406→   406→  }
+   407→   407→
+   408→   408→  /* Subtle pulse for critical items */
+   409→   409→  @keyframes hm-subtle-pulse {
+   410→   410→    0%, 100% { opacity: 1; }
+   411→   411→    50% { opacity: 0.7; }
+   412→   412→  }
+   413→   413→
+   414→   414→  /* Timeline draw-in */
+   415→   415→  @keyframes hm-draw-in {
+   416→   416→    from { clip-path: inset(0 0 100% 0); }
+   417→   417→    to { clip-path: inset(0 0 0 0); }
+   418→   418→  }
+   419→   419→
+   420→   420→  /* Step indicator pulse glow */
+   421→   421→  @keyframes hm-step-glow {
+   422→   422→    0%, 100% { transform: scale(1); }
+   423→   423→    50% { transform: scale(1.12); }
+   424→   424→  }
+   425→   425→
+   426→   426→  /* Checkmark pop */
+   427→   427→  @keyframes hm-check-pop {
+   428→   428→    0% { transform: scale(0); opacity: 0; }
+   429→   429→    60% { transform: scale(1.15); opacity: 1; }
+   430→   430→    100% { transform: scale(1); opacity: 1; }
+   431→   431→  }
+   432→   432→
+   433→   433→  /* ─── Premium utility classes ─── */
+   434→   434→
+   435→   435→  /* Shimmer overlay — position this absolutely inside an overflow:hidden container */
+   436→   436→  .hm-shimmer::after {
+   437→   437→    content: "";
+   438→   438→    position: absolute;
+   439→   439→    inset: 0;
+   440→   440→    background: linear-gradient(
+   441→   441→      105deg,
+   442→   442→      transparent 40%,
+   443→   443→      color-mix(in oklch, var(--foreground) 6%, var(--card)) 50%,
+   444→   444→      transparent 60%
+   445→   445→    );
+   446→   446→    animation: hm-shimmer 1.8s ease-in-out 1s 1 both;
+   447→   447→    pointer-events: none;
+   448→   448→    border-radius: inherit;
+   449→   449→  }
+   450→   450→
+   451→   451→  /* Animated gradient border using background-clip trick */
+   452→   452→  .hm-gradient-border {
+   453→   453→    --hm-gradient-angle: 0deg;
+   454→   454→    position: relative;
+   455→   455→    background: var(--card);
+   456→   456→    border-radius: calc(var(--radius) + 6px);
+   457→   457→    overflow: hidden;
+   458→   458→  }
+   459→   459→  .hm-gradient-border::before {
+   460→   460→    content: "";
+   461→   461→    position: absolute;
+   462→   462→    inset: 0;
+   463→   463→    padding: 1.5px;
+   464→   464→    border-radius: inherit;
+   465→   465→    background: conic-gradient(
+   466→   466→      from var(--hm-gradient-angle, 0deg),
+   467→   467→      var(--accent-blue),
+   468→   468→      var(--chart-5),
+   469→   469→      var(--accent-blue)
+   470→   470→    );
+   471→   471→    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+   472→   472→    -webkit-mask-composite: xor;
+   473→   473→    mask-composite: exclude;
+   474→   474→    animation: hm-gradient-spin 3s linear infinite;
+   475→   475→    pointer-events: none;
+   476→   476→  }
+   477→   477→
+   478→   478→  /* Gradient border for critical/gap items */
+   479→   479→  .hm-gradient-border-critical {
+   480→   480→    --hm-gradient-angle: 0deg;
+   481→   481→    position: relative;
+   482→   482→    background: var(--card);
+   483→   483→    border-radius: calc(var(--radius) + 6px);
+   484→   484→    overflow: hidden;
+   485→   485→  }
+   486→   486→  .hm-gradient-border-critical::before {
+   487→   487→    content: "";
+   488→   488→    position: absolute;
+   489→   489→    inset: 0;
+   490→   490→    padding: 1.5px;
+   491→   491→    border-radius: inherit;
+   492→   492→    background: conic-gradient(
+   493→   493→      from var(--hm-gradient-angle, 0deg),
+   494→   494→      var(--critical),
+   495→   495→      var(--warning),
+   496→   496→      var(--critical)
+   497→   497→    );
+   498→   498→    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+   499→   499→    -webkit-mask-composite: xor;
+   500→   500→    mask-composite: exclude;
+   501→   501→    animation: hm-gradient-spin 4s linear infinite;
+   502→   502→    pointer-events: none;
+   503→   503→  }
+   504→   504→
+   505→   505→  /* Micro-shine on hover for competency bars */
+   506→   506→  .hm-bar-shine {
+   507→   507→    position: relative;
+   508→   508→    overflow: hidden;
+   509→   509→  }
+   510→   510→  .hm-bar-shine::after {
+   511→   511→    content: "";
+   512→   512→    position: absolute;
+   513→   513→    top: 0;
+   514→   514→    left: -100%;
+   515→   515→    width: 60%;
+   516→   516→    height: 100%;
+   517→   517→    background: linear-gradient(
+   518→   518→      105deg,
+   519→   519→      transparent 40%,
+   520→   520→      color-mix(in oklch, currentColor 15%, transparent) 50%,
+   521→   521→      transparent 60%
+   522→   522→    );
+   523→   523→    transition: left 0.5s ease;
+   524→   524→    pointer-events: none;
+   525→   525→    border-radius: inherit;
+   526→   526→  }
+   527→   527→  .hm-bar-shine:hover::after {
+   528→   528→    left: 150%;
+   529→   529→  }
+   530→   530→
+   531→   531→  /* Typing indicator */
+   532→   532→  .hm-typing-indicator {
+   533→   533→    display: inline-flex;
+   534→   534→    align-items: center;
+   535→   535→    gap: 3px;
+   536→   536→  }
+   537→   537→  .hm-typing-indicator span {
+   538→   538→    width: 4px;
+   539→   539→    height: 4px;
+   540→   540→    border-radius: 50%;
+   541→   541→    background: var(--muted-foreground);
+   542→   542→  }
+   543→   543→  .hm-typing-indicator span:nth-child(1) { animation: hm-typing-dot 1.2s ease-in-out infinite 0ms; }
+   544→   544→  .hm-typing-indicator span:nth-child(2) { animation: hm-typing-dot 1.2s ease-in-out infinite 150ms; }
+   545→   545→  .hm-typing-indicator span:nth-child(3) { animation: hm-typing-dot 1.2s ease-in-out infinite 300ms; }
+   546→   546→
+   547→   547→  /* CSS-only floating dot particles — apply to background container */
+   548→   548→  .hm-particles {
+   549→   549→    position: relative;
+   550→   550→    overflow: hidden;
+   551→   551→  }
+   552→   552→  .hm-particles::before,
+   553→   553→  .hm-particles::after {
+   554→   554→    content: "";
+   555→   555→    position: absolute;
+   556→   556→    width: 3px;
+   557→   557→    height: 3px;
+   558→   558→    border-radius: 50%;
+   559→   559→    background: color-mix(in oklch, var(--accent-blue) 20%, transparent);
+   560→   560→    pointer-events: none;
+   561→   561→  }
+   562→   562→  .hm-particles::before {
+   563→   563→    top: 15%;
+   564→   564→    right: 18%;
+   565→   565→    animation: hm-float-1 8s ease-in-out infinite;
+   566→   566→  }
+   567→   567→  .hm-particles::after {
+   568→   568→    top: 45%;
+   569→   569→    left: 12%;
+   570→   570→    width: 2px;
+   571→   571→    height: 2px;
+   572→   572→    animation: hm-float-2 10s ease-in-out infinite 1s;
+   573→   573→  }
+   574→   574→
+   575→   575→  /* Additional particle dots via nested pseudo (requires a wrapper) */
+   576→   576→  .hm-particles-inner::before,
+   577→   577→  .hm-particles-inner::after {
+   578→   578→    content: "";
+   579→   579→    position: absolute;
+   580→   580→    width: 2px;
+   581→   581→    height: 2px;
+   582→   582→    border-radius: 50%;
+   583→   583→    background: color-mix(in oklch, var(--chart-5) 15%, transparent);
+   584→   584→    pointer-events: none;
+   585→   585→  }
+   586→   586→  .hm-particles-inner::before {
+   587→   587→    top: 60%;
+   588→   588→    right: 8%;
+   589→   589→    animation: hm-float-3 12s ease-in-out infinite 2s;
+   590→   590→  }
+   591→   591→  .hm-particles-inner::after {
+   592→   592→    top: 25%;
+   593→   593→    left: 25%;
+   594→   594→    width: 1.5px;
+   595→   595→    height: 1.5px;
+   596→   596→    animation: hm-float-1 14s ease-in-out infinite 3s;
+   597→   597→  }
+   598→   598→
+   599→   599→  /* Focus-visible ring transition — smooth, premium */
+   600→   600→  .hm-focus-ring {
+   601→   601→    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+   602→   602→  }
+   603→   603→  .hm-focus-ring:focus-visible {
+   604→   604→    box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent-blue) 18%, transparent),
+   605→   605→                0 0 0 1px color-mix(in oklch, var(--accent-blue) 50%, transparent);
+   606→   606→    outline: none;
+   607→   607→  }
+   608→   608→
+   609→   609→  /* Score ring glow layer */
+   610→   610→  .hm-ring-glow {
+   611→   611→    position: absolute;
+   612→   612→    inset: -8px;
+   613→   613→    border-radius: 50%;
+   614→   614→    animation: hm-ring-glow 1.4s ease-out forwards;
+   615→   615→    pointer-events: none;
+   616→   616→  }
+   617→   617→
+   618→   618→  /* Subtle pulse for critical priority pills */
+   619→   619→  .hm-pulse-critical {
+   620→   620→    animation: hm-subtle-pulse 2.5s ease-in-out infinite;
+   621→   621→  }
+   622→   622→
+   623→   623→  /* Timeline draw-in */
+   624→   624→  .hm-timeline-draw {
+   625→   625→    animation: hm-draw-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+   626→   626→  }
+   627→   627→
+   628→   628→  /* Enhanced timeline draw-in — slower, more premium feel for thicker line */
+   629→   629→  .hm-timeline-draw-enhanced {
+   630→   630→    animation: hm-draw-in 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both;
+   631→   631→  }
+   632→   632→
+   633→   633→  /* Phase step pulse — subtle breathing glow on the current phase indicator */
+   634→   634→  .hm-step-pulse {
+   635→   635→    animation: hm-step-glow 2.5s ease-in-out infinite;
+   636→   636→  }
+   637→   637→
+   638→   638→  /* Checkmark pop-in animation */
+   639→   639→  .hm-check-pop {
+   640→   640→    animation: hm-check-pop 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+   641→   641→  }
+   642→   642→
+   643→   643→  /* Progress step dots */
+   644→   644→  .hm-step-dot {
+   645→   645→    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+   646→   646→  }
+   647→   647→  .hm-step-dot-active {
+   648→   648→    background: var(--accent-blue);
+   649→   649→    transform: scale(1.3);
+   650→   650→    box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent-blue) 15%, transparent);
+   651→   651→  }
+   652→   652→  .hm-step-dot-complete {
+   653→   653→    background: var(--success);
+   654→   654→  }
+   655→   655→
+   656→   656→  /* Typewriter reveal */
+   657→   657→  .hm-typewriter {
+   658→   658→    display: inline-block;
+   659→   659→    overflow: hidden;
+   660→   660→    white-space: nowrap;
+   661→   661→    animation: hm-typewriter 0.8s steps(16, end) 0.5s both;
+   662→   662→  }
+   663→   663→
+   664→   664→  /* Radial glow for WOW moments */
+   665→   665→  .hm-radial-glow {
+   666→   666→    position: relative;
+   667→   667→  }
+   668→   668→  .hm-radial-glow::before {
+   669→   669→    content: "";
+   670→   670→    position: absolute;
+   671→   671→    inset: -40px;
+   672→   672→    border-radius: 50%;
+   673→   673→    background: radial-gradient(
+   674→   674→      circle,
+   675→   675→      color-mix(in oklch, var(--accent-blue) 8%, transparent),
+   676→   676→      transparent 70%
+   677→   677→    );
+   678→   678→    pointer-events: none;
+   679→   679→    animation: hm-ring-glow 2s ease-out forwards;
+   680→   680→  }
+   681→   681→  .dark .hm-radial-glow::before {
+   682→   682→    background: radial-gradient(
+   683→   683→      circle,
+   684→   684→      color-mix(in oklch, var(--accent-blue) 14%, transparent),
+   685→   685→      transparent 70%
+   686→   686→    );
+   687→   687→  }
+   688→   688→
+   689→   689→  /* ─── Skeleton Loading ─── */
+   690→   690→  .hm-skeleton {
+   691→   691→    background: linear-gradient(
+   692→   692→      90deg,
+   693→   693→      var(--muted) 25%,
+   694→   694→      color-mix(in oklch, var(--muted) 60%, var(--card)) 50%,
+   695→   695→      var(--muted) 75%
+   696→   696→    );
+   697→   697→    background-size: 200% 100%;
+   698→   698→    animation: hm-skeleton-pulse 1.5s ease-in-out infinite;
+   699→   699→    border-radius: calc(var(--radius) - 2px);
+   700→   700→  }
+   701→   701→  @keyframes hm-skeleton-pulse {
+   702→   702→    0% { background-position: 200% 0; }
+   703→   703→    100% { background-position: -200% 0; }
+   704→   704→  }
+   705→   705→
+   706→   706→  /* ─── Mobile Utilities ─── */
+   707→   707→  /* Hide scrollbar for horizontally scrolling containers */
+   708→   708→  .no-scrollbar {
+   709→   709→    -ms-overflow-style: none;
+   710→   710→    scrollbar-width: none;
+   711→   711→  }
+   712→   712→  .no-scrollbar::-webkit-scrollbar {
+   713→   713→    display: none;
+   714→   714→  }
+   715→   715→
+   716→   716→  /* Dark scrollbar for achievement gallery modal */
+   717→   717→  .custom-scrollbar-dark {
+   718→   718→    scrollbar-width: thin;
+   719→   719→    scrollbar-color: rgba(255,255,255,0.1) transparent;
+   720→   720→  }
+   721→   721→  .custom-scrollbar-dark::-webkit-scrollbar {
+   722→   722→    width: 6px;
+   723→   723→  }
+   724→   724→  .custom-scrollbar-dark::-webkit-scrollbar-track {
+   725→   725→    background: transparent;
+   726→   726→  }
+   727→   727→  .custom-scrollbar-dark::-webkit-scrollbar-thumb {
+   728→   728→    background: rgba(255,255,255,0.1);
+   729→   729→    border-radius: 999px;
+   730→   730→  }
+   731→   731→  .custom-scrollbar-dark::-webkit-scrollbar-thumb:hover {
+   732→   732→    background: rgba(255,255,255,0.2);
+   733→   733→  }
+   734→   734→
+   735→   735→  /* Safe area padding for mobile devices (notch/bottom bar) */
+   736→   736→  .pb-safe {
+   737→   737→    padding-bottom: env(safe-area-inset-bottom, 0px);
+   738→   738→  }
+   739→   739→  .pt-safe {
+   740→   740→    padding-top: env(safe-area-inset-top, 0px);
+   741→   741→  }
+   742→   742→  .pl-safe {
+   743→   743→    padding-left: env(safe-area-inset-left, 0px);
+   744→   744→  }
+   745→   745→  .pr-safe {
+   746→   746→    padding-right: env(safe-area-inset-right, 0px);
+   747→   747→  }
+   748→   748→
+   749→   749→  /* ─── Presentation Mode ─── */
+   750→   750→  /* When data-presentation="true" is on html/body, scale up font sizes ~20% */
+   751→   751→  [data-presentation="true"] {
+   752→   752→    font-size: 118.8%; /* ~20% larger base */
+   753→   753→  }
+   754→   754→  [data-presentation="true"] .hm-nav-item {
+   755→   755→    font-size: 15px;
+   756→   756→    padding: 6px 14px;
+   757→   757→  }
+   758→   758→  [data-presentation="true"] .hm-footer-hide {
+   759→   759→    display: none;
+   760→   760→  }
+   761→   761→
+   762→   762→  /* ─── Premium VLM-polish utilities ─── */
+   763→   763→
+   764→   764→  /* Evidence quote — italic, left-border accent, softer muted color */
+   765→   765→  .hm-evidence-quote {
+   766→   766→    font-style: italic;
+   767→   767→    color: color-mix(in oklch, var(--muted-foreground) 90%, var(--foreground));
+   768→   768→    border-left: 2px solid color-mix(in oklch, var(--border) 60%, var(--muted-foreground));
+   769→   769→    padding-left: 8px;
+   770→   770→    line-height: 1.5;
+   771→   771→  }
+   772→   772→  .dark .hm-evidence-quote {
+   773→   773→    color: color-mix(in oklch, var(--muted-foreground) 85%, var(--foreground));
+   774→   774→    border-left-color: color-mix(in oklch, var(--border) 70%, var(--muted-foreground));
+   775→   775→  }
+   776→   776→
+   777→   777→  /* Premium input — softer background, focus ring with glow */
+   778→   778→  .hm-input-premium {
+   779→   779→    background: color-mix(in oklch, var(--card) 92%, var(--muted));
+   780→   780→    border-color: color-mix(in oklch, var(--border) 80%, var(--muted-foreground));
+   781→   781→    transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+   782→   782→  }
+   783→   783→  .hm-input-premium:focus-visible {
+   784→   784→    box-shadow:
+   785→   785→      0 0 0 3px color-mix(in oklch, var(--accent-blue) 18%, transparent),
+   786→   786→      0 0 0 1px color-mix(in oklch, var(--accent-blue) 40%, transparent);
+   787→   787→    border-color: color-mix(in oklch, var(--accent-blue) 45%, var(--border));
+   788→   788→    outline: none;
+   789→   789→  }
+   790→   790→  .dark .hm-input-premium {
+   791→   791→    background: color-mix(in oklch, var(--card) 88%, var(--muted));
+   792→   792→  }
+   793→   793→
+   794→   794→  /* Vertical divider between buttons — 1px wide x 16px tall, with opacity */
+   795→   795→  .hm-divider-vertical {
+   796→   796→    width: 1px;
+   797→   797→    height: 16px;
+   798→   798→    background: color-mix(in oklch, var(--muted-foreground) 35%, transparent);
+   799→   799→    flex-shrink: 0;
+   800→   800→  }
+   801→   801→  .dark .hm-divider-vertical {
+   802→   802→    background: color-mix(in oklch, var(--muted-foreground) 30%, transparent);
+   803→   803→  }
+   804→   804→
+   805→   805→  /* Void box — visual placeholder for "missing evidence" */
+   806→   806→  .hm-void-box {
+   807→   807→    border: 1px dashed color-mix(in oklch, var(--muted-foreground) 35%, var(--border));
+   808→   808→    background: color-mix(in oklch, var(--muted) 50%, transparent);
+   809→   809→    color: color-mix(in oklch, var(--muted-foreground) 80%, var(--foreground));
+   810→   810→    border-radius: 8px;
+   811→   811→    transition: border-color 0.2s ease, background 0.2s ease;
+   812→   812→  }
+   813→   813→  .hm-void-box:hover {
+   814→   814→    border-color: color-mix(in oklch, var(--accent-blue) 40%, var(--border));
+   815→   815→    background: color-mix(in oklch, var(--accent-blue) 6%, var(--muted));
+   816→   816→  }
+   817→   817→  .dark .hm-void-box {
+   818→   818→    border-color: color-mix(in oklch, var(--muted-foreground) 30%, transparent);
+   819→   819→    background: color-mix(in oklch, var(--muted) 30%, transparent);
+   820→   820→  }
+   821→   821→
+   822→   822→  /* Premium badge — subtle gradient bg, refined border */
+   823→   823→  .hm-badge-premium {
+   824→   824→    background: linear-gradient(
+   825→   825→      180deg,
+   826→   826→      color-mix(in oklch, var(--accent-blue) 8%, var(--card)),
+   827→   827→      color-mix(in oklch, var(--accent-blue) 5%, var(--card))
+   828→   828→    );
+   829→   829→    border: 1px solid color-mix(in oklch, var(--accent-blue) 22%, var(--border));
+   830→   830→    /* Use accent-blue directly so text is readable on the soft tinted bg
+   831→   831→       (accent-blue-foreground is near-white in light mode and would vanish). */
+   832→   832→    color: var(--accent-blue);
+   833→   833→  }
+   834→   834→  .dark .hm-badge-premium {
+   835→   835→    background: linear-gradient(
+   836→   836→      180deg,
+   837→   837→      color-mix(in oklch, var(--accent-blue) 14%, transparent),
+   838→   838→      color-mix(in oklch, var(--accent-blue) 8%, transparent)
+   839→   839→    );
+   840→   840→    border: 1px solid color-mix(in oklch, var(--accent-blue) 30%, transparent);
+   841→   841→    color: var(--accent-blue);
+   842→   842→  }
+   843→   843→
+   844→   844→  /* ─── Round 4 Premium Polish ─── */
+   845→   845→  /* New utility classes extending the premium design system.
+   846→   846→     Refinements to .hm-card shadow stack were applied in place above. */
+   847→   847→
+   848→   848→  /* AI insight callout — soft accent-blue tinted box with thin left accent border.
+   849→   849→     Use for AI-generated insights, reasoning notes, or contextual hints. */
+   850→   850→  .hm-insight-callout {
+   851→   851→    background: color-mix(in oklch, var(--accent-blue) 7%, var(--card));
+   852→   852→    border-left: 2px solid color-mix(in oklch, var(--accent-blue) 35%, var(--border));
+   853→   853→    padding: 8px 12px;
+   854→   854→    border-radius: calc(var(--radius) - 2px);
+   855→   855→  }
+   856→   856→  .dark .hm-insight-callout {
+   857→   857→    /* Slightly stronger tint on dark surface so the callout reads as a distinct block */
+   858→   858→    background: color-mix(in oklch, var(--accent-blue) 12%, transparent);
+   859→   859→    border-left-color: color-mix(in oklch, var(--accent-blue) 45%, transparent);
+   860→   860→  }
+   861→   861→
+   862→   862→  /* Premium stat tile — soft gradient bg with inset top highlight for tactile depth.
+   863→   863→     Use for KPI numbers, metric cards, score breakdowns. */
+   864→   864→  .hm-stat-tile {
+   865→   865→    border-radius: calc(var(--radius) + 4px);
+   866→   866→    border: 1px solid color-mix(in oklch, var(--border) 40%, transparent);
+   867→   867→    background: linear-gradient(
+   868→   868→      180deg,
+   869→   869→      var(--card),
+   870→   870→      color-mix(in oklch, var(--card) 70%, var(--muted))
+   871→   871→    );
+   872→   872→    box-shadow:
+   873→   873→      inset 0 1px 0 color-mix(in oklch, white 4%, transparent),
+   874→   874→      0 1px 2px color-mix(in oklch, var(--foreground) 3%, transparent);
+   875→   875→    transition: transform 0.25s ease, box-shadow 0.25s ease;
+   876→   876→  }
+   877→   877→  .hm-stat-tile:hover {
+   878→   878→    transform: translateY(-1px);
+   879→   879→    box-shadow:
+   880→   880→      inset 0 1px 0 color-mix(in oklch, white 6%, transparent),
+   881→   881→      0 4px 12px -4px color-mix(in oklch, var(--foreground) 8%, transparent);
+   882→   882→  }
+   883→   883→  .dark .hm-stat-tile {
+   884→   884→    background: linear-gradient(
+   885→   885→      180deg,
+   886→   886→      var(--card),
+   887→   887→      color-mix(in oklch, var(--card) 60%, var(--muted))
+   888→   888→    );
+   889→   889→    box-shadow:
+   890→   890→      inset 0 1px 0 color-mix(in oklch, white 6%, transparent),
+   891→   891→      0 1px 2px rgba(0, 0, 0, 0.3);
+   892→   892→  }
+   893→   893→  .dark .hm-stat-tile:hover {
+   894→   894→    box-shadow:
+   895→   895→      inset 0 1px 0 color-mix(in oklch, white 8%, transparent),
+   896→   896→      0 4px 12px -4px rgba(0, 0, 0, 0.3);
+   897→   897→  }
+   898→   898→
+   899→   899→  /* Pulsing glow for "live" / real-time indicators (e.g. live transcription dot).
+   900→   900→     Uses --success token (green) to signal "active & healthy". */
+   901→   901→  .hm-glow-pulse {
+   902→   902→    box-shadow: 0 0 0 0 color-mix(in oklch, var(--success) 50%, transparent);
+   903→   903→    animation: hm-glow-pulse 2s ease-in-out infinite;
+   904→   904→  }
+   905→   905→  @keyframes hm-glow-pulse {
+   906→   906→    0% {
+   907→   907→      box-shadow: 0 0 0 0 color-mix(in oklch, var(--success) 50%, transparent);
+   908→   908→    }
+   909→   909→    100% {
+   910→   910→      box-shadow: 0 0 0 6px color-mix(in oklch, var(--success) 0%, transparent);
+   911→   911→    }
+   912→   912→  }
+   913→   913→  .dark .hm-glow-pulse {
+   914→   914→    /* Slightly stronger starting glow on dark surfaces for visibility */
+   915→   915→    box-shadow: 0 0 0 0 color-mix(in oklch, var(--success) 60%, transparent);
+   916→   916→  }
+   917→   917→
+   918→   918→  /* Premium card hover — spring-easing lift + accent-blue glow combined with
+   919→   919→     an elevated shadow. Note: --shadow-elevated isn't a defined token, so we
+   920→   920→     compose the elevated shadow inline with the same intent (layered close +
+   921→   921→     ambient). Apply alongside .hm-card for premium hover treatment. */
+   922→   922→  .hm-card-hover {
+   923→   923→    transition:
+   924→   924→      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+   925→   925→      box-shadow 0.3s ease;
+   926→   926→  }
+   927→   927→  .hm-card-hover:hover {
+   928→   928→    transform: translateY(-2px);
+   929→   929→    box-shadow:
+   930→   930→      0 8px 24px -8px color-mix(in oklch, var(--accent-blue) 18%, transparent),
+   931→   931→      0 4px 12px -4px color-mix(in oklch, var(--foreground) 8%, transparent);
+   932→   932→  }
+   933→   933→  .dark .hm-card-hover:hover {
+   934→   934→    box-shadow:
+   935→   935→      0 8px 24px -8px color-mix(in oklch, var(--accent-blue) 22%, transparent),
+   936→   936→      0 4px 12px -4px rgba(0, 0, 0, 0.3);
+   937→   937→  }
+   938→   938→
+   939→   939→  /* Tabular numerals for premium numeric alignment — use on score displays,
+   940→   940→     metric values, or anywhere numbers should align column-wise. Purely
+   941→   941→     typographic; no dark variant needed. */
+   942→   942→  .hm-num-tabular {
+   943→   943→    font-variant-numeric: tabular-nums;
+   944→   944→    letter-spacing: -0.01em;
+   945→   945→  }
+   946→   946→
+   947→   947→  /* Horizontal shimmer accent line — sweeps left-to-right via the existing
+   948→   948→     hm-shimmer keyframe. Best used inside an overflow:hidden parent so the
+   949→   949→     sweep stays contained. Useful as a premium section delimiter. */
+   950→   950→  .hm-shimmer-line {
+   951→   951→    height: 1px;
+   952→   952→    background: linear-gradient(
+   953→   953→      to right,
+   954→   954→      transparent,
+   955→   955→      color-mix(in oklch, var(--accent-blue) 40%, transparent),
+   956→   956→      transparent
+   957→   957→    );
+   958→   958→    animation: hm-shimmer 2.4s ease-in-out infinite;
+   959→   959→  }
+   960→   960→
+   961→   961→  /* Soft divider — fades at edges for gentle section breaks (vs .hm-divider
+   962→   962→     which has a more solid middle band). */
+   963→   963→  .hm-divider-soft {
+   964→   964→    height: 1px;
+   965→   965→    background: linear-gradient(
+   966→   966→      to right,
+   967→   967→      transparent,
+   968→   968→      color-mix(in oklch, var(--border) 80%, transparent),
+   969→   969→      transparent
+   970→   970→    );
+   971→   971→  }
+   972→   972→
+   973→   973→  /* Better-side tint for comparison views — a subtle radial gradient + soft
+   974→   974→     success-tinted bg to highlight the "winning" session for a given metric.
+   975→   975→     Pairs with the "Better" pill chip + tabular value cell. */
+   976→   976→  .hm-better-side {
+   977→   977→    background:
+   978→   978→      radial-gradient(
+   979→   979→        120% 100% at 50% 0%,
+   980→   980→        color-mix(in oklch, var(--success) 12%, transparent) 0%,
+   981→   981→        transparent 70%
+   982→   982→      ),
+   983→   983→      color-mix(in oklch, var(--success) 5%, transparent);
+   984→   984→    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--success) 22%, transparent);
+   985→   985→  }
+   986→   986→  .dark .hm-better-side {
+   987→   987→    background:
+   988→   988→      radial-gradient(
+   989→   989→        120% 100% at 50% 0%,
+   990→   990→        color-mix(in oklch, var(--success) 16%, transparent) 0%,
+   991→   991→        transparent 70%
+   992→   992→      ),
+   993→   993→      color-mix(in oklch, var(--success) 8%, transparent);
+   994→   994→    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--success) 30%, transparent);
+   995→   995→  }
+   996→   996→  .dark .hm-divider-soft {
+   997→   997→    /* Dark mode: blend border with muted so the divider stays visible against
+   998→   998→       dark surfaces without being too harsh. */
+   999→   999→    background: linear-gradient(
+  1000→  1000→      to right,
+  1001→  1001→      transparent,
+  1002→  1002→      color-mix(in oklch, var(--border) 65%, var(--muted)),
+  1003→  1003→      transparent
+  1004→  1004→    );
+  1005→  1005→  }
+  1006→  1006→
+  1007→  1007→  /* Premium tag/chip — smaller pill variant of hm-badge-premium.
+  1008→  1008→     Use for inline labels, status tags, or category markers. */
+  1009→  1009→  .hm-tag-premium {
+  1010→  1010→    display: inline-flex;
+  1011→  1011→    align-items: center;
+  1012→  1012→    border-radius: 9999px;
+  1013→  1013→    padding: 2px 8px;
+  1014→  1014→    font-size: 10px;
+  1015→  1015→    line-height: 1.4;
+  1016→  1016→    text-transform: uppercase;
+  1017→  1017→    letter-spacing: 0.05em;
+  1018→  1018→    font-weight: 600;
+  1019→  1019→    background: linear-gradient(
+  1020→  1020→      180deg,
+  1021→  1021→      color-mix(in oklch, var(--accent-blue) 6%, var(--card)),
+  1022→  1022→      color-mix(in oklch, var(--accent-blue) 3%, var(--card))
+  1023→  1023→    );
+  1024→  1024→    border: 1px solid color-mix(in oklch, var(--accent-blue) 22%, var(--border));
+  1025→  1025→    color: var(--accent-blue);
+  1026→  1026→  }
+  1027→  1027→  .dark .hm-tag-premium {
+  1028→  1028→    background: linear-gradient(
+  1029→  1029→      180deg,
+  1030→  1030→      color-mix(in oklch, var(--accent-blue) 14%, transparent),
+  1031→  1031→      color-mix(in oklch, var(--accent-blue) 8%, transparent)
+  1032→  1032→    );
+  1033→  1033→    border: 1px solid color-mix(in oklch, var(--accent-blue) 30%, transparent);
+  1034→  1034→    color: var(--accent-blue);
+  1035→  1035→  }
+  1036→  1036→
+  1037→  1037→  /* Premium texture — subtle dot-grid background pattern.
+  1038→  1038→     Use on hero sections or large empty backgrounds that need a hint of texture
+  1039→  1039→     without overpowering content. */
+  1040→  1040→  .hm-textured-bg {
+  1041→  1041→    background-image: radial-gradient(
+  1042→  1042→      color-mix(in oklch, var(--muted-foreground) 8%, transparent) 1px,
+  1043→  1043→      transparent 1px
+  1044→  1044→    );
+  1045→  1045→    background-size: 16px 16px;
+  1046→  1046→  }
+  1047→  1047→  .dark .hm-textured-bg {
+  1048→  1048→    /* Slightly stronger dot opacity on dark surfaces so the grid is perceptible */
+  1049→  1049→    background-image: radial-gradient(
+  1050→  1050→      color-mix(in oklch, var(--muted-foreground) 12%, transparent) 1px,
+  1051→  1051→      transparent 1px
+  1052→  1052→    );
+  1053→  1053→  }
+  1054→  1054→
+  1055→  1055→  /* ─── Hero gradient orb — soft atmospheric glow behind hero heading ───
+  1056→  1056→     Apply to an absolutely-positioned div inside a relative parent. Uses a
+  1057→  1057→     single radial-gradient with a slow floating motion for ambient depth.
+  1058→  1058→     No z-index set so it stays below sibling positioned text (which has
+  1059→  1059→     position:relative + z-auto, painting in DOM order above this orb). */
+  1060→  1060→  .hm-hero-orb {
+  1061→  1061→    background:
+  1062→  1062→      radial-gradient(circle at 50% 45%,
+  1063→  1063→        color-mix(in oklch, var(--accent-blue) 32%, transparent) 0%,
+  1064→  1064→        color-mix(in oklch, var(--chart-5) 18%, transparent) 35%,
+  1065→  1065→        transparent 70%);
+  1066→  1066→    filter: blur(44px);
+  1067→  1067→    opacity: 0.85;
+  1068→  1068→    transform: translateX(-50%);
+  1069→  1069→    animation: hm-hero-float 12s ease-in-out infinite;
+  1070→  1070→    pointer-events: none;
+  1071→  1071→  }
+  1072→  1072→  .dark .hm-hero-orb {
+  1073→  1073→    opacity: 0.7;
+  1074→  1074→  }
+  1075→  1075→  @keyframes hm-hero-float {
+  1076→  1076→    0%, 100% { transform: translate(-50%, 0) scale(1); opacity: 0.75; }
+  1077→  1077→    50% { transform: translate(-50%, -18px) scale(1.06); opacity: 0.95; }
+  1078→  1078→  }
+  1079→  1079→
+  1080→  1080→  /* ─── Achievement toast — glass-morphism card with subtle glow + sparkle ─── */
+  1081→  1081→  .hm-achievement-toast {
+  1082→  1082→    position: relative;
+  1083→  1083→    display: flex;
+  1084→  1084→    align-items: center;
+  1085→  1085→    gap: 0.5rem;
+  1086→  1086→    padding: 0.75rem 1rem;
+  1087→  1087→    border-radius: calc(var(--radius) + 2px);
+  1088→  1088→    background: color-mix(in oklch, var(--card) 85%, var(--accent-blue) 8%);
+  1089→  1089→    border: 1px solid color-mix(in oklch, var(--accent-blue) 20%, var(--border));
+  1090→  1090→    backdrop-filter: blur(12px) saturate(1.3);
+  1091→  1091→    box-shadow:
+  1092→  1092→      0 0 0 1px color-mix(in oklch, var(--accent-blue) 8%, transparent),
+  1093→  1093→      0 4px 16px -2px color-mix(in oklch, var(--accent-blue) 10%, transparent);
+  1094→  1094→    overflow: hidden;
+  1095→  1095→    cursor: pointer;
+  1096→  1096→    min-width: 240px;
+  1097→  1097→    max-width: 340px;
+  1098→  1098→    animation: hm-achievement-slide-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  1099→  1099→  }
+  1100→  1100→
+  1101→  1101→  .dark .hm-achievement-toast {
+  1102→  1102→    background: color-mix(in oklch, var(--card) 80%, var(--accent-blue) 12%);
+  1103→  1103→    border: 1px solid color-mix(in oklch, var(--accent-blue) 25%, var(--border));
+  1104→  1104→    box-shadow:
+  1105→  1105→      0 0 0 1px color-mix(in oklch, var(--accent-blue) 12%, transparent),
+  1106→  1106→      0 4px 16px -2px color-mix(in oklch, var(--accent-blue) 15%, transparent);
+  1107→  1107→  }
+  1108→  1108→
+  1109→  1109→  /* Glow layer behind toast */
+  1110→  1110→  .hm-achievement-toast-glow {
+  1111→  1111→    position: absolute;
+  1112→  1112→    inset: 0;
+  1113→  1113→    background: radial-gradient(
+  1114→  1114→      90% 120% at 0% 50%,
+  1115→  1115→      color-mix(in oklch, var(--accent-blue) 12%, transparent),
+  1116→  1116→      transparent
+  1117→  1117→    );
+  1118→  1118→    pointer-events: none;
+  1119→  1119→  }
+  1120→  1120→
+  1121→  1121→  .hm-achievement-toast-content {
+  1122→  1122→    position: relative;
+  1123→  1123→    display: flex;
+  1124→  1124→    align-items: center;
+  1125→  1125→    gap: 0.625rem;
+  1126→  1126→    z-index: 1;
+  1127→  1127→  }
+  1128→  1128→
+  1129→  1129→  .hm-achievement-toast-icon {
+  1130→  1130→    display: inline-flex;
+  1131→  1131→    align-items: center;
+  1132→  1132→    justify-content: center;
+  1133→  1133→    height: 2rem;
+  1134→  1134→    width: 2rem;
+  1135→  1135→    border-radius: 0.5rem;
+  1136→  1136→    background: linear-gradient(
+  1137→  1137→      135deg,
+  1138→  1138→      color-mix(in oklch, var(--accent-blue) 18%, var(--card)),
+  1139→  1139→      color-mix(in oklch, var(--success) 12%, var(--card))
+  1140→  1140→    );
+  1141→  1141→    color: var(--accent-blue);
+  1142→  1142→    flex-shrink: 0;
+  1143→  1143→  }
+  1144→  1144→
+  1145→  1145→  .hm-achievement-toast-text {
+  1146→  1146→    display: flex;
+  1147→  1147→    flex-direction: column;
+  1148→  1148→    min-width: 0;
+  1149→  1149→  }
+  1150→  1150→
+  1151→  1151→  .hm-achievement-toast-label {
+  1152→  1152→    font-size: 13px;
+  1153→  1153→    font-weight: 600;
+  1154→  1154→    color: var(--foreground);
+  1155→  1155→    line-height: 1.3;
+  1156→  1156→  }
+  1157→  1157→
+  1158→  1158→  .hm-achievement-toast-desc {
+  1159→  1159→    font-size: 11px;
+  1160→  1160→    color: var(--muted-foreground);
+  1161→  1161→    line-height: 1.3;
+  1162→  1162→    overflow: hidden;
+  1163→  1163→    text-overflow: ellipsis;
+  1164→  1164→    white-space: nowrap;
+  1165→  1165→  }
+  1166→  1166→
+  1167→  1167→  .hm-achievement-toast-sparkle {
+  1168→  1168→    display: inline-flex;
+  1169→  1169→    align-items: center;
+  1170→  1170→    justify-content: center;
+  1171→  1171→    color: var(--accent-blue);
+  1172→  1172→    opacity: 0.6;
+  1173→  1173→    flex-shrink: 0;
+  1174→  1174→    animation: hm-achievement-sparkle 1.5s ease-in-out infinite;
+  1175→  1175→  }
+  1176→  1176→
+  1177→  1177→  @keyframes hm-achievement-slide-in {
+  1178→  1178→    from {
+  1179→  1179→      opacity: 0;
+  1180→  1180→      transform: translateY(-8px) scale(0.95);
+  1181→  1181→    }
+  1182→  1182→    to {
+  1183→  1183→      opacity: 1;
+  1184→  1184→      transform: translateY(0) scale(1);
+  1185→  1185→    }
+  1186→  1186→  }
+  1187→  1187→
+  1188→  1188→  @keyframes hm-achievement-sparkle {
+  1189→  1189→    0%, 100% { opacity: 0.4; transform: scale(1) rotate(0deg); }
+  1190→  1190→    50% { opacity: 0.9; transform: scale(1.15) rotate(15deg); }
+  1191→  1191→  }
+  1192→  1192→
+  1193→  1193→  /* ─── Animated Gradient Mesh Background ───
+  1194→  1194→     Fixed full-screen container with 4 large blurred color blobs that slowly
+  1195→  1195→     drift around the viewport. VERY subtle — opacity 0.04 (light) / 0.06 (dark)
+  1196→  1196→     so the mesh adds atmosphere without distracting from foreground content.
+  1197→  1197→     Animations are GPU-friendly: transform + opacity only. */
+  1198→  1198→
+  1199→  1199→  .hm-mesh {
+  1200→  1200→    /* Container matches the fixed inset-0 classes applied in the component,
+  1201→  1201→       but we declare it here too so the class is self-documenting and any
+  1202→  1202→       future bare <div className="hm-mesh"> usage works correctly. */
+  1203→  1203→    position: fixed;
+  1204→  1204→    inset: 0;
+  1205→  1205→    overflow: hidden;
+  1206→  1206→    pointer-events: none;
+  1207→  1207→  }
+  1208→  1208→
+  1209→  1209→  /* Base blob styles — large, blurred, low-opacity radial gradients.
+  1210→  1210→     max-w/h 600px keeps blobs from overwhelming the viewport on small screens.
+  1211→  1211→     The actual color is set inline by the component (per-blob CSS var). */
+  1212→  1212→  .hm-mesh-blob {
+  1213→  1213→    position: absolute;
+  1214→  1214→    width: 600px;
+  1215→  1215→    height: 600px;
+  1216→  1216→    max-width: 600px;
+  1217→  1217→    max-height: 600px;
+  1218→  1218→    border-radius: 9999px;
+  1219→  1219→    filter: blur(64px);
+  1220→  1220→    opacity: 0.04;
+  1221→  1221→    will-change: transform, opacity;
+  1222→  1222→    pointer-events: none;
+  1223→  1223→  }
+  1224→  1224→  .dark .hm-mesh-blob {
+  1225→  1225→    /* Dark mode: slightly more visible so the mesh remains perceptible
+  1226→  1226→       against the deep charcoal background. */
+  1227→  1227→    opacity: 0.06;
+  1228→  1228→  }
+  1229→  1229→
+  1230→  1230→  /* Four distinct drift patterns. Each runs 22–28s, ease-in-out, infinite
+  1231→  1231→     alternate so motion reverses smoothly — no jarring jump back to start.
+  1232→  1232→     Animates transform ONLY (translate + scale) — opacity is set by the
+  1233→  1233→     .hm-mesh-blob class so dark mode can bump it via the .dark override
+  1234→  1234→     without conflicting with keyframe values. This keeps motion GPU-friendly
+  1235→  1235→     (transform is composited on the GPU; opacity is too, but isolating it
+  1236→  1236→     to the class avoids the keyframe/class cascade fighting each other). */
+  1237→  1237→
+  1238→  1238→  @keyframes hm-mesh-drift-1 {
+  1239→  1239→    0%   { transform: translate(0, 0) scale(1); }
+  1240→  1240→    50%  { transform: translate(60px, 80px) scale(1.12); }
+  1241→  1241→    100% { transform: translate(-40px, 120px) scale(0.95); }
+  1242→  1242→  }
+  1243→  1243→  @keyframes hm-mesh-drift-2 {
+  1244→  1244→    0%   { transform: translate(0, 0) scale(1); }
+  1245→  1245→    33%  { transform: translate(-80px, 60px) scale(1.08); }
+  1246→  1246→    66%  { transform: translate(40px, 100px) scale(0.92); }
+  1247→  1247→    100% { transform: translate(-60px, -40px) scale(1.05); }
+  1248→  1248→  }
+  1249→  1249→  @keyframes hm-mesh-drift-3 {
+  1250→  1250→    0%   { transform: translate(0, 0) scale(1); }
+  1251→  1251→    50%  { transform: translate(80px, -60px) scale(1.1); }
+  1252→  1252→    100% { transform: translate(-50px, 40px) scale(0.94); }
+  1253→  1253→  }
+  1254→  1254→  @keyframes hm-mesh-drift-4 {
+  1255→  1255→    0%   { transform: translate(0, 0) scale(1); }
+  1256→  1256→    40%  { transform: translate(-70px, -80px) scale(1.06); }
+  1257→  1257→    75%  { transform: translate(50px, -50px) scale(0.96); }
+  1258→  1258→    100% { transform: translate(60px, 70px) scale(1.08); }
+  1259→  1259→  }
+  1260→  1260→
+  1261→  1261→  /* Apply each drift animation to its respective blob. Different durations
+  1262→  1262→     (22s, 26s, 24s, 28s) so blobs never sync up — keeps the motion feeling
+  1263→  1263→     organic and unforced. Opacity is inherited from .hm-mesh-blob (0.04 light,
+  1264→  1264→     0.06 dark). */
+  1265→  1265→  .hm-mesh-blob-1 {
+  1266→  1266→    animation: hm-mesh-drift-1 22s ease-in-out infinite alternate;
+  1267→  1267→  }
+  1268→  1268→  .hm-mesh-blob-2 {
+  1269→  1269→    animation: hm-mesh-drift-2 26s ease-in-out infinite alternate;
+  1270→  1270→  }
+  1271→  1271→  .hm-mesh-blob-3 {
+  1272→  1272→    animation: hm-mesh-drift-3 24s ease-in-out infinite alternate;
+  1273→  1273→  }
+  1274→  1274→  .hm-mesh-blob-4 {
+  1275→  1275→    animation: hm-mesh-drift-4 28s ease-in-out infinite alternate;
+  1276→  1276→  }
+  1277→  1277→
+  1278→  1278→  /* ─── Premium micro-interactions ─── */
+  1279→  1279→
+  1280→  1280→  /* Primary button hover — subtle scale (1.02) + shadow lift.
+  1281→  1281→     Targets any element with the shadcn default-variant .bg-primary class
+  1282→  1282→     (covers <Button> default variant AND any custom element using bg-primary).
+  1283→  1283→     Uses cubic-bezier for an Apple-style spring. */
+  1284→  1284→  [data-slot="button"].bg-primary,
+  1285→  1285→  button.bg-primary {
+  1286→  1286→    transition:
+  1287→  1287→      transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+  1288→  1288→      box-shadow 0.25s ease,
+  1289→  1289→      background-color 0.2s ease;
+  1290→  1290→  }
+  1291→  1291→  [data-slot="button"].bg-primary:hover,
+  1292→  1292→  button.bg-primary:hover {
+  1293→  1293→    transform: scale(1.02);
+  1294→  1294→    box-shadow:
+  1295→  1295→      0 4px 14px -4px color-mix(in oklch, var(--primary) 30%, transparent),
+  1296→  1296→      0 2px 6px -2px color-mix(in oklch, var(--foreground) 12%, transparent);
+  1297→  1297→  }
+  1298→  1298→  [data-slot="button"].bg-primary:active,
+  1299→  1299→  button.bg-primary:active {
+  1300→  1300→    transform: scale(0.99);
+  1301→  1301→  }
+  1302→  1302→  .dark [data-slot="button"].bg-primary:hover,
+  1303→  1303→  .dark button.bg-primary:hover {
+  1304→  1304→    box-shadow:
+  1305→  1305→      0 4px 14px -4px color-mix(in oklch, var(--primary) 45%, transparent),
+  1306→  1306→      0 2px 6px -2px rgba(0, 0, 0, 0.4);
+  1307→  1307→  }
+  1308→  1308→
+  1309→  1309→  /* Enhanced card hover — adds a subtle border glow on top of the existing
+  1310→  1310→     lift + shadow. Accent-blue ring tint signals interactivity. */
+  1311→  1311→  .hm-card-hover {
+  1312→  1312→    transition:
+  1313→  1313→      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+  1314→  1314→      box-shadow 0.3s ease,
+  1315→  1315→      border-color 0.3s ease;
+  1316→  1316→  }
+  1317→  1317→  .hm-card-hover:hover {
+  1318→  1318→    transform: translateY(-2px);
+  1319→  1319→    border-color: color-mix(in oklch, var(--accent-blue) 35%, var(--border));
+  1320→  1320→    box-shadow:
+  1321→  1321→      0 8px 24px -8px color-mix(in oklch, var(--accent-blue) 18%, transparent),
+  1322→  1322→      0 0 0 1px color-mix(in oklch, var(--accent-blue) 18%, transparent),
+  1323→  1323→      0 4px 12px -4px color-mix(in oklch, var(--foreground) 8%, transparent);
+  1324→  1324→  }
+  1325→  1325→  .dark .hm-card-hover:hover {
+  1326→  1326→    border-color: color-mix(in oklch, var(--accent-blue) 40%, transparent);
+  1327→  1327→    box-shadow:
+  1328→  1328→      0 8px 24px -8px color-mix(in oklch, var(--accent-blue) 24%, transparent),
+  1329→  1329→      0 0 0 1px color-mix(in oklch, var(--accent-blue) 22%, transparent),
+  1330→  1330→      0 4px 12px -4px rgba(0, 0, 0, 0.3);
+  1331→  1331→  }
+  1332→  1332→
+  1333→  1333→  /* Nav item hover underline — premium animated sweep. Active items already
+  1334→  1334→     have a 2px underline (set inline in shell.tsx); this adds a hover-only
+  1335→  1335→     underline that grows from the left on non-active items for a tactile
+  1336→  1336→     "this is clickable" hint. */
+  1337→  1337→  .hm-nav-item {
+  1338→  1338→    position: relative;
+  1339→  1339→  }
+  1340→  1340→  .hm-nav-item::after {
+  1341→  1341→    content: "";
+  1342→  1342→    position: absolute;
+  1343→  1343→    bottom: 0;
+  1344→  1344→    left: 50%;
+  1345→  1345→    transform: translateX(-50%) scaleX(0);
+  1346→  1346→    transform-origin: center;
+  1347→  1347→    height: 2px;
+  1348→  1348→    width: 16px;
+  1349→  1349→    border-radius: 999px;
+  1350→  1350→    background: var(--accent-blue);
+  1351→  1351→    opacity: 0;
+  1352→  1352→    transition:
+  1353→  1353→      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+  1354→  1354→      opacity 0.2s ease;
+  1355→  1355→    pointer-events: none;
+  1356→  1356→  }
+  1357→  1357→  .hm-nav-item:not(:disabled):hover::after {
+  1358→  1358→    transform: translateX(-50%) scaleX(1);
+  1359→  1359→    opacity: 0.7;
+  1360→  1360→  }
+  1361→  1361→  .hm-nav-item:disabled::after {
+  1362→  1362→    /* Never show underline on disabled items */
+  1363→  1363→    display: none;
+  1364→  1364→  }
+  1365→  1365→
+  1366→  1366→  /* Loading text shimmer — applies to elements with .hm-loading-text class.
+  1367→  1367→     Sweeps a diagonal light band across the text every 2.5s for a premium
+  1368→  1368→     "thinking" feel. Use on loading placeholders, AI processing hints. */
+  1369→  1369→  .hm-loading-text {
+  1370→  1370→    position: relative;
+  1371→  1371→    color: var(--muted-foreground);
+  1372→  1372→    overflow: hidden;
+  1373→  1373→  }
+  1374→  1374→  .hm-loading-text::after {
+  1375→  1375→    content: "";
+  1376→  1376→    position: absolute;
+  1377→  1377→    inset: 0;
+  1378→  1378→    background: linear-gradient(
+  1379→  1379→      105deg,
+  1380→  1380→      transparent 30%,
+  1381→  1381→      color-mix(in oklch, var(--foreground) 18%, transparent) 50%,
+  1382→  1382→      transparent 70%
+  1383→  1383→    );
+  1384→  1384→    background-size: 200% 100%;
+  1385→  1385→    animation: hm-loading-shimmer 2.5s ease-in-out infinite;
+  1386→  1386→    pointer-events: none;
+  1387→  1387→  }
+  1388→  1388→  @keyframes hm-loading-shimmer {
+  1389→  1389→    0% { background-position: 200% 0; }
+  1390→  1390→    100% { background-position: -200% 0; }
+  1391→  1391→  }
+  1392→  1392→
+  1393→  1393→  /* Score ring idle breathing — subtle continuous pulse to keep the ring
+  1394→  1394→     feeling "alive" even when no data is changing. Very slow (4s) and gentle
+  1395→  1395→     (1.0 ↔ 1.015 scale). */
+  1396→  1396→  @keyframes hm-ring-breathe {
+  1397→  1397→    0%, 100% { transform: scale(1); opacity: 0.85; }
+  1398→  1398→    50% { transform: scale(1.015); opacity: 1; }
+  1399→  1399→  }
+  1400→  1400→  .hm-ring-glow-breathe {
+  1401→  1401→    animation: hm-ring-glow 1.4s ease-out forwards, hm-ring-breathe 4s ease-in-out 1.8s infinite;
+  1402→  1402→  }
+  1403→  1403→
+  1404→  1404→  /* Periodic shimmer sweep — runs the shimmer across the element for ~1.6s
+  1405→  1405→     of a 5s cycle, then idles invisibly for the remaining ~3.4s. This gives
+  1406→  1406→     the "shimmer every 5s" effect used on the ScoreRing after its initial
+  1407→  1407→     entrance sweep. */
+  1408→  1408→  @keyframes hm-shimmer-periodic {
+  1409→  1409→    0%   { transform: translateX(-100%) skewX(-15deg); opacity: 0; }
+  1410→  1410→    4%   { opacity: 1; }
+  1411→  1411→    32%  { transform: translateX(200%) skewX(-15deg); opacity: 1; }
+  1412→  1412→    34%  { opacity: 0; }
+  1413→  1413→    100% { transform: translateX(200%) skewX(-15deg); opacity: 0; }
+  1414→  1414→  }
+  1415→  1415→}
+  1416→  1416→
+  1417→  1417→/* ─── prefers-reduced-motion: disable non-essential animations ───
+  1418→  1418→   Respects users who prefer reduced motion. Entrance reveals and one-shot
+  1419→  1419→   animations (hm-reveal, hm-fade, hm-check-pop, hm-timeline-draw) are kept
+  1420→  1420→   because they communicate state changes; purely decorative motion (mesh
+  1421→  1421→   drift, breathing, ambient floats, shimmer sweeps) is disabled. */
+  1422→  1422→@media (prefers-reduced-motion: reduce) {
+  1423→  1423→  .hm-mesh-blob-1,
+  1424→  1424→  .hm-mesh-blob-2,
+  1425→  1425→  .hm-mesh-blob-3,
+  1426→  1426→  .hm-mesh-blob-4 {
+  1427→  1427→    animation: none !important;
+  1428→  1428→  }
+  1429→  1429→  .hm-ring-glow-breathe,
+  1430→  1430→  .hm-ring-glow {
+  1431→  1431→    animation: none !important;
+  1432→  1432→  }
+  1433→  1433→  .hm-loading-text::after,
+  1434→  1434→  .hm-shimmer::after,
+  1435→  1435→  .hm-shimmer-line,
+  1436→  1436→  .hm-particles::before,
+  1437→  1437→  .hm-particles::after,
+  1438→  1438→  .hm-particles-inner::before,
+  1439→  1439→  .hm-particles-inner::after,
+  1440→  1440→  .hm-hero-orb,
+  1441→  1441→  .hm-glow-pulse,
+  1442→  1442→  .hm-pulse-critical,
+  1443→  1443→  .hm-thinking,
+  1444→  1444→  .hm-step-pulse {
+  1445→  1445→    animation: none !important;
+  1446→  1446→  }
+  1447→  1447→  /* Mesh blobs: keep them visible (static) so background still has atmosphere */
+  1448→  1448→  .hm-mesh-blob {
+  1449→  1449→    opacity: 0.05;
+  1450→  1450→  }
+  1451→  1451→  .dark .hm-mesh-blob {
+  1452→  1452→    opacity: 0.07;
+  1453→  1453→  }
+  1454→  1454→}
+  1455→  1455→
+  1456→  1456→/* ───────────────────────────────────────────────────────────────────
+  1457→  1457→   Round 5 — Premium styling enhancements
+  1458→  1458→   Word-by-word hero reveal, premium gradient text shimmer, depth-shadow
+  1459→  1459→   cards, premium focus rings, animated stat tiles, candidate hero
+  1460→  1460→   snapshot, badge sheen, and refined typography for headings.
+  1461→  1461→   ─────────────────────────────────────────────────────────────────── */
+  1462→  1462→
+  1463→  1463→/* Word-by-word hero reveal — each .hm-word wraps one word and
+  1464→  1464→   fades + lifts in sequence. Used on the home view hero. */
+  1465→  1465→@keyframes hm-word-rise {
+  1466→  1466→  from {
+  1467→  1467→    opacity: 0;
+  1468→  1468→    transform: translateY(0.5em) rotateX(-30deg);
+  1469→  1469→    filter: blur(4px);
+  1470→  1470→  }
+  1471→  1471→  to {
+  1472→  1472→    opacity: 1;
+  1473→  1473→    transform: translateY(0) rotateX(0);
+  1474→  1474→    filter: blur(0);
+  1475→  1475→  }
+  1476→  1476→}
+  1477→  1477→.hm-word {
+  1478→  1478→  display: inline-block;
+  1479→  1479→  opacity: 0;
+  1480→  1480→  animation: hm-word-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  1481→  1481→  transform-origin: bottom center;
+  1482→  1482→  will-change: transform, opacity, filter;
+  1483→  1483→}
+  1484→  1484→
+  1485→  1485→/* Premium gradient text with animated shimmer sweep.
+  1486→  1486→   Use on hero headlines and big numbers. */
+  1487→  1487→@keyframes hm-text-shimmer-sweep {
+  1488→  1488→  0% {
+  1489→  1489→    background-position: 0% center;
+  1490→  1490→  }
+  1491→  1491→  100% {
+  1492→  1492→    background-position: 200% center;
+  1493→  1493→  }
+  1494→  1494→}
+  1495→  1495→.hm-text-gradient-premium {
+  1496→  1496→  background: linear-gradient(
+  1497→  1497→    100deg,
+  1498→  1498→    var(--foreground) 0%,
+  1499→  1499→    var(--foreground) 35%,
+  1500→  1500→    color-mix(in oklch, var(--accent-blue) 80%, var(--foreground)) 50%,
+  1501→  1501→    var(--foreground) 65%,
+  1502→  1502→    var(--foreground) 100%
+  1503→  1503→  );
+  1504→  1504→  background-size: 200% auto;
+  1505→  1505→  background-clip: text;
+  1506→  1506→  -webkit-background-clip: text;
+  1507→  1507→  -webkit-text-fill-color: transparent;
+  1508→  1508→  color: transparent;
+  1509→  1509→  animation: hm-text-shimmer-sweep 6s linear infinite;
+  1510→  1510→}
+  1511→  1511→
+  1512→  1512→/* Depth shadow card — a richer shadow layering for hero cards.
+  1513→  1513→   Combines a tight inner shadow with a soft outer halo for a
+  1514→  1514→   "floating glass" feel. */
+  1515→  1515→.hm-card-depth {
+  1516→  1516→  box-shadow:
+  1517→  1517→    0 1px 2px color-mix(in oklch, var(--foreground) 8%, transparent),
+  1518→  1518→    0 4px 12px -2px color-mix(in oklch, var(--foreground) 6%, transparent),
+  1519→  1519→    0 12px 32px -8px color-mix(in oklch, var(--accent-blue) 12%, transparent);
+  1520→  1520→}
+  1521→  1521→.dark .hm-card-depth {
+  1522→  1522→  box-shadow:
+  1523→  1523→    0 1px 2px rgba(0, 0, 0, 0.4),
+  1524→  1524→    0 4px 12px -2px rgba(0, 0, 0, 0.3),
+  1525→  1525→    0 12px 32px -8px color-mix(in oklch, var(--accent-blue) 18%, transparent);
+  1526→  1526→}
+  1527→  1527→.hm-card-depth:hover {
+  1528→  1528→  box-shadow:
+  1529→  1529→    0 2px 4px color-mix(in oklch, var(--foreground) 10%, transparent),
+  1530→  1530→    0 8px 20px -4px color-mix(in oklch, var(--foreground) 8%, transparent),
+  1531→  1531→    0 20px 48px -10px color-mix(in oklch, var(--accent-blue) 20%, transparent);
+  1532→  1532→}
+  1533→  1533→
+  1534→  1534→/* Premium focus ring — visible, smooth, accessible. */
+  1535→  1535→.hm-focus-ring-premium {
+  1536→  1536→  outline: none;
+  1537→  1537→  transition: box-shadow 0.2s ease-out;
+  1538→  1538→}
+  1539→  1539→.hm-focus-ring-premium:focus-visible {
+  1540→  1540→  box-shadow:
+  1541→  1541→    0 0 0 2px var(--background),
+  1542→  1542→    0 0 0 4px color-mix(in oklch, var(--accent-blue) 60%, transparent);
+  1543→  1543→}
+  1544→  1544→
+  1545→  1545→/* Animated stat tile — subtle gradient sweep on the left edge. */
+  1546→  1546→@keyframes hm-stat-sweep {
+  1547→  1547→  0%, 100% {
+  1548→  1548→    transform: translateY(0);
+  1549→  1549→    opacity: 0.6;
+  1550→  1550→  }
+  1551→  1551→  50% {
+  1552→  1552→    transform: translateY(0);
+  1553→  1553→    opacity: 1;
+  1554→  1554→  }
+  1555→  1555→}
+  1556→  1556→.hm-stat-tile-premium {
+  1557→  1557→  position: relative;
+  1558→  1558→  overflow: hidden;
+  1559→  1559→}
+  1560→  1560→.hm-stat-tile-premium::before {
+  1561→  1561→  content: "";
+  1562→  1562→  position: absolute;
+  1563→  1563→  inset: 0 auto 0 0;
+  1564→  1564→  width: 2px;
+  1565→  1565→  background: linear-gradient(180deg, transparent, var(--accent-blue), transparent);
+  1566→  1566→  opacity: 0.6;
+  1567→  1567→  animation: hm-stat-sweep 3s ease-in-out infinite;
+  1568→  1568→}
+  1569→  1569→
+  1570→  1570→/* Badge sheen — diagonal light sweep across badges on hover. */
+  1571→  1571→@keyframes hm-badge-sheen {
+  1572→  1572→  0% {
+  1573→  1573→    transform: translateX(-120%) skewX(-20deg);
+  1574→  1574→  }
+  1575→  1575→  100% {
+  1576→  1576→    transform: translateX(220%) skewX(-20deg);
+  1577→  1577→  }
+  1578→  1578→}
+  1579→  1579→.hm-badge-sheen {
+  1580→  1580→  position: relative;
+  1581→  1581→  overflow: hidden;
+  1582→  1582→}
+  1583→  1583→.hm-badge-sheen::after {
+  1584→  1584→  content: "";
+  1585→  1585→  position: absolute;
+  1586→  1586→  inset: 0;
+  1587→  1587→  background: linear-gradient(
+  1588→  1588→    90deg,
+  1589→  1589→    transparent 0%,
+  1590→  1590→    color-mix(in oklch, var(--foreground) 20%, transparent) 50%,
+  1591→  1591→    transparent 100%
+  1592→  1592→  );
+  1593→  1593→  transform: translateX(-120%) skewX(-20deg);
+  1594→  1594→  pointer-events: none;
+  1595→  1595→}
+  1596→  1596→.hm-badge-sheen:hover::after {
+  1597→  1597→  animation: hm-badge-sheen 1.2s ease-out;
+  1598→  1598→}
+  1599→  1599→
+  1600→  1600→/* Candidate hero avatar — gradient ring with breathing glow. */
+  1601→  1601→@keyframes hm-avatar-glow {
+  1602→  1602→  0%, 100% {
+  1603→  1603→    box-shadow:
+  1604→  1604→      0 0 0 0 color-mix(in oklch, var(--accent-blue) 40%, transparent),
+  1605→  1605→      0 0 20px -4px color-mix(in oklch, var(--accent-blue) 50%, transparent);
+  1606→  1606→  }
+  1607→  1607→  50% {
+  1608→  1608→    box-shadow:
+  1609→  1609→      0 0 0 4px color-mix(in oklch, var(--accent-blue) 20%, transparent),
+  1610→  1610→      0 0 28px -2px color-mix(in oklch, var(--accent-blue) 60%, transparent);
+  1611→  1611→  }
+  1612→  1612→}
+  1613→  1613→.hm-avatar-premium {
+  1614→  1614→  animation: hm-avatar-glow 3.5s ease-in-out infinite;
+  1615→  1615→}
+  1616→  1616→
+  1617→  1617→/* Premium divider — gradient line with center pulse. */
+  1618→  1618→.hm-divider-premium {
+  1619→  1619→  height: 1px;
+  1620→  1620→  background: linear-gradient(
+  1621→  1621→    90deg,
+  1622→  1622→    transparent 0%,
+  1623→  1623→    color-mix(in oklch, var(--border) 80%, transparent) 20%,
+  1624→  1624→    var(--accent-blue) 50%,
+  1625→  1625→    color-mix(in oklch, var(--border) 80%, transparent) 80%,
+  1626→  1626→    transparent 100%
+  1627→  1627→  );
+  1628→  1628→  position: relative;
+  1629→  1629→}
+  1630→  1630→.hm-divider-premium::after {
+  1631→  1631→  content: "";
+  1632→  1632→  position: absolute;
+  1633→  1633→  top: 50%;
+  1634→  1634→  left: 50%;
+  1635→  1635→  width: 4px;
+  1636→  1636→  height: 4px;
+  1637→  1637→  border-radius: 50%;
+  1638→  1638→  background: var(--accent-blue);
+  1639→  1639→  transform: translate(-50%, -50%);
+  1640→  1640→  box-shadow: 0 0 8px var(--accent-blue);
+  1641→  1641→  animation: hm-stat-sweep 2.5s ease-in-out infinite;
+  1642→  1642→}
+  1643→  1643→
+  1644→  1644→/* Refined heading typography — tighter letter-spacing for big headings. */
+  1645→  1645→.hm-heading-display {
+  1646→  1646→  letter-spacing: -0.025em;
+  1647→  1647→  line-height: 1.05;
+  1648→  1648→  text-wrap: balance;
+  1649→  1649→}
+  1650→  1650→.hm-heading-section {
+  1651→  1651→  letter-spacing: -0.015em;
+  1652→  1652→  line-height: 1.15;
+  1653→  1653→}
+  1654→  1654→
+  1655→  1655→/* Animated underline link — grows from left on hover. */
+  1656→  1656→.hm-link-underline {
+  1657→  1657→  position: relative;
+  1658→  1658→  display: inline-block;
+  1659→  1659→}
+  1660→  1660→.hm-link-underline::after {
+  1661→  1661→  content: "";
+  1662→  1662→  position: absolute;
+  1663→  1663→  left: 0;
+  1664→  1664→  bottom: -2px;
+  1665→  1665→  height: 1px;
+  1666→  1666→  width: 100%;
+  1667→  1667→  background: currentColor;
+  1668→  1668→  transform: scaleX(0);
+  1669→  1669→  transform-origin: left;
+  1670→  1670→  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  1671→  1671→}
+  1672→  1672→.hm-link-underline:hover::after {
+  1673→  1673→  transform: scaleX(1);
+  1674→  1674→}
+  1675→  1675→
+  1676→  1676→/* Glass chip — frosted background with subtle border. */
+  1677→  1677→.hm-glass-chip {
+  1678→  1678→  background: color-mix(in oklch, var(--background) 60%, transparent);
+  1679→  1679→  backdrop-filter: blur(12px) saturate(180%);
+  1680→  1680→  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  1681→  1681→  border: 1px solid color-mix(in oklch, var(--border) 60%, transparent);
+  1682→  1682→}
+  1683→  1683→
+  1684→  1684→/* Premium skeleton — shimmer with gradient sweep. */
+  1685→  1685→@keyframes hm-skeleton-shimmer {
+  1686→  1686→  0% {
+  1687→  1687→    background-position: -200% 0;
+  1688→  1688→  }
+  1689→  1689→  100% {
+  1690→  1690→    background-position: 200% 0;
+  1691→  1691→  }
+  1692→  1692→}
+  1693→  1693→.hm-skeleton-premium {
+  1694→  1694→  background: linear-gradient(
+  1695→  1695→    90deg,
+  1696→  1696→    color-mix(in oklch, var(--muted) 60%, transparent) 0%,
+  1697→  1697→    color-mix(in oklch, var(--muted) 100%, transparent) 50%,
+  1698→  1698→    color-mix(in oklch, var(--muted) 60%, transparent) 100%
+  1699→  1699→  );
+  1700→  1700→  background-size: 200% 100%;
+  1701→  1701→  animation: hm-skeleton-shimmer 1.6s ease-in-out infinite;
+  1702→  1702→}
+  1703→  1703→
+  1704→  1704→/* Premium button glow — for primary CTAs on hero sections. */
+  1705→  1705→@keyframes hm-cta-glow {
+  1706→  1706→  0%, 100% {
+  1707→  1707→    box-shadow:
+  1708→  1708→      0 0 0 0 color-mix(in oklch, var(--primary) 30%, transparent),
+  1709→  1709→      0 8px 24px -8px color-mix(in oklch, var(--primary) 50%, transparent);
+  1710→  1710→  }
+  1711→  1711→  50% {
+  1712→  1712→    box-shadow:
+  1713→  1713→      0 0 0 6px color-mix(in oklch, var(--primary) 10%, transparent),
+  1714→  1714→      0 12px 32px -6px color-mix(in oklch, var(--primary) 60%, transparent);
+  1715→  1715→  }
+  1716→  1716→}
+  1717→  1717→.hm-cta-glow {
+  1718→  1718→  animation: hm-cta-glow 3s ease-in-out infinite;
+  1719→  1719→}
+  1720→  1720→
+  1721→  1721→/* Job template card — premium hover with gradient border reveal. */
+  1722→  1722→.hm-template-card {
+  1723→  1723→  position: relative;
+  1724→  1724→  isolation: isolate;
+  1725→  1725→  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+  1726→  1726→              box-shadow 0.25s ease-out;
+  1727→  1727→}
+  1728→  1728→.hm-template-card::before {
+  1729→  1729→  content: "";
+  1730→  1730→  position: absolute;
+  1731→  1731→  inset: -1px;
+  1732→  1732→  border-radius: inherit;
+  1733→  1733→  padding: 1px;
+  1734→  1734→  background: linear-gradient(
+  1735→  1735→    135deg,
+  1736→  1736→    color-mix(in oklch, var(--accent-blue) 50%, transparent),
+  1737→  1737→    transparent 40%,
+  1738→  1738→    transparent 60%,
+  1739→  1739→    color-mix(in oklch, var(--accent-blue) 30%, transparent)
+  1740→  1740→  );
+  1741→  1741→  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  1742→  1742→  -webkit-mask-composite: xor;
+  1743→  1743→  mask-composite: exclude;
+  1744→  1744→  opacity: 0;
+  1745→  1745→  transition: opacity 0.25s ease-out;
+  1746→  1746→  z-index: -1;
+  1747→  1747→}
+  1748→  1748→.hm-template-card:hover::before {
+  1749→  1749→  opacity: 1;
+  1750→  1750→}
+  1751→  1751→
+  1752→  1752→/* Respect reduced motion — disable all new decorative animations. */
+  1753→  1753→@media (prefers-reduced-motion: reduce) {
+  1754→  1754→  .hm-word,
+  1755→  1755→  .hm-text-gradient-premium,
+  1756→  1756→  .hm-stat-tile-premium::before,
+  1757→  1757→  .hm-badge-sheen::after,
+  1758→  1758→  .hm-avatar-premium,
+  1759→  1759→  .hm-divider-premium::after,
+  1760→  1760→  .hm-skeleton-premium,
+  1761→  1761→  .hm-cta-glow,
+  1762→  1762→  .hm-template-card::before {
+  1763→  1763→    animation: none !important;
+  1764→  1764→  }
+  1765→  1765→  .hm-word {
+  1766→  1766→    opacity: 1;
+  1767→  1767→    transform: none;
+  1768→  1768→    filter: none;
+  1769→  1769→  }
+  1770→  1770→  .hm-text-gradient-premium {
+  1771→  1771→    animation: none;
+  1772→  1772→  }
+  1773→  1773→}
+  1774→  1774→
+  1775→  1775→/* ───────────────────────────────────────────────────────────────────
+  1776→  1776→   Print Report — HIREMIND AI PDF export
+  1777→  1777→   The print report (#hm-print-report / .hm-print-report) is rendered
+  1778→  1778→   offscreen on screen and revealed only when the browser enters print
+  1779→  1779→   media (window.print()). On print, everything else on the page is
+  1780→  1780→   hidden via visibility:hidden, and the report is repositioned to
+  1781→  1781→   top-left at full width. Score badges / colored tiles use
+  1782→  1782→   print-color-adjust: exact so their backgrounds survive the print
+  1783→  1783→   pipeline (most browsers strip backgrounds by default to save ink).
+  1784→  1784→   ─────────────────────────────────────────────────────────────────── */
+  1785→  1785→
+  1786→  1786→/* Screen: keep the report offscreen so it never affects layout or
+  1787→  1787→   causes horizontal scroll. A4 width (210mm) matches the typical PDF
+  1788→  1788→   page width so the design feels native when saved as PDF. White
+  1789→  1789→   background + dark ink colors are set inline in print-report.tsx so
+  1790→  1790→   the report looks identical in light AND dark mode (we don't want a
+  1791→  1791→   dark-themed PDF). */
+  1792→  1792→.hm-print-report {
+  1793→  1793→  position: absolute;
+  1794→  1794→  left: -9999px;
+  1795→  1795→  top: 0;
+  1796→  1796→  width: 210mm;
+  1797→  1797→  min-height: 0;
+  1798→  1798→  padding: 0;
+  1799→  1799→  margin: 0;
+  1800→  1800→  background: #ffffff;
+  1801→  1801→  color: #1a1a2e;
+  1802→  1802→  z-index: -1;
+  1803→  1803→  pointer-events: none;
+  1804→  1804→}
+  1805→  1805→
+  1806→  1806→/* Print media — reveal the report and hide the rest of the app. */
+  1807→  1807→@media print {
+  1808→  1808→  /* Page margins for the saved PDF. 1.5cm is comfortable for A4/Letter. */
+  1809→  1809→  @page {
+  1810→  1810→    margin: 1.5cm;
+  1811→  1811→  }
+  1812→  1812→
+  1813→  1813→  /* Hide everything on the page. We use visibility:hidden rather than
+  1814→  1814→     display:none so layout/scroll position don't shift — only the
+  1815→  1815→     print report's subtree is revealed below. */
+  1816→  1816→  body * {
+  1817→  1817→    visibility: hidden !important;
+  1818→  1818→  }
+  1819→  1819→
+  1820→  1820→  /* Reveal the print report and all its descendants. */
+  1821→  1821→  #hm-print-report,
+  1822→  1822→  #hm-print-report * {
+  1823→  1823→    visibility: visible !important;
+  1824→  1824→  }
+  1825→  1825→
+  1826→  1826→  /* Position the report at the top-left of the page, full width. The
+  1827→  1827→     !important is needed to override the screen offscreen positioning. */
+  1828→  1828→  #hm-print-report {
+  1829→  1829→    position: absolute !important;
+  1830→  1830→    left: 0 !important;
+  1831→  1831→    top: 0 !important;
+  1832→  1832→    width: 100% !important;
+  1833→  1833→    z-index: 1 !important;
+  1834→  1834→    pointer-events: auto !important;
+  1835→  1835→    display: block !important;
+  1836→  1836→  }
+  1837→  1837→
+  1838→  1838→  /* Force a light, ink-friendly background regardless of theme so the
+  1839→  1839→     saved PDF never has a dark page. */
+  1840→  1840→  html, body {
+  1841→  1841→    background: #ffffff !important;
+  1842→  1842→  }
+  1843→  1843→
+  1844→  1844→  /* Each major section starts on a new page. The last section's
+  1845→  1845→     page-break-after is removed so we don't emit a trailing blank page. */
+  1846→  1846→  .hm-print-section {
+  1847→  1847→    page-break-after: always;
+  1848→  1848→  }
+  1849→  1849→  .hm-print-section-last,
+  1850→  1850→  .hm-print-section:last-child {
+  1851→  1851→    page-break-after: auto;
+  1852→  1852→  }
+  1853→  1853→
+  1854→  1854→  /* Avoid breaking inside table rows, Q&A cards, and callouts. */
+  1855→  1855→  tr,
+  1856→  1856→  .hm-print-avoid-break {
+  1857→  1857→    page-break-inside: avoid;
+  1858→  1858→  }
+  1859→  1859→
+  1860→  1860→  /* Score badges / colored tiles / stat tiles — preserve their
+  1861→  1861→     background colors when printing. Most browsers strip backgrounds
+  1862→  1862→     to save ink; this opts the report's accent colors back in. */
+  1863→  1863→  .hm-print-badge {
+  1864→  1864→    print-color-adjust: exact !important;
+  1865→  1865→    -webkit-print-color-adjust: exact !important;
+  1866→  1866→    color-adjust: exact !important;
+  1867→  1867→  }
+  1868→  1868→
+  1869→  1869→  /* The site header / footer are outside #hm-print-report so they're
+  1870→  1870→     already hidden by the body * { visibility: hidden } rule above —
+  1871→  1871→     no extra rules needed. */
+  1872→  1872→
+  1873→  1873→  /* Remove decorative shadows / borders that would muddy the print. */
+  1874→  1874→  .hm-card,
+  1875→  1875→  .hm-card-hover {
+  1876→  1876→    box-shadow: none !important;
+  1877→  1877→  }
+  1878→  1878→}
+  1879→  1879→

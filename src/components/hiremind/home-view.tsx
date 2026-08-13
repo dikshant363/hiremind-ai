@@ -116,14 +116,14 @@ export function HomeView() {
           >
             <HelpCircle className="h-4 w-4" />
           </button>
-          <div className="hm-badge-premium relative inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium mb-6">
+          <div className="hm-badge-premium hm-glass-panel relative inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium mb-6">
             <Sparkles className="h-3 w-3" />
             <span>Evidence-based job readiness · AI-assisted assessment</span>
           </div>
           <h1 className="relative hm-heading-display text-[40px] sm:text-[56px] font-semibold tracking-tight text-balance leading-[1.1] sm:leading-[1.05]">
             Know your job
             <br />
-            <span className="hm-text-gradient-premium">readiness.</span>
+            <span className="hm-text-shimmer">readiness.</span>
           </h1>
           <p className="relative mt-4 mx-auto max-w-xl text-sm sm:text-base text-foreground/70 leading-relaxed sm:leading-normal text-pretty">
             Upload your resume and choose a target role. HireMind finds your strongest evidence, identifies your biggest gap, and tests it in an adaptive AI interview.

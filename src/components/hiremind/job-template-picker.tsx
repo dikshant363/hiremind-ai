@@ -125,7 +125,7 @@ const JobTemplateCard = React.memo(function JobTemplateCard({
       aria-label={`Use ${template.title} template`}
       title={`${template.title} — click to pre-fill`}
       className={cn(
-        "group hm-template-card relative flex flex-col text-left",
+        "group hm-template-card hm-card-lift relative flex flex-col text-left",
         "p-3 rounded-xl",
         "bg-card border border-border/60",
         "transition-[transform,border-color,box-shadow] duration-200 ease-out",

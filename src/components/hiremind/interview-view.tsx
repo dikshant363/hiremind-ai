@@ -465,7 +465,7 @@ export function InterviewView() {
                 <span /><span /><span />
               </span>
             </div>
-            <h1 className="mt-3 text-2xl sm:text-[28px] font-semibold tracking-tight leading-snug text-balance">
+            <h1 className="hm-typing-cursor mt-3 text-2xl sm:text-[28px] font-semibold tracking-tight leading-snug text-balance">
               {current.text}
             </h1>
 
@@ -525,7 +525,10 @@ export function InterviewView() {
                     onClick={onSubmit}
                     size="lg"
                     disabled={loading || answer.trim().length < 5}
-                    className="h-11 sm:h-12 px-5 sm:px-5 gap-2"
+                    className={cn(
+                      "h-11 sm:h-12 px-5 sm:px-5 gap-2",
+                      !loading && answer.trim().length >= 5 && "hm-pulse-ring"
+                    )}
                   >
                     {loading ? (
                       <>
