@@ -41,6 +41,10 @@ interface StoreState {
   view: View;
   setView: (v: View) => void;
 
+  // Presentation mode
+  presentationMode: boolean;
+  togglePresentationMode: () => void;
+
   // Session
   sessionId: string | null;
   isDemo: boolean;
@@ -89,6 +93,9 @@ const LOADING_STEPS: Record<string, string> = {
 export const useHireMind = create<StoreState>((set, get) => ({
   view: "home",
   setView: (v) => set({ view: v }),
+
+  presentationMode: false,
+  togglePresentationMode: () => set((s) => ({ presentationMode: !s.presentationMode })),
 
   sessionId: null,
   isDemo: false,
@@ -228,6 +235,7 @@ export const useHireMind = create<StoreState>((set, get) => ({
   reset: () =>
     set({
       view: "home",
+      presentationMode: false,
       sessionId: null,
       isDemo: false,
       resumeText: "",

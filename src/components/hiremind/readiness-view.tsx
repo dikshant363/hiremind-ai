@@ -6,6 +6,8 @@ import { ArrowRight, Sparkles, AlertOctagon, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHireMind } from "@/lib/store";
 import { ScoreRing, CompetencyBar } from "./shell";
+import { SessionSummary } from "./session-summary";
+import { ExportResults } from "./export-results";
 
 export function ReadinessView() {
   const { readiness, interview, gaps, computeReadiness, loading, loadingStep, setView } = useHireMind();
@@ -59,9 +61,9 @@ export function ReadinessView() {
 
       <div className="mt-8 grid gap-4 lg:grid-cols-5">
         <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          initial={{ opacity: 0, y: 8, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
           className="hm-card p-6 lg:col-span-2 flex flex-col items-center justify-center text-center"
         >
           <ScoreRing
@@ -69,6 +71,7 @@ export function ReadinessView() {
             label="Prototype Job Readiness Index"
             caption={readiness.headline}
             tone={tone as "neutral" | "success" | "warning" | "critical"}
+            delay={200}
           />
         </motion.div>
 
@@ -114,11 +117,17 @@ export function ReadinessView() {
           </div>
           {readiness.criticalBlockers.length > 0 ? (
             <ul className="space-y-2">
-              {readiness.criticalBlockers.map((b) => (
-                <li key={b} className="text-[13px] flex gap-2">
-                  <span className="text-critical-foreground">·</span>
-                  {b}
-                </li>
+              {readiness.criticalBlockers.map((b, i) => (
+                <motion.li
+                  key={b}
+                  initial={{ opacity: 0, x: -6 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: 0.3 + i * 0.08 }}
+                  className="text-[13px] flex gap-2 items-center"
+                >
+                  <span className="inline-flex h-1.5 w-1.5 rounded-full bg-critical animate-pulse" />
+                  <span className="text-foreground">{b}</span>
+                </motion.li>
               ))}
             </ul>
           ) : (
@@ -142,6 +151,9 @@ export function ReadinessView() {
           <Button className="mt-4 gap-2" onClick={() => setView("roadmap")}>
             Open my roadmap <ArrowRight className="h-4 w-4" />
           </Button>
+          <div className="mt-3">
+            <ExportResults />
+          </div>
         </motion.div>
       </div>
 
@@ -171,6 +183,9 @@ export function ReadinessView() {
           </div>
         </motion.div>
       )}
+
+      {/* Session Summary */}
+      <SessionSummary />
     </div>
   );
 }

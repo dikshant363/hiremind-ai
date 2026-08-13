@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useHireMind } from "@/lib/store";
 import { ScoreRing } from "./shell";
+import { cn } from "@/lib/utils";
 
 export function InterviewView() {
   const { interview, submitAnswer, loading, loadingStep, setView, isDemo } = useHireMind();
@@ -90,6 +91,24 @@ export function InterviewView() {
               style={{ width: `${progress}%` }}
             />
           </div>
+          {/* Progress step indicator dots */}
+          <div className="mt-2 flex items-center justify-center gap-1.5">
+            {Array.from({ length: interview.totalQuestions }, (_, i) => {
+              const isComplete = i < interview.currentIndex;
+              const isActive = i === interview.currentIndex;
+              return (
+                <span
+                  key={i}
+                  className={cn(
+                    "inline-block h-1.5 w-1.5 rounded-full hm-step-dot",
+                    isActive && "hm-step-dot-active",
+                    isComplete && "hm-step-dot-complete",
+                    !isActive && !isComplete && "bg-muted-foreground/25"
+                  )}
+                />
+              );
+            })}
+          </div>
         </motion.div>
 
         {/* Question card */}
@@ -104,6 +123,9 @@ export function InterviewView() {
           >
             <div className="text-[11px] font-semibold text-accent-blue-foreground uppercase tracking-wider">
               {current.competency} · {current.difficulty}
+              <span className="ml-2 inline-flex hm-typing-indicator">
+                <span /><span /><span />
+              </span>
             </div>
             <h1 className="mt-3 text-2xl sm:text-[28px] font-semibold tracking-tight leading-snug text-balance">
               {current.text}
@@ -128,7 +150,7 @@ export function InterviewView() {
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
                 placeholder="Write your answer here. Take your time — depth matters more than length."
-                className="min-h-[160px] resize-none text-[14px] leading-relaxed bg-transparent border-border/60 focus-visible:ring-1 focus-visible:ring-ring/40"
+                className="min-h-[160px] resize-none text-[14px] leading-relaxed bg-transparent border-border/60 hm-focus-ring transition-all duration-200"
                 disabled={loading}
               />
               <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">

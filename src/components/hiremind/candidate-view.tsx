@@ -6,6 +6,7 @@ import { ArrowRight, BadgeCheck, FolderGit2, GraduationCap, Briefcase, Quote, Al
 import { Button } from "@/components/ui/button";
 import { useHireMind } from "@/lib/store";
 import type { SkillEvidence } from "@/lib/types";
+import { EvidenceGraph } from "./evidence-graph";
 
 export function CandidateView() {
   const { candidate, job, isDemo, meta, setView } = useHireMind();
@@ -75,8 +76,15 @@ export function CandidateView() {
           </div>
 
           <div className="space-y-2">
-            {[...strongSkills, ...moderateSkills, ...weakSkills].map((ev) => (
-              <SkillRow key={ev.competency} ev={ev} />
+            {[...strongSkills, ...moderateSkills, ...weakSkills].map((ev, i) => (
+              <motion.div
+                key={ev.competency}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.35, delay: i * 0.04, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <SkillRow ev={ev} />
+              </motion.div>
             ))}
           </div>
 
@@ -139,6 +147,8 @@ export function CandidateView() {
         </motion.div>
       </div>
 
+      <EvidenceGraph />
+
       <div className="mt-8 flex items-center justify-between">
         {(meta.resumeFallback || meta.jobFallback) && (
           <div className="inline-flex items-center gap-1.5 rounded-md bg-warning/10 text-warning-foreground px-3 py-1.5 text-[11px]">
@@ -181,13 +191,15 @@ function SkillRow({ ev }: { ev: SkillEvidence }) {
       ? "var(--warning)"
       : "var(--muted-foreground)";
   return (
-    <div className="rounded-lg border border-border/60 bg-card/40">
+    <div
+      className="rounded-lg border border-border/60 bg-card/40 overflow-hidden"
+      style={{ borderLeft: `3px solid ${color}` }}
+    >
       <button
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center justify-between px-3 py-2 text-left"
       >
         <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full" style={{ background: color }} />
           <span className="text-[13px] font-medium">{ev.competency}</span>
         </div>
         <div className="flex items-center gap-3">
@@ -195,14 +207,19 @@ function SkillRow({ ev }: { ev: SkillEvidence }) {
           <BadgeCheck className="h-3.5 w-3.5 text-muted-foreground/60" />
         </div>
       </button>
-      {open && (
+      <motion.div
+        initial={false}
+        animate={{ height: open ? "auto" : 0, opacity: open ? 1 : 0 }}
+        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+        style={{ overflow: "hidden" }}
+      >
         <div className="px-3 pb-3 pt-1">
           <div className="flex gap-2 text-[12px] text-muted-foreground leading-relaxed bg-secondary/40 rounded-md p-2.5">
             <Quote className="h-3 w-3 mt-0.5 shrink-0 opacity-60" />
             <span>{ev.evidence}</span>
           </div>
         </div>
-      )}
+      </motion.div>
     </div>
   );
 }

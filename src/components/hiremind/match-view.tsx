@@ -8,6 +8,25 @@ import { useHireMind } from "@/lib/store";
 import { ScoreRing, CompetencyBar, StatusPill } from "./shell";
 import type { MatchStatus } from "@/lib/types";
 
+/** Animated number counter for score displays */
+function AnimatedCounter({ value, delay = 0 }: { value: number; delay?: number }) {
+  const [display, setDisplay] = React.useState(0);
+  React.useEffect(() => {
+    const start = performance.now();
+    const dur = 700;
+    let raf = 0;
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - start) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setDisplay(Math.round(value * eased));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    const timeout = setTimeout(() => { raf = requestAnimationFrame(tick); }, delay * 1000);
+    return () => { clearTimeout(timeout); cancelAnimationFrame(raf); };
+  }, [value, delay]);
+  return <span className="font-semibold tabular-nums">{display}</span>;
+}
+
 export function MatchView() {
   const { match, setView } = useHireMind();
   if (!match) return null;
@@ -37,14 +56,20 @@ export function MatchView() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="hm-card p-6 lg:col-span-2 flex flex-col items-center justify-center text-center"
+          className="hm-card p-6 lg:col-span-2 flex flex-col items-center justify-center text-center relative"
         >
-          <ScoreRing
-            value={match.index}
-            label="Prototype Job Match Index"
-            caption={match.headline}
-            tone={tone as "neutral" | "success" | "warning" | "critical"}
-          />
+          <motion.div
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <ScoreRing
+              value={match.index}
+              label="Prototype Job Match Index"
+              caption={match.headline}
+              tone={tone as "neutral" | "success" | "warning" | "critical"}
+            />
+          </motion.div>
           <div className="mt-4 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <Info className="h-3 w-3" />
             Deterministic aggregate · AI-assisted interpretation only
@@ -63,22 +88,28 @@ export function MatchView() {
             <span className="text-[11px] text-muted-foreground">Weighted contribution</span>
           </div>
           <div className="space-y-4">
-            {match.components.map((c) => (
-              <div key={c.label}>
+            {match.components.map((c, ci) => (
+              <motion.div
+                key={c.label}
+                initial={{ opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, delay: 0.15 + ci * 0.08, ease: [0.22, 1, 0.36, 1] }}
+              >
                 <div className="flex items-center justify-between text-[13px] mb-1.5">
                   <div>
                     <span className="font-medium">{c.label}</span>
                     <span className="ml-2 text-[11px] text-muted-foreground">weight {Math.round(c.weight * 100)}%</span>
                   </div>
-                  <span className="font-semibold tabular-nums">{Math.round(c.score * 100)}</span>
+                  <AnimatedCounter value={Math.round(c.score * 100)} delay={0.3 + ci * 0.1} />
                 </div>
                 <CompetencyBar
                   label=""
                   value={c.score}
                   status={c.score >= 0.7 ? "matched" : c.score >= 0.4 ? "weak" : "gap"}
+                  index={ci}
                 />
                 <div className="mt-1 text-[11px] text-muted-foreground leading-relaxed">{c.detail}</div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </motion.div>
@@ -138,9 +169,15 @@ export function MatchView() {
       </motion.div>
 
       <div className="mt-8 flex items-center justify-end">
-        <Button onClick={() => setView("gaps")} className="gap-2">
-          See your gaps <ArrowRight className="h-4 w-4" />
-        </Button>
+        <motion.div
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.98 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        >
+          <Button onClick={() => setView("gaps")} className="gap-2">
+            See your gaps <ArrowRight className="h-4 w-4" />
+          </Button>
+        </motion.div>
       </div>
     </div>
   );

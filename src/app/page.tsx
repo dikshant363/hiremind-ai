@@ -12,16 +12,33 @@ import { EvaluationView } from "@/components/hiremind/evaluation-view";
 import { ReadinessView } from "@/components/hiremind/readiness-view";
 import { RoadmapView } from "@/components/hiremind/roadmap-view";
 import { LoadingOverlay } from "@/components/hiremind/loading-overlay";
+import { ShortcutHint } from "@/components/hiremind/shortcut-hint";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import { useEffect } from "react";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { useTheme } from "next-themes";
 
 export default function Home() {
-  const { view, error } = useHireMind();
+  const { view, error, presentationMode } = useHireMind();
+  const { showHints, setShowHints } = useKeyboardShortcuts();
+  const { setTheme, theme } = useTheme();
 
   useEffect(() => {
     if (error) toast.error(error);
   }, [error]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-presentation", presentationMode ? "true" : "false");
+    return () => { document.documentElement.removeAttribute("data-presentation"); };
+  }, [presentationMode]);
+
+  // Listen for custom theme toggle event from keyboard shortcuts
+  useEffect(() => {
+    const handler = () => setTheme(theme === "dark" ? "light" : "dark");
+    document.addEventListener("hm-toggle-theme", handler);
+    return () => document.removeEventListener("hm-toggle-theme", handler);
+  }, [setTheme, theme]);
 
   return (
     <>
@@ -48,6 +65,7 @@ export default function Home() {
       </main>
       <SiteFooter />
       <LoadingOverlay />
+      <ShortcutHint open={showHints} onClose={() => setShowHints(false)} />
     </>
   );
 }

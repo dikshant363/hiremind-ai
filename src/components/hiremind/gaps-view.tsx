@@ -30,7 +30,7 @@ export function GapsView() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.05 }}
-          className="hm-card mt-8 p-8 sm:p-10 relative overflow-hidden"
+          className="hm-gradient-border-critical mt-8 p-8 sm:p-10 relative overflow-hidden"
         >
           <div
             className="absolute -top-24 -right-24 h-64 w-64 rounded-full opacity-[0.07]"
@@ -63,17 +63,23 @@ export function GapsView() {
           </div>
 
           <div className="mt-7 flex flex-col sm:flex-row gap-3">
-            <Button onClick={startInterview} size="lg" className="h-12 px-6 gap-2" disabled={loading}>
-              {loading ? (
-                <>
-                  <Sparkles className="h-4 w-4 hm-thinking" /> {loadingStep || "Working…"}
-                </>
-              ) : (
-                <>
-                  Test this skill <ArrowRight className="h-4 w-4" />
-                </>
-              )}
-            </Button>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
+            >
+              <Button onClick={startInterview} size="lg" className="h-12 px-6 gap-2" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Sparkles className="h-4 w-4 hm-thinking" /> {loadingStep || "Working…"}
+                  </>
+                ) : (
+                  <>
+                    Test this skill <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            </motion.div>
             <Button variant="ghost" onClick={() => setView("interview")} className="text-muted-foreground">
               Resume interview →
             </Button>

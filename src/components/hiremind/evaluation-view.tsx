@@ -34,10 +34,18 @@ export function EvaluationView() {
         className="hm-card mt-8 p-6 sm:p-8"
       >
         <div className="grid sm:grid-cols-2 gap-x-8 gap-y-4">
-          <DimensionBar label="Technical Accuracy" value={ev.technicalAccuracy} />
-          <DimensionBar label="Relevance" value={ev.relevance} />
-          <DimensionBar label="Depth" value={ev.depth} />
-          <DimensionBar label="Communication" value={ev.communication} />
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}>
+            <DimensionBar label="Technical Accuracy" value={ev.technicalAccuracy} />
+          </motion.div>
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.18 }}>
+            <DimensionBar label="Relevance" value={ev.relevance} />
+          </motion.div>
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.26 }}>
+            <DimensionBar label="Depth" value={ev.depth} />
+          </motion.div>
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.34 }}>
+            <DimensionBar label="Communication" value={ev.communication} />
+          </motion.div>
         </div>
         <div className="hm-divider my-6" />
         <div className="flex items-center justify-between">
@@ -109,7 +117,7 @@ export function EvaluationView() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="hm-card mt-6 p-8 sm:p-10 relative overflow-hidden"
+            className="hm-card mt-6 p-8 sm:p-10 relative overflow-hidden hm-radial-glow"
           >
             <div
               className="absolute -top-32 -right-32 h-72 w-72 rounded-full opacity-[0.08]"
@@ -131,7 +139,7 @@ export function EvaluationView() {
               </div>
               <div className="flex items-start gap-3">
                 <Sparkles className="h-4 w-4 text-accent-blue-foreground mt-0.5" />
-                <span className="text-[14px]">Let's test that.</span>
+                <span className="text-[14px]"><span className="hm-typewriter">Let's test that.</span></span>
               </div>
             </div>
 

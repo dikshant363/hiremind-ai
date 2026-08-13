@@ -40,16 +40,16 @@ export function RoadmapView() {
 
       {/* Timeline */}
       <div className="mt-6 relative">
-        <div className="absolute left-[19px] top-2 bottom-2 w-px bg-border" />
+        <div className="absolute left-[19px] top-2 bottom-2 w-px bg-border hm-timeline-draw" />
         <div className="space-y-4">
           {roadmap.steps.map((step, i) => {
             const meta = PHASE_META[step.phase];
             return (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.45, delay: 0.1 + i * 0.08 }}
+                initial={{ opacity: 0, x: -12, rotate: -1.5 }}
+                animate={{ opacity: 1, x: 0, rotate: 0 }}
+                transition={{ duration: 0.5, delay: 0.15 + i * 0.1, ease: [0.22, 1, 0.36, 1] }}
                 className="relative pl-12"
               >
                 <span
@@ -74,7 +74,7 @@ export function RoadmapView() {
                     <ul className="mt-3 space-y-1.5">
                       {step.practice.map((p, j) => (
                         <li key={j} className="text-[12px] text-muted-foreground flex gap-2">
-                          <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0 text-muted-foreground/60" />
+                          <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0 text-muted-foreground/60 hm-check-pop" style={{ animationDelay: `${0.5 + i * 0.1 + j * 0.06}s` }} />
                           {p}
                         </li>
                       ))}

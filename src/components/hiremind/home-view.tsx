@@ -24,7 +24,7 @@ export function HomeView() {
   const canAnalyze = resumeText.trim().length > 30 && jobText.trim().length > 30;
 
   return (
-    <div className="hm-ambient">
+    <div className="hm-ambient hm-particles">
       <section className="mx-auto max-w-5xl px-5 sm:px-8 pt-16 sm:pt-24 pb-12">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -131,16 +131,18 @@ export function HomeView() {
             {!loading && <ArrowRight className="h-4 w-4" />}
           </Button>
           <span className="text-[12px] text-muted-foreground">or</span>
-          <Button
-            onClick={onDemo}
-            disabled={loading}
-            variant="outline"
-            size="lg"
-            className="h-12 px-6 rounded-xl text-[14px] font-medium gap-2 border-border/80"
-          >
-            <Wand2 className="h-4 w-4" />
-            Load demo candidate
-          </Button>
+          <div className="hm-gradient-border rounded-[calc(var(--radius)+6px)]">
+            <Button
+              onClick={onDemo}
+              disabled={loading}
+              variant="outline"
+              size="lg"
+              className="h-12 px-6 rounded-[calc(var(--radius)+5px)] text-[14px] font-medium gap-2 border-0 bg-card hover:bg-secondary/80"
+            >
+              <Wand2 className="h-4 w-4" />
+              Load demo candidate
+            </Button>
+          </div>
         </motion.div>
 
         <p className="mt-4 text-center text-[11px] text-muted-foreground">
@@ -149,7 +151,7 @@ export function HomeView() {
       </section>
 
       {/* Trust strip */}
-      <section className="border-t border-border/60 bg-card/30">
+      <section className="border-t border-border/60 bg-card/30 relative hm-particles-inner">
         <div className="mx-auto max-w-5xl px-5 sm:px-8 py-10 grid sm:grid-cols-3 gap-6">
           {[
             {
@@ -168,7 +170,12 @@ export function HomeView() {
               body: "Every Prototype Job Match Index and Readiness Index is broken down into the factors that actually produced it.",
             },
           ].map((f) => (
-            <div key={f.title} className="flex gap-3">
+            <motion.div
+              key={f.title}
+              whileHover={{ scale: 1.03, y: -2 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              className="flex gap-3 cursor-default"
+            >
               <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
                 {f.icon}
               </span>
@@ -176,7 +183,7 @@ export function HomeView() {
                 <h4 className="text-[13px] font-semibold">{f.title}</h4>
                 <p className="mt-1 text-[12px] text-muted-foreground leading-relaxed">{f.body}</p>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>

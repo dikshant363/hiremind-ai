@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { useTheme } from "next-themes";
-import { Sun, Moon, BrainCircuit, RotateCcw } from "lucide-react";
+import { motion } from "framer-motion";
+import { Sun, Moon, BrainCircuit, RotateCcw, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHireMind, type View } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -21,7 +21,7 @@ const NAV: { id: View; label: string }[] = [
 const NAV_REQUIRES_SESSION: View[] = ["candidate", "match", "gaps", "interview", "readiness", "roadmap"];
 
 export function SiteHeader() {
-  const { view, setView, sessionId, isDemo, reset } = useHireMind();
+  const { view, setView, sessionId, isDemo, reset, presentationMode, togglePresentationMode } = useHireMind();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
@@ -57,7 +57,7 @@ export function SiteHeader() {
                 disabled={disabled}
                 onClick={() => setView(item.id)}
                 className={cn(
-                  "px-3 py-1.5 rounded-md text-[13px] font-medium transition-all",
+                  "hm-nav-item px-3 py-1.5 rounded-md text-[13px] font-medium transition-all",
                   active
                     ? "bg-secondary text-secondary-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
@@ -71,6 +71,11 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          {presentationMode && (
+            <span className="rounded-full bg-accent-blue/12 text-accent-blue-foreground px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-widest">
+              Presentation Mode
+            </span>
+          )}
           {sessionId && (
             <Button
               variant="ghost"
@@ -82,6 +87,15 @@ export function SiteHeader() {
               <span className="hidden sm:inline">Start over</span>
             </Button>
           )}
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Toggle presentation mode"
+            onClick={togglePresentationMode}
+            className={cn("h-8 w-8", presentationMode && "bg-accent-blue/15 text-accent-blue-foreground")}
+          >
+            <Monitor className="h-4 w-4" />
+          </Button>
           <Button
             variant="ghost"
             size="icon"
@@ -127,7 +141,7 @@ export function SiteHeader() {
 
 export function SiteFooter() {
   return (
-    <footer className="mt-auto border-t border-border/60 bg-background/50">
+    <footer className="hm-footer-hide mt-auto border-t border-border/60 bg-background/50">
       <div className="mx-auto max-w-6xl px-5 sm:px-8 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-[13px] text-muted-foreground">
         <div className="flex items-center gap-2">
           <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary text-primary-foreground">
@@ -145,36 +159,60 @@ export function SiteFooter() {
   );
 }
 
-/** Premium score ring — animated count-up. */
+/** Premium score ring — animated count-up with glow + shimmer. */
 export function ScoreRing({
   value,
   size = 168,
   label,
   caption,
   tone = "neutral",
+  delay = 0,
 }: {
   value: number;
   size?: number;
   label?: string;
   caption?: string;
   tone?: "neutral" | "success" | "warning" | "critical";
+  delay?: number;
 }) {
   const [display, setDisplay] = React.useState(0);
+  const [glowActive, setGlowActive] = React.useState(true);
+  const [shimmerActive, setShimmerActive] = React.useState(false);
+
   React.useEffect(() => {
     const start = performance.now();
     const from = 0;
     const to = Math.max(0, Math.min(100, value));
-    const dur = 900;
+    const dur = 1100; // slightly longer for smoother feel
     let raf = 0;
     const tick = (t: number) => {
       const p = Math.min(1, (t - start) / dur);
-      const eased = 1 - Math.pow(1 - p, 3);
-      setDisplay(Math.round(from + (to - from) * eased));
+      // Overshoot easing: cubic with slight spring past target
+      const eased = p < 0.85
+        ? 1 - Math.pow(1 - p / 0.85, 3) * 1
+        : 1 + 0.02 * Math.sin(((p - 0.85) / 0.15) * Math.PI);
+      setDisplay(Math.round(from + (to - from) * Math.min(1.01, eased)));
       if (p < 1) raf = requestAnimationFrame(tick);
+      else {
+        setDisplay(to);
+        // Trigger shimmer after animation completes
+        setTimeout(() => setShimmerActive(true), 200);
+      }
     };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [value]);
+    const timeout = setTimeout(() => {
+      raf = requestAnimationFrame(tick);
+    }, delay);
+    return () => {
+      clearTimeout(timeout);
+      cancelAnimationFrame(raf);
+    };
+  }, [value, delay]);
+
+  // Fade out glow after entrance
+  React.useEffect(() => {
+    const t = setTimeout(() => setGlowActive(false), 1800);
+    return () => clearTimeout(t);
+  }, []);
 
   const stroke = 9;
   const r = (size - stroke) / 2;
@@ -193,7 +231,16 @@ export function ScoreRing({
   return (
     <div className="flex flex-col items-center" style={{ width: size }}>
       <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} className="-rotate-90">
+        {/* Glow layer behind ring */}
+        {glowActive && (
+          <div
+            className="hm-ring-glow"
+            style={{
+              background: `radial-gradient(circle, color-mix(in oklch, ${toneColor} 12%, transparent), transparent 70%)`,
+            }}
+          />
+        )}
+        <svg width={size} height={size} className="-rotate-90" style={{ overflow: "visible" }}>
           <circle
             cx={size / 2}
             cy={size / 2}
@@ -216,6 +263,18 @@ export function ScoreRing({
             style={{ transition: "stroke-dashoffset 0.1s linear" }}
           />
         </svg>
+        {/* Shimmer sweep overlay */}
+        {shimmerActive && (
+          <div className="absolute inset-0 overflow-hidden rounded-full pointer-events-none">
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(105deg, transparent 40%, color-mix(in oklch, ${toneColor} 8%, white) 50%, transparent 60%)`,
+                animation: "hm-shimmer 1.6s ease-in-out 1 both",
+              }}
+            />
+          </div>
+        )}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-5xl font-semibold tracking-tight tabular-nums hm-text-gradient">
             {display}
@@ -233,23 +292,26 @@ export function ScoreRing({
   );
 }
 
-/** Premium horizontal competency bar. */
+/** Premium horizontal competency bar with gradient fill + micro-shine. */
 export function CompetencyBar({
   label,
   value,
   status,
   rightLabel,
+  index = 0,
 }: {
   label: string;
   value: number; // 0..1
   status: "matched" | "weak" | "unknown" | "gap";
   rightLabel?: string;
+  index?: number;
 }) {
   const [w, setW] = React.useState(0);
   React.useEffect(() => {
-    const t = setTimeout(() => setW(Math.max(0.04, Math.min(1, value))), 60);
+    // Staggered entrance: each bar appears 50ms after the previous
+    const t = setTimeout(() => setW(Math.max(0.04, Math.min(1, value))), 60 + index * 50);
     return () => clearTimeout(t);
-  }, [value]);
+  }, [value, index]);
 
   const color =
     status === "matched"
@@ -260,16 +322,26 @@ export function CompetencyBar({
       ? "var(--critical)"
       : "var(--muted-foreground)";
 
+  // Gradient fill for matched/weak bars
+  const background =
+    status === "matched"
+      ? "linear-gradient(90deg, color-mix(in oklch, var(--success) 85%, var(--accent-blue)), var(--success))"
+      : status === "weak"
+      ? "linear-gradient(90deg, color-mix(in oklch, var(--warning) 85%, var(--accent-blue)), var(--warning))"
+      : color;
+
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center justify-between text-[13px]">
-        <span className="font-medium text-foreground">{label}</span>
-        {rightLabel && <span className="text-muted-foreground tabular-nums">{rightLabel}</span>}
-      </div>
-      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+      {label && (
+        <div className="flex items-center justify-between text-[13px]">
+          <span className="font-medium text-foreground">{label}</span>
+          {rightLabel && <span className="text-muted-foreground tabular-nums">{rightLabel}</span>}
+        </div>
+      )}
+      <div className="h-1.5 rounded-full bg-muted overflow-hidden hm-bar-shine">
         <div
           className="h-full rounded-full transition-all duration-700 ease-out"
-          style={{ width: `${w * 100}%`, background: color, opacity: status === "unknown" ? 0.5 : 1 }}
+          style={{ width: `${w * 100}%`, background, opacity: status === "unknown" ? 0.5 : 1 }}
         />
       </div>
     </div>
@@ -300,7 +372,11 @@ export function PriorityPill({ priority }: { priority: "critical" | "high" | "me
   } as const;
   const s = map[priority];
   return (
-    <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider", s.className)}>
+    <span className={cn(
+      "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+      s.className,
+      priority === "critical" && "hm-pulse-critical"
+    )}>
       {s.label}
     </span>
   );
