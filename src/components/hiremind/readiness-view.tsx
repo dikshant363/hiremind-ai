@@ -30,6 +30,7 @@ import { ScoreRing, CompetencyBar, AnimatedCounter } from "./shell";
 import { SessionSummary } from "./session-summary";
 import { ExportResults } from "./export-results";
 import { InterviewTimeline } from "./interview-timeline";
+import { BookmarkedQuestions } from "./bookmarked-questions";
 import type { SkillLevel } from "@/lib/types";
 
 /** Map a 0..1 dimension score onto the smooth color scale:
@@ -452,6 +453,11 @@ export function ReadinessView() {
 
       {/* Interview journey — full adaptive timeline */}
       <InterviewTimeline />
+
+      {/* Bookmarked questions — review the questions the user starred
+          during the interview. Renders even when empty (shows the empty
+          state with the star icon) so the section is always discoverable. */}
+      <BookmarkedQuestions variant="full" />
 
       {/* Session Summary */}
       <SessionSummary />

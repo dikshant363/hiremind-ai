@@ -1433,3 +1433,427 @@
     opacity: 0.07;
   }
 }
+
+/* ───────────────────────────────────────────────────────────────────
+   Round 5 — Premium styling enhancements
+   Word-by-word hero reveal, premium gradient text shimmer, depth-shadow
+   cards, premium focus rings, animated stat tiles, candidate hero
+   snapshot, badge sheen, and refined typography for headings.
+   ─────────────────────────────────────────────────────────────────── */
+
+/* Word-by-word hero reveal — each .hm-word wraps one word and
+   fades + lifts in sequence. Used on the home view hero. */
+@keyframes hm-word-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.5em) rotateX(-30deg);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotateX(0);
+    filter: blur(0);
+  }
+}
+.hm-word {
+  display: inline-block;
+  opacity: 0;
+  animation: hm-word-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  transform-origin: bottom center;
+  will-change: transform, opacity, filter;
+}
+
+/* Premium gradient text with animated shimmer sweep.
+   Use on hero headlines and big numbers. */
+@keyframes hm-text-shimmer-sweep {
+  0% {
+    background-position: 0% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+.hm-text-gradient-premium {
+  background: linear-gradient(
+    100deg,
+    var(--foreground) 0%,
+    var(--foreground) 35%,
+    color-mix(in oklch, var(--accent-blue) 80%, var(--foreground)) 50%,
+    var(--foreground) 65%,
+    var(--foreground) 100%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: hm-text-shimmer-sweep 6s linear infinite;
+}
+
+/* Depth shadow card — a richer shadow layering for hero cards.
+   Combines a tight inner shadow with a soft outer halo for a
+   "floating glass" feel. */
+.hm-card-depth {
+  box-shadow:
+    0 1px 2px color-mix(in oklch, var(--foreground) 8%, transparent),
+    0 4px 12px -2px color-mix(in oklch, var(--foreground) 6%, transparent),
+    0 12px 32px -8px color-mix(in oklch, var(--accent-blue) 12%, transparent);
+}
+.dark .hm-card-depth {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 4px 12px -2px rgba(0, 0, 0, 0.3),
+    0 12px 32px -8px color-mix(in oklch, var(--accent-blue) 18%, transparent);
+}
+.hm-card-depth:hover {
+  box-shadow:
+    0 2px 4px color-mix(in oklch, var(--foreground) 10%, transparent),
+    0 8px 20px -4px color-mix(in oklch, var(--foreground) 8%, transparent),
+    0 20px 48px -10px color-mix(in oklch, var(--accent-blue) 20%, transparent);
+}
+
+/* Premium focus ring — visible, smooth, accessible. */
+.hm-focus-ring-premium {
+  outline: none;
+  transition: box-shadow 0.2s ease-out;
+}
+.hm-focus-ring-premium:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--background),
+    0 0 0 4px color-mix(in oklch, var(--accent-blue) 60%, transparent);
+}
+
+/* Animated stat tile — subtle gradient sweep on the left edge. */
+@keyframes hm-stat-sweep {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.hm-stat-tile-premium {
+  position: relative;
+  overflow: hidden;
+}
+.hm-stat-tile-premium::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: linear-gradient(180deg, transparent, var(--accent-blue), transparent);
+  opacity: 0.6;
+  animation: hm-stat-sweep 3s ease-in-out infinite;
+}
+
+/* Badge sheen — diagonal light sweep across badges on hover. */
+@keyframes hm-badge-sheen {
+  0% {
+    transform: translateX(-120%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(220%) skewX(-20deg);
+  }
+}
+.hm-badge-sheen {
+  position: relative;
+  overflow: hidden;
+}
+.hm-badge-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklch, var(--foreground) 20%, transparent) 50%,
+    transparent 100%
+  );
+  transform: translateX(-120%) skewX(-20deg);
+  pointer-events: none;
+}
+.hm-badge-sheen:hover::after {
+  animation: hm-badge-sheen 1.2s ease-out;
+}
+
+/* Candidate hero avatar — gradient ring with breathing glow. */
+@keyframes hm-avatar-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 0 color-mix(in oklch, var(--accent-blue) 40%, transparent),
+      0 0 20px -4px color-mix(in oklch, var(--accent-blue) 50%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 4px color-mix(in oklch, var(--accent-blue) 20%, transparent),
+      0 0 28px -2px color-mix(in oklch, var(--accent-blue) 60%, transparent);
+  }
+}
+.hm-avatar-premium {
+  animation: hm-avatar-glow 3.5s ease-in-out infinite;
+}
+
+/* Premium divider — gradient line with center pulse. */
+.hm-divider-premium {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklch, var(--border) 80%, transparent) 20%,
+    var(--accent-blue) 50%,
+    color-mix(in oklch, var(--border) 80%, transparent) 80%,
+    transparent 100%
+  );
+  position: relative;
+}
+.hm-divider-premium::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent-blue);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 8px var(--accent-blue);
+  animation: hm-stat-sweep 2.5s ease-in-out infinite;
+}
+
+/* Refined heading typography — tighter letter-spacing for big headings. */
+.hm-heading-display {
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+.hm-heading-section {
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+}
+
+/* Animated underline link — grows from left on hover. */
+.hm-link-underline {
+  position: relative;
+  display: inline-block;
+}
+.hm-link-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 1px;
+  width: 100%;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.hm-link-underline:hover::after {
+  transform: scaleX(1);
+}
+
+/* Glass chip — frosted background with subtle border. */
+.hm-glass-chip {
+  background: color-mix(in oklch, var(--background) 60%, transparent);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid color-mix(in oklch, var(--border) 60%, transparent);
+}
+
+/* Premium skeleton — shimmer with gradient sweep. */
+@keyframes hm-skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+.hm-skeleton-premium {
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklch, var(--muted) 60%, transparent) 0%,
+    color-mix(in oklch, var(--muted) 100%, transparent) 50%,
+    color-mix(in oklch, var(--muted) 60%, transparent) 100%
+  );
+  background-size: 200% 100%;
+  animation: hm-skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+/* Premium button glow — for primary CTAs on hero sections. */
+@keyframes hm-cta-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 0 color-mix(in oklch, var(--primary) 30%, transparent),
+      0 8px 24px -8px color-mix(in oklch, var(--primary) 50%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 6px color-mix(in oklch, var(--primary) 10%, transparent),
+      0 12px 32px -6px color-mix(in oklch, var(--primary) 60%, transparent);
+  }
+}
+.hm-cta-glow {
+  animation: hm-cta-glow 3s ease-in-out infinite;
+}
+
+/* Job template card — premium hover with gradient border reveal. */
+.hm-template-card {
+  position: relative;
+  isolation: isolate;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.25s ease-out;
+}
+.hm-template-card::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklch, var(--accent-blue) 50%, transparent),
+    transparent 40%,
+    transparent 60%,
+    color-mix(in oklch, var(--accent-blue) 30%, transparent)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.25s ease-out;
+  z-index: -1;
+}
+.hm-template-card:hover::before {
+  opacity: 1;
+}
+
+/* Respect reduced motion — disable all new decorative animations. */
+@media (prefers-reduced-motion: reduce) {
+  .hm-word,
+  .hm-text-gradient-premium,
+  .hm-stat-tile-premium::before,
+  .hm-badge-sheen::after,
+  .hm-avatar-premium,
+  .hm-divider-premium::after,
+  .hm-skeleton-premium,
+  .hm-cta-glow,
+  .hm-template-card::before {
+    animation: none !important;
+  }
+  .hm-word {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+  .hm-text-gradient-premium {
+    animation: none;
+  }
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   Print Report — HIREMIND AI PDF export
+   The print report (#hm-print-report / .hm-print-report) is rendered
+   offscreen on screen and revealed only when the browser enters print
+   media (window.print()). On print, everything else on the page is
+   hidden via visibility:hidden, and the report is repositioned to
+   top-left at full width. Score badges / colored tiles use
+   print-color-adjust: exact so their backgrounds survive the print
+   pipeline (most browsers strip backgrounds by default to save ink).
+   ─────────────────────────────────────────────────────────────────── */
+
+/* Screen: keep the report offscreen so it never affects layout or
+   causes horizontal scroll. A4 width (210mm) matches the typical PDF
+   page width so the design feels native when saved as PDF. White
+   background + dark ink colors are set inline in print-report.tsx so
+   the report looks identical in light AND dark mode (we don't want a
+   dark-themed PDF). */
+.hm-print-report {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  width: 210mm;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  background: #ffffff;
+  color: #1a1a2e;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Print media — reveal the report and hide the rest of the app. */
+@media print {
+  /* Page margins for the saved PDF. 1.5cm is comfortable for A4/Letter. */
+  @page {
+    margin: 1.5cm;
+  }
+
+  /* Hide everything on the page. We use visibility:hidden rather than
+     display:none so layout/scroll position don't shift — only the
+     print report's subtree is revealed below. */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Reveal the print report and all its descendants. */
+  #hm-print-report,
+  #hm-print-report * {
+    visibility: visible !important;
+  }
+
+  /* Position the report at the top-left of the page, full width. The
+     !important is needed to override the screen offscreen positioning. */
+  #hm-print-report {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    z-index: 1 !important;
+    pointer-events: auto !important;
+    display: block !important;
+  }
+
+  /* Force a light, ink-friendly background regardless of theme so the
+     saved PDF never has a dark page. */
+  html, body {
+    background: #ffffff !important;
+  }
+
+  /* Each major section starts on a new page. The last section's
+     page-break-after is removed so we don't emit a trailing blank page. */
+  .hm-print-section {
+    page-break-after: always;
+  }
+  .hm-print-section-last,
+  .hm-print-section:last-child {
+    page-break-after: auto;
+  }
+
+  /* Avoid breaking inside table rows, Q&A cards, and callouts. */
+  tr,
+  .hm-print-avoid-break {
+    page-break-inside: avoid;
+  }
+
+  /* Score badges / colored tiles / stat tiles — preserve their
+     background colors when printing. Most browsers strip backgrounds
+     to save ink; this opts the report's accent colors back in. */
+  .hm-print-badge {
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* The site header / footer are outside #hm-print-report so they're
+     already hidden by the body * { visibility: hidden } rule above —
+     no extra rules needed. */
+
+  /* Remove decorative shadows / borders that would muddy the print. */
+  .hm-card,
+  .hm-card-hover {
+    box-shadow: none !important;
+  }
+}

@@ -2,10 +2,11 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Target, Sparkles, ListChecks, Plus, ChevronDown, Lightbulb } from "lucide-react";
+import { ArrowRight, Target, Sparkles, ListChecks, Plus, ChevronDown, Lightbulb, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHireMind } from "@/lib/store";
 import { PriorityPill, CompetencyBar } from "./shell";
+import { GapDeepDive } from "./gap-deep-dive";
 import type { CompetencyCategory, SkillGap } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -143,7 +144,15 @@ function GapComparison({ gap }: { gap: SkillGap }) {
 /* ---------------------------------------------------------------------------
  * Other gap card — with expand/collapse
  * ------------------------------------------------------------------------- */
-function OtherGapCard({ g, index }: { g: SkillGap; index: number }) {
+function OtherGapCard({
+  g,
+  index,
+  onOpenDeepDive,
+}: {
+  g: SkillGap;
+  index: number;
+  onOpenDeepDive: (g: SkillGap) => void;
+}) {
   const [expanded, setExpanded] = React.useState(false);
   const severityValue = g.priorityScore ?? 0;
   const barStatus: "matched" | "weak" | "unknown" | "gap" | "accent" =
@@ -159,7 +168,16 @@ function OtherGapCard({ g, index }: { g: SkillGap; index: number }) {
         "transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
         "hover:-translate-y-0.5"
       )}
-      onClick={() => setExpanded(!expanded)}
+      onClick={() => onOpenDeepDive(g)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpenDeepDive(g);
+        }
+      }}
+      aria-label={`Open deep dive for ${g.competency}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
@@ -174,12 +192,25 @@ function OtherGapCard({ g, index }: { g: SkillGap; index: number }) {
         </div>
         <div className="flex flex-col items-end gap-1.5 shrink-0">
           <PriorityPill priority={g.priority} />
-          <motion.div
-            animate={{ rotate: expanded ? 180 : 0 }}
-            transition={{ duration: 0.2 }}
+          {/* Chevron is a separate button so the card body opens the deep
+              dive while the chevron only toggles the inline expand. */}
+          <button
+            type="button"
+            aria-label={expanded ? "Collapse details" : "Expand details"}
+            aria-expanded={expanded}
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpanded((v) => !v);
+            }}
+            className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/40"
           >
-            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-          </motion.div>
+            <motion.div
+              animate={{ rotate: expanded ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ChevronDown className="h-3.5 w-3.5" />
+            </motion.div>
+          </button>
         </div>
       </div>
       <AnimatePresence>
@@ -219,6 +250,7 @@ const fadeUp = {
  * ------------------------------------------------------------------------- */
 export function GapsView() {
   const { gaps, candidate, job, setView, startInterview, loading, loadingStep } = useHireMind();
+  const [deepDiveGap, setDeepDiveGap] = React.useState<SkillGap | null>(null);
   if (!gaps) return null;
 
   const top = gaps[0];
@@ -330,7 +362,7 @@ export function GapsView() {
           </motion.div>
 
           {/* CTA buttons */}
-          <div className="mt-7 flex flex-col sm:flex-row gap-3">
+          <div className="mt-7 flex flex-col sm:flex-row gap-3 flex-wrap">
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.97 }}
@@ -348,7 +380,15 @@ export function GapsView() {
                 )}
               </Button>
             </motion.div>
-            <Button variant="ghost" onClick={() => setView("interview")} className="text-muted-foreground">
+            <Button
+              variant="ghost"
+              onClick={() => setDeepDiveGap(top)}
+              className="h-12 gap-2 text-accent-blue-foreground hover:text-accent-blue-foreground hover:bg-accent-blue/10"
+            >
+              <BookOpen className="h-4 w-4" />
+              Deep dive
+            </Button>
+            <Button variant="ghost" onClick={() => setView("interview")} className="text-muted-foreground h-12">
               Resume interview →
             </Button>
           </div>
@@ -369,11 +409,18 @@ export function GapsView() {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {others.map((g, i) => (
-              <OtherGapCard key={g.competency} g={g} index={i} />
+              <OtherGapCard key={g.competency} g={g} index={i} onOpenDeepDive={setDeepDiveGap} />
             ))}
           </div>
         </motion.div>
       )}
+
+      {/* Skill Gap Deep-Dive modal — controlled by deepDiveGap state. */}
+      <GapDeepDive
+        gap={deepDiveGap}
+        open={!!deepDiveGap}
+        onOpenChange={(o) => !o && setDeepDiveGap(null)}
+      />
     </div>
   );
 }

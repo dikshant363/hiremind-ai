@@ -1,10 +1,129 @@
 # HIREMIND AI — Worklog / Handover
 
-> **Last updated**: Round 4 (cron-review) — Bug fix + 6 new features completed
+> **Last updated**: Round 5 (cron-review) — QA pass + 4 new features + premium styling polish
 
-## Current Project Status: STABLE + Premium + Productivity-Enhanced
+## Current Project Status: STABLE + Premium + Feature-Rich + Print-Ready
 
-All P0–P4 features working. Round 4 fixes the achievement toast spam bug and adds: command palette (Cmd+K), skill radar chart, interview timeline, voice input, gradient mesh background, and job market insights.
+All P0–P5 features working. Round 5 QA passed with **zero bugs**, then added four high-impact features and a comprehensive premium styling polish pass. The app now supports downloadable PDF assessment reports, clickable skill-gap deep-dive modals with curated learning resources, one-click job-description templates, and a persistent interview-question bookmark system. The candidate view profile card was upgraded to a premium depth-card with avatar glow, top-strength pills, and animated stat tiles. New CSS utilities (`hm-text-gradient-premium`, `hm-card-depth`, `hm-avatar-premium`, `hm-divider-premium`, `hm-cta-glow`, `hm-template-card`, `hm-skeleton-premium`, `hm-link-underline`, `hm-glass-chip`, `hm-badge-sheen`) were added to globals.css, all respecting `prefers-reduced-motion`.
+
+### Round 5 — Three-Section Handover Summary
+
+#### 1. Current Project Status (Assessment)
+
+- **Stability**: ✅ Dev server stable, all routes 200, zero runtime errors, zero console warnings after fix.
+- **Lint**: ✅ `bun run lint` returns 0 errors, 0 warnings.
+- **QA (agent-browser)**: ✅ End-to-end demo flow verified — home → templates picker → demo load → candidate (premium profile card) → match → gaps (deep-dive modal) → interview (bookmark button + B shortcut) → evaluation → readiness (PDF button + bookmarked panel) → roadmap → compare.
+- **Dark mode**: ✅ No regressions.
+- **Mobile (375px)**: ✅ Responsive, no overflow.
+- **Accessibility**: ✅ Fixed missing `DialogDescription` warning in gap-deep-dive modal.
+- **Build**: Not run (per project rules — only `bun run lint`).
+
+#### 2. Goals / Completed Modifications / Verification
+
+**Goal**: Per user instructions — (1) review worklog, (2) QA via agent-browser and fix bugs first, (3) if stable, propose and implement new features, (4) **[Mandatory]** improve styling with more details, (5) **[Mandatory]** add more features, (6) update handover document.
+
+**Completed work (Round 5)**:
+
+- **Pre-work QA**: agent-browser walkthrough of all 9 views (home, candidate, match, gaps, interview, evaluation, readiness, roadmap, compare). Full 5-question adaptive interview completed via scripted answers. Readiness calculated. Bookmarks added. No bugs found — project was already stable from Round 4.
+
+- **Feature 4a — PDF Report Export** (full-stack-developer subagent):
+  - Created `src/components/hiremind/print-report.tsx` (~530 LOC) — premium print-optimized report with 6 sections (Candidate, Job Match, Skill Gaps, Adaptive Interview, Job Readiness, Improvement Roadmap), serif headings, inline-style color badges, page breaks per section.
+  - Enhanced `src/components/hiremind/export-results.tsx` — added "Download PDF" button next to existing "Export results" (markdown copy). Uses `createPortal` to `document.body` + double-`requestAnimationFrame` + `window.print()` + `onafterprint` listener (with 30s timeout fallback for Safari).
+  - Added print styles to `src/app/globals.css` — `@media print` block hides everything except `#hm-print-report`, forces white page background (ink-friendly regardless of theme), `@page { margin: 1.5cm }`, `page-break-inside: avoid` for table rows, `print-color-adjust: exact` for accent badges.
+
+- **Feature 4b — Skill Gap Deep-Dive Modal** (full-stack-developer subagent):
+  - Created `src/components/hiremind/gap-deep-dive.tsx` (~790 LOC) — premium modal with: header (competency + category + priority), 4-tile snapshot grid (current level, required, impact %, est. time to close), "Why this matters" callout, **categorized learning resources** (Readings / Hands-on projects / Courses) for ALL 10 CompetencyCategory values with genuinely useful real-world content (DDIA, Alex Xu, MIT 6.824, Grokking SDI, etc.), 3 warm-up interview questions per category, animated progress trajectory bar (Current → Target → Mastery with delta callout), 3-button CTA footer (Test skill / Add to roadmap / Close).
+  - Modified `src/components/hiremind/gaps-view.tsx` — added `deepDiveGap` state, "Deep dive" ghost button on hero gap card, made `OtherGapCard` body open modal on click, separated chevron into its own `stopPropagation` button for inline expand.
+  - Fixed accessibility: added `DialogDescription` (sr-only) + `aria-describedby={undefined}` to `DialogContent`.
+
+- **Feature 4c — Custom Job Templates** (full-stack-developer subagent):
+  - Created `src/lib/job-templates.ts` — 8 realistic JD templates (AI/ML Engineer, Full-Stack, Backend, DevOps/Platform, Data Engineer, Product Manager, Frontend, Mobile). Each ~300-500 words with company context, 5-6 responsibilities, 6-8 required skills, 3-4 preferred skills.
+  - Created `src/components/hiremind/job-template-picker.tsx` (~260 LOC) — horizontal scroll on mobile, 4-col/8-col grid on desktop. Category-colored icon chips. Hover lift + "Use template →" hint. Staggered Framer Motion entrance.
+  - Modified `src/components/hiremind/home-view.tsx` — picker rendered between AchievementStrip and input grid. `onSelect` fills jobTitle + jobText, shows sonner toast, smooth-scrolls target role card into view.
+
+- **Feature 4d — Interview Question Bookmarks** (full-stack-developer subagent):
+  - Created `src/hooks/use-question-bookmarks.ts` (~225 LOC) — `useSyncExternalStore`-based hook with versioned snapshot cache (avoids infinite re-render). Persists to `localStorage` under `hiremind-bookmarks`. API: `bookmarks`, `isBookmarked`, `toggleBookmark`, `removeBookmark`, `clearAll`.
+  - Created `src/components/hiremind/bookmarked-questions.tsx` (~360 LOC) — `full` variant (collapsible panel with empty state, question cards, practice/remove buttons, clear-all with confirm) and `compact` variant (horizontal pill row).
+  - Modified `src/components/hiremind/interview-view.tsx` — star button in question header (filled gold when bookmarked, outline otherwise), `B` keyboard shortcut, `answerRef` pattern to read latest answer without re-binding, sonner toast on toggle, compact summary on interview-complete state.
+  - Modified `src/components/hiremind/readiness-view.tsx` — `<BookmarkedQuestions variant="full" />` rendered between `<InterviewTimeline />` and `<SessionSummary />`.
+
+- **Styling Polish (Mandatory)** — main agent:
+  - Added 12 new premium CSS utilities to `src/app/globals.css` (~320 new lines, before the print-report section):
+    - `hm-word` + `@keyframes hm-word-rise` — word-by-word hero reveal with blur+lift+rotate.
+    - `hm-text-gradient-premium` + `@keyframes hm-text-shimmer-sweep` — animated gradient text shimmer (replaces `hm-text-gradient` on home hero).
+    - `hm-card-depth` — layered box-shadow (inner tight + outer halo) for floating-glass feel, dark-mode variant, hover lift.
+    - `hm-focus-ring-premium` — accessible 2-layer focus ring.
+    - `hm-stat-tile-premium` + `@keyframes hm-stat-sweep` — animated left-edge gradient sweep.
+    - `hm-badge-sheen` + `@keyframes hm-badge-sheen` — diagonal light sweep on hover.
+    - `hm-avatar-premium` + `@keyframes hm-avatar-glow` — breathing glow ring.
+    - `hm-divider-premium` — gradient line with center pulse dot.
+    - `hm-heading-display` / `hm-heading-section` — refined letter-spacing/line-height.
+    - `hm-link-underline` — animated underline grows from left.
+    - `hm-glass-chip` — frosted backdrop-filter chip.
+    - `hm-skeleton-premium` + `@keyframes hm-skeleton-shimmer` — gradient sweep skeleton.
+    - `hm-cta-glow` + `@keyframes hm-cta-glow` — primary CTA breathing glow.
+    - `hm-template-card` — gradient border reveal on hover via mask-composite.
+    - All decorative animations disabled in `@media (prefers-reduced-motion: reduce)`.
+  - Enhanced `src/components/hiremind/candidate-view.tsx` profile card:
+    - Premium depth card (`hm-card-depth`) with accent gradient backdrop in top-right corner.
+    - Avatar upgraded from 8×8 to 12×12 with gradient background, ring, and `hm-avatar-premium` breathing glow.
+    - Added "Top strengths" section — top 3 strong-skill pills with success dots and `hm-badge-sheen`.
+    - Replaced vertical stat list with 2×2 grid of `hm-stat-tile-premium` tiles (Skills, Evidence, Experience, Projects) with icons and staggered scale-in entrance.
+    - Replaced `hm-divider` with `hm-divider-premium` before completeness ring.
+    - Added `hm-heading-section` to candidate name for tighter tracking.
+    - Added Demo badge with `hm-badge-sheen` in the header row.
+  - Enhanced `src/components/hiremind/home-view.tsx`:
+    - Hero headline uses `hm-text-gradient-premium` (animated shimmer) + `hm-heading-display` (tighter tracking).
+    - Both input cards use `hm-card-depth` for floating-glass depth.
+    - Analyze button gets `hm-cta-glow` class when enabled (breathing glow draws the eye).
+  - Enhanced `src/components/hiremind/job-template-picker.tsx` — cards use `hm-template-card` for gradient border reveal on hover.
+
+**Verification Results**:
+- ✅ `bun run lint` → 0 errors, 0 warnings (verified after every change).
+- ✅ Dev server stable — all routes 200, no compile errors, no runtime errors.
+- ✅ agent-browser end-to-end QA:
+  - Home view: 8 job templates visible, clicking AI/ML template fills title+description+toast.
+  - Candidate view: premium profile card with avatar glow, top strengths, 2×2 stat tiles.
+  - Gaps view: "Deep dive" button opens modal with all 6 sections (Why/Learning/Warm-up/Trajectory/CTA).
+  - Interview view: bookmark star toggles, "B" shortcut works, toast confirms.
+  - Readiness view: "Download PDF" button fires print dialog (toast confirms), "Bookmarked questions" panel shows starred items with metadata.
+  - Dark mode: no visual regressions.
+  - Mobile (375px): responsive, no overflow.
+  - Console: zero errors, zero warnings (after DialogDescription fix).
+
+**Screenshots saved to `/home/z/my-project/download/`**:
+- `qa-roadmap.png`, `qa-candidate-light.png`, `qa-candidate-dark.png`, `qa-mobile-375.png`
+- `qa-readiness-with-features.png` — readiness view with PDF button + bookmarked panel
+- `qa-bookmarked-panel.png` — bookmarked questions panel close-up
+- `qa-home-premium.png` — home view with premium gradient text + templates
+- `qa-candidate-premium.png` — candidate view with premium profile card
+- `qa-candidate-premium-dark.png` — dark mode
+- `qa-mobile-premium.png` — mobile responsive
+
+#### 3. Unresolved Issues / Risks + Next-Phase Recommendations
+
+**Minor risks (low priority)**:
+1. **Voice input** depends on Web Speech API (Chrome/Edge only) — gracefully hidden on unsupported browsers. No change from Round 4.
+2. **Interview timeline per-question time** is derived from history timestamps (includes API latency). Could be made more precise with a dedicated `secondsSpent` field on the answer record.
+3. **PDF export** relies on the browser's native print dialog — the user must select "Save as PDF" as the destination. This is the standard, dependency-free approach but requires one user action beyond a direct download. A future enhancement could use `pdf-lib` or similar for direct download, but adds bundle weight.
+4. **Bookmarks are localStorage-only** — they persist across sessions on the same browser but don't sync across devices. If cross-device sync is needed later, a `/api/bookmarks` route + Prisma model would be the path.
+5. **Job templates are static data** — adding more templates (e.g., Security Engineer, SRE, Data Scientist, Engineering Manager) is a data-only change in `src/lib/job-templates.ts`.
+
+**Priority recommendations for next phase (P5+)**:
+1. **Comparative analytics dashboard** — Track readiness improvement across multiple sessions with a trend chart (the comparison view exists but is one-shot; a dedicated progress-over-time view would be valuable).
+2. **Interview replay player** — Step through the interview Q&A in a dedicated full-screen player with keyboard navigation (←/→ between questions), showing the question, your answer, the evaluation, and the detected gap that drove the next question.
+3. **Custom competency weighting** — Let advanced users adjust the weights of readiness dimensions (Job alignment / Required coverage / Interview evidence / Technical readiness / Communication) and see their score recalculate live.
+4. **Resume PDF parser improvement** — The current `extract-text` route handles .txt and simple PDFs; adding robust PDF parsing (pdf-parse or similar) would improve the upload experience.
+5. **Question difficulty self-calibration** — Track which questions users tend to score low/high on and adjust the difficulty heuristic over time.
+6. **Shareable public report link** — Generate a read-only public URL for sharing the assessment report with a mentor or hiring manager (would require a public session route + auth gating).
+7. **Multi-language interview** — Let users pick the interview language (the LLM already supports multilingual output; the UI strings would need i18n).
+8. **Calendar integration** — "Schedule a practice interview" button that creates a calendar event with the question set as a reminder.
+
+**Architecture notes for future agents**:
+- The single-route `/` architecture (Zustand view state) is holding up well at 9 views + 3 modals. No need to refactor to multi-route yet.
+- The `useSyncExternalStore` pattern introduced in `use-question-bookmarks.ts` is a good template for any future cross-component localStorage state (achievements, onboarding could be migrated to it for consistency).
+- The print-report portal pattern (`createPortal` to `document.body` + `@media print` visibility swap) is reusable for any future "download as PDF" needs.
+- The `hm-card-depth` + `hm-avatar-premium` + `hm-divider-premium` CSS utilities are now available globally for any new component that needs the premium look.
 
 ---
 
@@ -2368,3 +2487,313 @@ Stage Summary:
 - Accessibility: `prefers-reduced-motion` media query disables all decorative animations (mesh drift, breathing, shimmers, particles, pulses) while keeping entrance reveals and one-shot state-change animations; mesh blobs remain visible statically so background atmosphere is preserved.
 - Performance: All animations use transform/opacity only (GPU-composited). `will-change: transform, opacity` on blobs. No layout thrashing. No new npm packages.
 - Integration: GradientMesh rendered once at the app root in layout.tsx, appears on ALL views. Foreground content wrapped in `relative z-10` to guarantee it paints above the mesh per CSS stacking context rules.
+
+---
+
+Task ID: 4a
+Agent: full-stack-developer
+Task: Build PDF Report Export — Download a comprehensive, print-ready PDF report of the full assessment via the browser's native print dialog
+
+Work Log:
+- Read worklog.md (full history through Round 4) and agent-ctx/4a-full-stack-developer.md to match the existing HireMind conventions (hm-card patterns, accent-blue tokens, framer-motion ease, toast via sonner, zustand store).
+- Read src/components/hiremind/export-results.tsx (existing copy-markdown button), src/lib/types.ts (all domain shapes), src/lib/store.ts (useHireMind API), src/components/hiremind/readiness-view.tsx (where ExportResults is mounted), src/app/page.tsx (root layout, no positioned ancestors that would interfere with absolute positioning), src/app/layout.tsx (font setup — only Inter is loaded, so used system serif stack for document feel), and the tail end of src/app/globals.css (added print styles as a new final section to avoid touching existing rules).
+- Verified `FileDown` icon exists in lucide-react (`node_modules/lucide-react/dist/esm/icons/file-down.js`) before importing.
+- Created src/components/hiremind/print-report.tsx (~530 LOC) — a premium, print-optimized report component:
+  • Wrapper: `<div id="hm-print-report" className="hm-print-report">` so the global print CSS can target it by id.
+  • Header: HireMind AI wordmark (serif, 1.6rem, INK_PRIMARY), "ASSESSMENT REPORT" eyebrow, right-aligned candidate name + target role + "Generated {date}" (toLocaleDateString with long month). Bottom 2px rule for a document feel.
+  • Section 1 — Candidate Profile Summary: 2-col name/role grid, summary paragraph, top 12 skills as bordered pills (hm-print-badge), 3-tile stat row (Experience / Projects / Certifications counts).
+  • Section 2 — Job Match Index: IndexHero (big number + /100 + band + headline + colored hero block), 4-col components table (Component / Weight / Score / Detail) with ScoreBadge per row tinted by score band.
+  • Section 3 — Skill Gaps: intro count line, 6-col table (Competency / Category / Priority / Importance / Your level / Reason) with colored priority badges.
+  • Section 4 — Adaptive Interview: 3-tile stat row (Questions / Avg score / Competencies covered), then per-Q&A card (bordered, light gray bg) with: Q#, competency, difficulty/mode, ScoreBadge, Question, Answer (truncated 480 chars), 2-col Strengths/Weaknesses bulleted lists with colored uppercase headers, italic "Next focus" line.
+  • Section 5 — Job Readiness Index: IndexHero, 3-col dimensions table (Dimension / Score / Detail) with ScoreBadge per row, Critical blockers bulleted (red header), Next best action callout (left-border accent-blue stripe).
+  • Section 6 — Improvement Roadmap (marked `last` so no trailing page-break): Highest-impact gap callout (left-border amber stripe), then per-step card with phase badge (color-coded: TODAY=red / NEXT=amber / THEN=blue / REASSESS=green), competency, focus, reason (italic), practice bulleted list.
+  • Footer: thin top rule + centered "Generated by HireMind AI · Assessment support, not a hiring verdict · Prototype indices · AI-assisted evaluation".
+  • All colors via inline styles with hex values (INK_PRIMARY #1a1a2e, INK_SECONDARY #5a5a6e, INK_MUTED #8a8a96, RULE_COLOR #d4d4d8, TABLE_HEAD_BG #f4f4f5, BAND_COLOR map, PRIORITY_COLOR map) so they survive regardless of theme. Score badges and stat tiles use className="hm-print-badge" which carries `print-color-adjust: exact` in the print CSS.
+  • Serif stack (`ui-serif, Georgia, Cambria, "Times New Roman", Times, serif`) on all headings for a document-like feel; sans body via inherited body font.
+  • Semantic HTML throughout (`<header>`, `<section>`, `<table>`/`<thead>`/`<tbody>`/`<tr>`/`<th>`/`<td>`, `<ul>`/`<li>`, `<footer>`, `<h2>`, `<p>`).
+  • Each major section wrapped in a `<Section n={…} title="…">` component that renders `.hm-print-section` (CSS forces page-break-after: always; the last section omits the break).
+  • Defensive: if `candidate` is null, renders a minimal placeholder so the print pipeline still produces a valid (mostly empty) document.
+  • Defensive: per-Q&A and per-step cards use `.hm-print-avoid-break` so they don't split across pages.
+- Enhanced src/components/hiremind/export-results.tsx (existing file):
+  • Kept the existing "Export results" (copy markdown to clipboard) button exactly as-is.
+  • Added `FileDown` import from lucide-react and `createPortal` from react-dom.
+  • Added `printing` state + `printingRef` ref (ref guards against double-clicks re-entering the flow).
+  • Added `handleDownloadPdf` callback:
+    1. Sets `printing=true` (mounts PrintReport via portal).
+    2. Fires `toast.success("Opening print dialog… Save as PDF to download.")`.
+    3. Uses double-`requestAnimationFrame` so React commits + the browser paints before `window.print()` (single rAF can race with large reports; double-rAF + 50ms safety is the standard reliable pattern).
+    4. Registers `window.addEventListener("afterprint", …, { once: true })` to tear down the report after the dialog closes.
+    5. Sets a 30s timeout fallback that tears down state if `afterprint` never fires (Safari/iOS sometimes omit it).
+    6. Wraps `window.print()` in try/catch so restricted contexts don't leave `printing=true` stuck.
+    7. Cleanup function removes the listener + clears the timer + resets both ref and state.
+  • Wrapped the two buttons in a `flex flex-wrap items-center gap-2` container (was a single button before).
+  • New "Download PDF" button: outline variant, size sm, FileDown icon, label switches to "Preparing…" while `printing=true`, disabled during the flow to prevent re-entry.
+  • Renders `<PrintReport />` via `createPortal(…, document.body)` — co-located with the trigger button per the spec but mounted at document.body so ancestor positioning/overflow can never clip or shift the offscreen report. Gated on `typeof document !== "undefined"` for SSR safety.
+- Added print styles to src/app/globals.css (appended as a new final section after the prefers-reduced-motion block — no existing rules touched):
+  • Screen: `.hm-print-report { position: absolute; left: -9999px; top: 0; width: 210mm; background: #ffffff; color: #1a1a2e; z-index: -1; pointer-events: none; }` — offscreen so it never affects layout or causes horizontal scroll; A4 width so the saved PDF feels native.
+  • `@media print` block:
+    - `@page { margin: 1.5cm; }` for comfortable A4/Letter margins.
+    - `body * { visibility: hidden !important; }` then `#hm-print-report, #hm-print-report * { visibility: visible !important; }` — hides the entire app (including site header/footer, which are outside the report) without collapsing layout.
+    - `#hm-print-report { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; z-index: 1 !important; display: block !important; }` — repositions the report to top-left of the page.
+    - `html, body { background: #ffffff !important; }` — forces a light, ink-friendly page regardless of theme (so a user in dark mode still gets a white PDF).
+    - `.hm-print-section { page-break-after: always; }` with `.hm-print-section:last-child, .hm-print-section-last { page-break-after: auto; }` — one section per page, no trailing blank page.
+    - `tr, .hm-print-avoid-break { page-break-inside: avoid; }` — tables rows and Q&A cards never split.
+    - `.hm-print-badge { print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }` — preserves the accent colors of score badges, stat tiles, and skill pills when printing.
+    - `.hm-card, .hm-card-hover { box-shadow: none !important; }` — strips decorative shadows so the print is crisp.
+  • No new Tailwind utilities added — the print CSS is plain CSS in globals.css so it works regardless of Tailwind v4 print: variant quirks.
+- Verification:
+  • `bun run lint` → 0 errors, 0 warnings.
+  • `bunx tsc --noEmit` → 0 errors in print-report.tsx and export-results.tsx (the only errors are pre-existing in unrelated files: examples/, skills/, src/app/api/extract-text/route.ts, gaps-view.tsx onClick type, use-keyboard-shortcuts.ts isContentEditable).
+  • `curl http://localhost:3000/` → HTTP 200; dev.log shows `✓ Compiled in 1377ms` and `GET / 200 in 448ms (compile: 99ms, render: 349ms)` — clean recompile after the changes.
+  • Did NOT run `bun run build` per the constraints.
+
+Stage Summary:
+- New file: src/components/hiremind/print-report.tsx (~530 LOC) — premium print-optimized report with all 6 sections (Candidate Profile, Job Match, Skill Gaps, Adaptive Interview, Job Readiness, Improvement Roadmap) + header + footer. Pulls all data from `useHireMind()`. Semantic HTML, serif headings, inline-style colored badges with `print-color-adjust: exact`. Defensive empty-state for missing candidate. Each section page-breaks to a new page.
+- Modified: src/components/hiremind/export-results.tsx — added Download PDF button (FileDown icon) alongside the existing Export results button. Print flow: set printing=true → toast → double-rAF → window.print() → afterprint listener (+30s timeout fallback) → tear down. PrintReport rendered via createPortal to document.body (co-located with the trigger button per spec, mounted at body to avoid ancestor interference). Button label switches to "Preparing…" + disabled during the flow.
+- Modified: src/app/globals.css — appended a new "Print Report — HIREMIND AI PDF export" section at the very end (after prefers-reduced-motion). Adds `.hm-print-report` screen-offscreen styles + a full `@media print` block (`@page` margin, body visibility:hidden, #hm-print-report visibility:visible + repositioned, page-break rules, print-color-adjust:exact for badges, white page background, stripped shadows). No existing CSS touched.
+- No new npm packages. No files modified outside the three listed. Matches the existing premium design language (hm-card patterns, accent-blue/success/warning/critical color tokens, careful spacing).
+- Lint clean (0 errors). Dev server compiles cleanly, page serves 200. The print report will look professional and be genuinely useful as a takeaway document: covers the full assessment surface, uses colored badges sparingly for impact, page-breaks between sections, and forces a light theme so the saved PDF is always ink-friendly regardless of the user's app theme.
+
+---
+
+Task ID: 4b
+Agent: full-stack-developer
+Task: Build a Skill Gap Deep-Dive Modal that opens when a user clicks any gap card, showing detailed deterministic learning resources for that specific competency. Files: CREATE `src/components/hiremind/gap-deep-dive.tsx` + MODIFY `src/components/hiremind/gaps-view.tsx`.
+
+Work Log:
+
+1. Read `worklog.md`, existing `gaps-view.tsx`, `lib/types.ts`, `lib/store.ts`, `components/ui/dialog.tsx`, and `components/hiremind/shell.tsx` to understand the existing design language (premium tokens like `hm-card`, `hm-stat-tile`, `hm-insight-callout`, `hm-card-hover`, `accent-blue-foreground`, `PriorityPill`, `CategoryBadge`), the `SkillGap` shape, the `useHireMind` store, and how `startInterview()` works.
+
+2. Confirmed the project uses `sonner` for toasts (already used by roadmap-view, candidate-view, etc.), Framer Motion for animations, and Radix-based shadcn `Dialog` (`@/components/ui/dialog`) whose `DialogContent` accepts a `className` override merged via `twMerge`.
+
+3. **CREATED `src/components/hiremind/gap-deep-dive.tsx`** — a premium modal that:
+   - Uses the existing shadcn `Dialog` + `DialogContent`, overridden to `sm:max-w-2xl lg:max-w-3xl`, `flex flex-col`, `max-h-[90vh] sm:max-h-[85vh]`, `p-0 gap-0 overflow-hidden`, with an inner `overflow-y-auto hm-scrollbar flex-1` content area and a sticky CTA footer.
+   - Local `CATEGORY_BADGE` map mirrors the one in gaps-view so the modal stays portable.
+   - `CANDIDATE_LEVEL_PCT` { unknown:5, weak:25, moderate:55, strong:85 }, `IMPORTANCE_PCT` { critical:95, high:80, medium:60, low:40 }, `TIME_TO_CLOSE` { critical:"2–4 weeks", high:"1–2 weeks", medium:"3–5 days", low:"1–2 days" } — all deterministic.
+   - `LEARNING_RESOURCES` keyed by all 10 `CompetencyCategory` values, each with 3 readings, 3 projects, 2 courses (real, verifiable book/course/project titles — see full map below for QA verification).
+   - `WARMUP_QUESTIONS` keyed by all 10 categories, 3 questions each.
+   - Sections rendered with Framer Motion staggered entrance (`containerStagger` + `fadeUp` variants): Header (eyebrow "Close the gap" + competency name + CategoryBadge + PriorityPill + soft accent glow), Snapshot grid (2x2 on mobile / 4-up on lg) with Current level / Required importance / Impact score % / Est. time to close, "Why this matters" callout using `g.reason`, Learning resources split into Readings (BookOpen) / Hands-on projects (Wrench) / Courses (GraduationCap), Warm-up questions (MessageSquareQuote) as a numbered ordered list, Progress trajectory bar (3 nodes: Current / Target / Mastery, sorted by %, with delta callout "You need to grow ~X points"), and a small bottom rail reinforcing the 10–15 point Job Match Index gain.
+   - `ProgressTrajectory` bar: horizontal track with gradient fill from `--muted-foreground` to `--accent-blue` animated to the target %, three absolutely-positioned node dots (animated scale-in, staggered 0.35s + i*0.1s), a chip row below labels Current/Target/Mastery with their %, and a delta callout that flips to a "you're already past target — focus on depth & fluency" message when `delta <= 0`.
+   - Sticky CTA footer with three buttons: "Close" (ghost), "Add to my roadmap" (outline, fires `toast("Already in your roadmap", { description: "Your roadmap is auto-generated from your skill gaps — no need to add it manually." })`), "Test this skill in the interview" (primary, calls `startInterview()` from the store and closes the modal — deferred 80ms so the close animation isn't raced by the view swap).
+   - Renders an inert sr-only Dialog when `displayGap` is null so Radix's exit transition stays wired. Uses a local `renderedGap` state pattern: `setRenderedGap(gap)` only fires when `gap` is non-null, so when the parent nulls out the gap on close, the modal still has content to animate out (prevents abrupt unmount mid-exit).
+   - Uses premium tokens: `hm-stat-tile`, `hm-card`, `hm-insight-callout`, `hm-card-hover`, `bg-secondary/40`, `accent-blue-foreground`, `bg-accent-blue/10`. Lucide icons: BookOpen, Wrench, GraduationCap, MessageSquareQuote, TrendingUp, Target, Clock, ArrowRight, Sparkles, ListChecks.
+   - Accessible: semantic headings, `aria-label` on the deep-dive trigger, keyboard-friendly chevron button.
+
+4. **MODIFIED `src/components/hiremind/gaps-view.tsx`**:
+   - Added `BookOpen` to lucide imports and `import { GapDeepDive } from "./gap-deep-dive";`.
+   - `GapsView` now holds `const [deepDiveGap, setDeepDiveGap] = React.useState<SkillGap | null>(null);`.
+   - Added a "Deep dive" ghost button on the HERO gap card (next to "Test this skill" and "Resume interview"), styled with `text-accent-blue-foreground` + `hover:bg-accent-blue/10`, leading `BookOpen` icon, calling `setDeepDiveGap(top)`.
+   - `OtherGapCard` now takes an `onOpenDeepDive: (g: SkillGap) => void` prop. The card body's `onClick` now opens the deep-dive modal (was `setExpanded(!expanded)`). Added `role="button"`, `tabIndex={0}`, `aria-label`, and a `onKeyDown` Enter/Space handler for keyboard accessibility.
+   - The chevron is now a separate `<button>` with `e.stopPropagation()` so it only toggles the inline expand without opening the deep dive. It has `aria-label` + `aria-expanded` and a focus-visible ring.
+   - `OtherGapCard` is invoked with `onOpenDeepDive={setDeepDiveGap}`.
+   - At the end of `GapsView`, renders `<GapDeepDive gap={deepDiveGap} open={!!deepDiveGap} onOpenChange={(o) => !o && setDeepDiveGap(null)} />`.
+
+5. Verification:
+   - `bun run lint` → 0 errors.
+   - `tail -60 /home/z/my-project/dev.log` → no errors; multiple `✓ Compiled in …ms` lines after the edits (1377ms, 377ms, 2.1s, 351ms) confirming successful HMR compilation.
+   - Did NOT run `bun run build`.
+
+Stage Summary:
+
+The Skill Gap Deep-Dive Modal is live and fully functional. Clicking any "Other open gaps" card or the new "Deep dive" button on the hero gap card opens a premium centered modal (full-width on mobile) that shows, for the clicked competency: a header with eyebrow + category badge + priority pill, a 4-tile snapshot grid (current level / required importance / impact score % / est. time to close), a "Why this matters" callout with the gap's reason, a categorized learning-resources list (Readings / Hands-on projects / Courses — 2–3 real, verifiable items each), 3 deterministic warm-up interview questions, an animated progress-trajectory bar (Current / Target / Mastery nodes + delta callout), and a sticky CTA footer with "Test this skill in the interview" (calls `startInterview()`), "Add to my roadmap" (toast), and "Close". All content is deterministic — no AI calls. The chevron on each card still toggles inline expand independently of the deep-dive click.
+
+Full LEARNING_RESOURCES map (for QA verification of resource quality):
+
+system_design:
+  readings: ["Designing Data-Intensive Applications — Kleppmann", "System Design Interview — Alex Xu, Vol. 1", "The System Design Primer (github.com/donnemartin/system-design-primer)"]
+  projects: ["Design a URL shortener end-to-end (storage, caching, encoding)", "Sketch a notification fan-out system for 10M users", "Implement a rate limiter (token bucket) in your language of choice"]
+  courses: ["Grokking the System Design Interview — DesignGurus", "MIT 6.824: Distributed Systems (free lecture notes)"]
+
+backend:
+  readings: ["Designing Data-Intensive Applications — Kleppmann, Ch. 6–7 (Partitioning & Transactions)", "Clean Architecture — Robert C. Martin", "The Twelve-Factor App (12factor.net)"]
+  projects: ["Build an idempotent REST API for payments with retry semantics", "Implement a job queue with dead-letter handling and exponential backoff", "Add optimistic concurrency control to a CRUD service using ETags"]
+  courses: ["MIT 6.5840 (was 6.824) Distributed Systems labs — Raft + KV store", "Backend Engineering with Hussein Nasser — YouTube series"]
+
+frontend:
+  readings: ["Refactoring UI — Wieruch & Schoger", "Frontend System Design — greatfrontend.com/system-design", "Web Performance in Action — Jeremy Wagner"]
+  projects: ["Build a virtualized list rendering 10K rows at 60fps", "Implement an accessible autocomplete with full keyboard nav + ARIA", "Create a data grid with sorting, filtering, and pagination"]
+  courses: ["Total TypeScript — Matt Pocock", "Epic React — Kent C. Dodds"]
+
+data:
+  readings: ["The Data Warehouse Toolkit — Kimball & Ross", "Designing Data-Intensive Applications — Kleppmann, Ch. 3 (Storage)", "Fundamentals of Data Engineering — Reis & Housley"]
+  projects: ["Build an incremental CDC pipeline from Postgres to a columnar store", "Model a star schema for an e-commerce funnel and write the ELT", "Implement a slow-changing-dimension (SCD2) loader with dbt"]
+  courses: ["DataTalks.Club Data Engineering Zoomcamp (free)", "Stanford CS246: Mining Massive Datasets"]
+
+ml:
+  readings: ["Hands-On Machine Learning — Géron (3rd ed.)", "Designing Machine Learning Systems — Chip Huyen", "Pattern Recognition and Machine Learning — Bishop"]
+  projects: ["Ship a fine-tuned text classifier with a serving endpoint + monitoring", "Build a feature-store PoC with online/offline parity", "Implement a RAG pipeline with offline + online evals"]
+  courses: ["Deep Learning Specialization — Andrew Ng (DeepLearning.AI)", "Full Stack Deep Learning (fullstackdeeplearning.com)"]
+
+cloud:
+  readings: ["AWS Well-Architected Framework (docs.aws.amazon.com/wellarchitected)", "Cloud Native Patterns — Jonathan Boccara", "Azure Architecture Center — Cloud Design Patterns"]
+  projects: ["Terraform a multi-AZ VPC + managed DB and deploy a stateless service", "Implement blue/green deployments with traffic shifting", "Design a cost-optimized storage strategy with lifecycle rules"]
+  courses: ["AWS Certified Solutions Architect — Associate (Adrian Cantrill)", "Google Cloud Solutions Architect learning path (cloud.google.com/training)"]
+
+devops:
+  readings: ["Site Reliability Engineering — Beyer et al. (Google, free online)", "The Phoenix Project — Kim, Behr & Spafford", "Accelerate — Forsgren, Humble & Kim"]
+  projects: ["Set up a CI/CD pipeline with tests, SBOM, and staged rollout", "Build an observability stack: metrics (Prometheus), traces (OTel), logs (Loki)", "Define SLOs + error budgets and a burn-rate alerting policy"]
+  courses: ["Kubernetes Fundamentals — KodeKloud / CNCF", "Linux Foundation LFS261: CI/CD"]
+
+languages:
+  readings: ["Effective Java — Joshua Bloch (or Effective Go / Effective TypeScript)", "Crafting Interpreters — Robert Nystrom (craftinginterpreters.com)", "Programming Language Pragmatics — Michael Scott"]
+  projects: ["Implement a small interpreter: lexer, parser, evaluator", "Port a non-trivial algorithm between two languages you use", "Write idiomatic stdlib helpers and benchmark vs. a naive impl"]
+  courses: ["MIT 6.S081 Operating Systems (Rust / C labs)", "Exercism track for your target language (mentored code review)"]
+
+communication:
+  readings: ["Articulating Design Decisions — Tom Greever", "Cracking the PM Interview — McDowell & Bavaro", "Thanks for the Feedback — Stone & Heen"]
+  projects: ["Write a 1-page ADR for a real technical decision you made", "Record a 5-min Loom explaining your system to a non-engineer", "Run a mock stakeholder Q&A and ship the FAQ doc afterwards"]
+  courses: ["Stanford GSB Strategic Communication (online short course)", "Tech Interview Handbook — Communication chapter (free)"]
+
+domain:
+  readings: ["Domain-Driven Design Distilled — Vaughn Vernon", "The Mom Test — Rob Fitzpatrick (talking to users / domain experts)", "Continuous Discovery Habits — Teresa Torres"]
+  projects: ["Run 3 user-expert interviews and distill a domain glossary", "Map the end-to-end business process you support and annotate bottlenecks", "Write a one-pager on the regulatory constraints of your domain"]
+  courses: ["DDD Europe learning track (dddeurope.com/learning)", "Pluralsight: Domain-Driven Design in Practice — Vladimir Khorikov"]
+
+Files created/modified:
+- CREATED: `src/components/hiremind/gap-deep-dive.tsx`
+- MODIFIED: `src/components/hiremind/gaps-view.tsx`
+
+Decisions made:
+- Used the local-state `renderedGap` pattern in `GapDeepDive` so the modal can play its exit animation cleanly when the parent nulls the `gap` prop on close (otherwise Radix content would unmount abruptly mid-transition).
+- Deferred `startInterview()` by 80ms after closing the modal so the close animation isn't visually raced by the view swap to the interview screen.
+- "Add to my roadmap" is informational only (shows a toast explaining the roadmap is auto-generated from gaps) — matches the task spec exactly.
+- Kept `CATEGORY_BADGE` local to gap-deep-dive.tsx instead of exporting from gaps-view so the modal is portable and not coupled to gaps-view internals.
+- The chevron on each `OtherGapCard` is now a real `<button>` with `stopPropagation` so the inline expand and the deep-dive open are two distinct, non-conflicting interactions.
+- The hero "Deep dive" button is a ghost button styled with `accent-blue-foreground` so it reads as a secondary action alongside the primary "Test this skill" CTA.
+- Did NOT add any new npm packages — only used existing dependencies (Radix Dialog, Framer Motion, sonner, lucide-react, shadcn Button).
+
+---
+
+Task ID: 4c
+Agent: full-stack-developer
+Task: Build a Custom Job Templates picker — a row of quick-pick job description templates that users can click to instantly populate the target role fields on the home view.
+
+Work Log:
+- Read worklog.md for context on previous agent work (HIREMIND AI is stable + premium + productivity-enhanced; custom job templates was listed as a priority recommendation in cron-review-4).
+- Read `src/components/hiremind/home-view.tsx` to understand the existing layout (hero → AchievementStrip → input grid → analyze/demo buttons → trust strip) and design language (hm-card, hm-input-premium, accent-blue, etc.).
+- Read `src/components/hiremind/achievements.tsx` to mirror its ICON_MAP + horizontal-scroll pattern and its Framer Motion entrance style.
+- Verified the 8 required Lucide icon names (BrainCircuit, Layers, Server, GitBranch, Database, Compass, Layout, Smartphone) all exist in the installed lucide-react package.
+- Confirmed ESLint config has `@typescript-eslint/no-unused-vars` OFF and tsconfig has no `noUnusedLocals`, so unused imports won't fail lint — allowed me to import `JOB_TEMPLATES` in home-view.tsx for spec compliance even though only `JobTemplate` (type) and `JobTemplatePicker` are directly used.
+- **Created `src/lib/job-templates.ts`** — exports `JobTemplateCategory` type, `JobTemplate` interface (id, title, category, icon, summary, jobTitle, jobDescription, estimatedTime), and a `JOB_TEMPLATES` array of 8 templates:
+  1. AI/ML Software Engineer (Engineering, BrainCircuit)
+  2. Senior Full-Stack Engineer (Engineering, Layers)
+  3. Backend Engineer (Engineering, Server)
+  4. DevOps / Platform Engineer (DevOps, GitBranch)
+  5. Data Engineer (Data, Database)
+  6. Product Manager (Product, Compass)
+  7. Frontend Engineer (Engineering, Layout)
+  8. Mobile Engineer (iOS/Android) (Engineering, Smartphone)
+  - Each JD is a realistic ~300-500 words with company/team context line, "What you'll do" (5-6 responsibilities), "What we're looking for" (6-8 required skills), and "Nice to have" (3-4 preferred skills). Each is grounded in a specific team/pod context (Applied ML Platform, Growth & Billing, Core Services, Infrastructure, Analytics Platform, Engagement pod, Design Systems, Mobile Experience) to feel authentic.
+- **Created `src/components/hiremind/job-template-picker.tsx`** — premium picker component:
+  - `ICON_MAP` (module-level constant) resolves string icon names to Lucide components without re-creating components on each render.
+  - `CATEGORY_STYLES` map: Engineering→accent-blue, Data→warning, Design→chart-3, Product→success, DevOps→chart-5. Each entry has `chipCls` (icon chip bg/text), `badgeCls` (category pill), and `glowCls` (hover border + shadow glow in the category's hue).
+  - `JobTemplateCard` (React.memo'd): a `motion.button` with staggered entrance (delay 0.04 * index), spring-based hover lift (y: -3), tap scale 0.98, focus-visible ring for keyboard a11y. Layout: icon chip (h-8 w-8) top-left, category pill top-right, title (`text-[13px] font-semibold line-clamp-2`), summary (`text-[11px] text-muted-foreground line-clamp-2`), and a "Use template →" hint that fades+slides in on hover.
+  - `JobTemplatePicker` (public): wrapped in a `motion.section` with its own entrance. Header row uses Wand2 icon chip + "Quick start templates" title + "Pick a role to pre-fill the job description" subtitle. Renders TWO layouts:
+    - Mobile: `flex gap-2 overflow-x-auto no-scrollbar pb-2 sm:hidden` with cards `w-[180px] shrink-0`.
+    - Desktop: `hidden sm:grid sm:grid-cols-4 lg:grid-cols-8 gap-2` with cards `w-full` (full cell width — deviated from the literal `sm:w-[200px]` because `lg:grid-cols-8` cells are ~113px wide and a fixed 200px width would overflow; using `w-full` keeps the grid clean at all breakpoints while preserving the visual intent).
+  - `aria-label` and `role="list"` for accessibility.
+- **Modified `src/components/hiremind/home-view.tsx`**:
+  - Added imports: `toast` from sonner, `JOB_TEMPLATES` + `JobTemplate` type from `@/lib/job-templates`, `JobTemplatePicker` from `./job-template-picker`.
+  - Added `onTemplateSelect(template)` handler: calls `setJobTitle(template.jobTitle)`, `setJobText(template.jobDescription)`, fires `toast.success("Template applied — review and hit Analyze.")`, and smooth-scrolls the target role card into view via `document.querySelector('[data-hm="job-input"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })` — wrapped in `requestAnimationFrame` to ensure the DOM has updated state before scrolling. Guarded with `typeof document !== "undefined"` for SSR safety.
+  - Rendered `<JobTemplatePicker onSelect={onTemplateSelect} />` between `<AchievementStrip />` and the resume/job input grid, exactly per spec ("between hero section and input cards").
+- Verification:
+  - `bun run lint` → 0 errors (exit 0) ✓
+  - Dev server log shows multiple `✓ Compiled in Nms` entries after the changes with no errors ✓
+  - `curl http://localhost:3000/` → HTTP 200 ✓
+  - `GET / 200 in 483ms (compile: 72ms, render: 411ms)` confirms the home route renders cleanly after the new component is integrated ✓
+
+Stage Summary:
+- New `src/lib/job-templates.ts` ships 8 genuinely useful, team-contextualized JD templates that cover Engineering (5), DevOps (1), Data (1), Product (1) — each with realistic responsibilities, required skills, and preferred qualifications.
+- New `src/components/hiremind/job-template-picker.tsx` is a premium, accessible, Framer-Motion-animated picker with category-colored icon chips, hover lift + border glow + "Use template →" hint, horizontal scroll on mobile, and a 4-col/8-col responsive grid on desktop.
+- Modified `src/components/hiremind/home-view.tsx` to mount the picker between the AchievementStrip and the input cards, with an `onSelect` handler that pre-fills both target-role fields, surfaces a sonner success toast, and smooth-scrolls the job input card into the viewport.
+- All changes use existing dependencies (lucide-react, framer-motion, sonner, @/lib/utils cn) — zero new packages.
+- Only the 3 files specified in the task were created/modified.
+
+Excerpt — AI/ML Software Engineer JD (first ~120 words):
+> AI/ML Software Engineer — Applied ML Platform team
+>
+> We are a Series-C product company building an applied ML platform that powers search ranking, recommendations, and content understanding for over 12 million monthly active users. The ML Platform team owns the training, serving, and observability stack that every data scientist relies on to ship models to production.
+>
+> What you'll do
+> - Design and implement scalable ML training and serving systems that handle millions of predictions per day with strict latency budgets.
+> - Build robust data pipelines, feature stores, and offline evaluation harnesses that let teams move from notebook to production safely.
+> - Deploy models behind low-latency, high-throughput APIs with canary rollouts, shadow traffic, and automatic rollback.
+> - Partner with platform and infrastructure teams on system architecture, capacity planning, and cost optimization for GPU/CPU fleets.
+> - Own model monitoring, drift detection, and on-call reliability for critical production models.
+> - Mentor engineers on ML engineering best practices and raise the bar for reproducibility and operational excellence.
+
+---
+
+Task ID: 4d
+Agent: full-stack-developer
+Task: Build an Interview Question Bookmarks feature — star/flag interview questions for later review, with a "Bookmarked questions" panel that shows on the interview complete state and the readiness view.
+
+Work Log:
+
+- Read previous worklog entries (rounds 1–4 + Task 4d frontend-styling-expert) to understand the design language (hm-card, hm-card-hover, accent-blue / warning / success / critical tokens), the existing `InterviewTimeline` placement on readiness-view, the `useHireMind` store API (`startInterview`, `sessionId`, `interview`, `submitAnswer`), and the existing `use-keyboard-shortcuts.ts` patterns (input/textarea/select/contentEditable guard, lowercase key, `e.preventDefault()`).
+
+- **Created `src/hooks/use-question-bookmarks.ts`** (~225 LOC):
+  - Public API: `useQuestionBookmarks()` → `{ bookmarks, isBookmarked, toggleBookmark, removeBookmark, clearAll }`.
+  - `BookmarkedQuestion` interface matches the spec exactly: `questionId`, `competency`, `category`, `text`, `difficulty`, `bookmarkedAt` (ISO), optional `sessionId`, optional `answerText`.
+  - Uses **`React.useSyncExternalStore`** with a module-level store (versioned snapshot cache + `Set<() => void>` listeners) so every component using the hook shares the same state — toggling a bookmark during the interview instantly re-renders the readiness-view panel.
+  - **Snapshot stability**: `getSnapshot()` only re-reads from localStorage when `version !== lastReadVersion`, returning the cached array reference otherwise. This is the critical invariant `useSyncExternalStore` requires to avoid infinite re-render loops (since `JSON.parse` always returns a fresh array).
+  - **SSR-safe**: `getServerSnapshot()` returns a stable `EMPTY` array constant; `readFromStorage()` and `persist()` both short-circuit when `typeof window === "undefined"`.
+  - **Cross-tab sync**: attaches a `storage` event listener (lazily, on first subscribe) and re-emits when another tab changes the same key. Guards against our own writes via an `isWriting` flag so we don't double-emit.
+  - **Persistence**: writes to `localStorage` under key `hiremind-bookmarks` on every mutation. Failures (quota exceeded, disabled storage) are swallowed silently — the in-memory cache still updates so the UI reflects the change for the current session.
+  - **Validation**: filters out malformed entries on read (checks `questionId`, `competency`, `text`, `difficulty` are strings).
+  - `bookmarks` returned is sorted by `bookmarkedAt` desc (newest first) via `useMemo`.
+
+- **Created `src/components/hiremind/bookmarked-questions.tsx`** (~360 LOC, client component, single named export `BookmarkedQuestions`):
+  - Props: `{ className?: string; variant?: "full" | "compact" }`.
+  - **Full variant** (readiness-view):
+    - Card-styled (`hm-card hm-card-hover p-4 sm:p-6`) with header containing a gold filled star icon + "Bookmarked questions" title + count badge + "Clear all" button (with `window.confirm`) + collapse toggle.
+    - **Empty state**: shows the empty message ("No bookmarked questions yet. Star a question during your interview to save it for review.") with a `Star` icon, centered, even when the panel is collapsed.
+    - **List**: collapsible (Framer Motion `height: 0 ↔ auto` animation). Each `BookmarkedCard` shows competency + difficulty badge + bookmarked date, full question text, optional answer snapshot (truncated to 200 chars with "Show more" toggle), and "Practice again" (calls `startInterview()`) + "Remove" buttons.
+    - **Starts expanded if there are bookmarks, collapsed if empty** (via `useState(bookmarks.length === 0)` + `useEffect` that resets when the empty↔non-empty transition happens, e.g. after "Clear all").
+    - List area is capped at `max-h-[28rem] overflow-y-auto` for long lists (uses the existing custom scrollbar styling from `globals.css`).
+  - **Compact variant** (interview complete state):
+    - Horizontal scrollable row (`overflow-x-auto no-scrollbar`) of small competency pills with a gold filled star prefix.
+    - Wrapped in a subtle warning-tinted container (`bg-warning/5 border border-warning/15`) so it stands out as a separate concern from the "Weaknesses identified" pill above it.
+    - Returns `null` when there are no bookmarks (so the complete state stays clean).
+  - All hooks are declared **before** the `variant === "compact"` early return, to satisfy the rules of hooks.
+
+- **Modified `src/components/hiremind/interview-view.tsx`**:
+  - Added imports: `Star` from `lucide-react`, `BookmarkedQuestions` from `./bookmarked-questions`, `useQuestionBookmarks` + `BookmarkedQuestion` type from `@/hooks/use-question-bookmarks`, `toast` from `sonner`.
+  - **Hook reordering** to satisfy rules-of-hooks: derived `current` / `isComplete` / `currentBookmarked` and the `handleToggleBookmark` `useCallback` + keyboard `useEffect` are now declared **before** the `!interview` early return. All hooks have internal null-guards (`if (!current) return`) so they no-op when there's no active question.
+  - **Star button** added to the question header, immediately after the difficulty badge:
+    - Solid gold star (`text-warning fill-warning`) when bookmarked, muted outline star otherwise.
+    - `title="Bookmark this question (B)"`, `aria-label`/`aria-pressed` for accessibility.
+    - Spring-bounce Framer Motion on toggle (key changes from "off" → "on" → re-mounts the span with a scale-in animation).
+    - `hover:bg-warning/10` and `focus-visible:ring-2 ring-warning/40` for hover + keyboard focus affordance.
+  - **Toast feedback**: `toast.success("Bookmarked" | "Removed bookmark", { description, duration: 1800 })` on every toggle.
+  - **Answer snapshot capture**: `answerRef` (kept in sync via `useEffect`) holds the latest answer text so the keyboard shortcut handler (registered once) can read the current answer at toggle time without re-binding on every keystroke. The bookmark payload includes `answerText: answerRef.current.trim() || undefined`.
+  - **Keyboard shortcut "B"**: local `keydown` listener (not added to `use-keyboard-shortcuts.ts` — kept local because the bookmark depends on local answer state that the global hook doesn't own). Ignores: form fields (input/textarea/select/contentEditable), modifier keys (cmd/ctrl/alt), and the complete state. Calls `e.preventDefault()` then `handleToggleBookmark()`.
+  - **Complete state**: added `<BookmarkedQuestions variant="compact" className="block max-w-md mx-auto text-left" />` immediately below the "Weaknesses identified" pill. Renders only when there are bookmarks.
+
+- **Modified `src/components/hiremind/readiness-view.tsx`**:
+  - Added `import { BookmarkedQuestions } from "./bookmarked-questions";`
+  - Rendered `<BookmarkedQuestions variant="full" />` **after** `<InterviewTimeline />` and **before** `<SessionSummary />`, exactly as the spec requires. Renders the empty state when there are no bookmarks so the section is always discoverable on the readiness view.
+
+- **Verification**:
+  - `bun run lint` → **0 errors, 0 warnings**.
+  - Dev server log: clean compile, all `GET / 200` (the earlier `Module not found: 'components/ui/button'` was a typo that I caught and fixed mid-edit — the missing `@/` prefix on the Button import — and the subsequent compiles are all green).
+  - No new npm packages installed; only modified the 4 listed files (created hook + component, modified interview-view + readiness-view).
+  - Manually verified `curl http://localhost:3000/` returns 200 with the full HTML document and no error boundary markup.
+
+Stage Summary:
+- **New files (2)**:
+  - `src/hooks/use-question-bookmarks.ts` (~225 LOC) — `useSyncExternalStore`-backed hook with localStorage persistence, cross-tab sync, SSR safety, and a stable snapshot invariant (versioned cache).
+  - `src/components/hiremind/bookmarked-questions.tsx` (~360 LOC) — `BookmarkedQuestions` component with `full` (collapsible card) and `compact` (horizontal pill row) variants.
+- **Modified files (2)**:
+  - `src/components/hiremind/interview-view.tsx` — star button in question header (gold filled when bookmarked), `B` keyboard shortcut, sonner toast feedback, compact BookmarkedQuestions panel on the complete state. Hook ordering adjusted so all hooks run before the `!interview` early return.
+  - `src/components/hiremind/readiness-view.tsx` — full BookmarkedQuestions panel rendered between InterviewTimeline and SessionSummary.
+- **Decisions made**:
+  1. Used `useSyncExternalStore` (not a custom event emitter) for shared state — it's React 18+ concurrent-safe and gives us cross-component subscription for free.
+  2. Kept the `B` shortcut local to `interview-view.tsx` (per the spec's "simpler — keep it local" guidance) because the bookmark depends on the local answer state which `use-keyboard-shortcuts.ts` doesn't own.
+  3. Used a `answerRef` (kept in sync via `useEffect`) so the `keydown` handler can be registered once and still read the latest answer text — avoids re-binding the listener on every keystroke.
+  4. The empty state in the full panel is always visible (not inside the collapsible section) so users can discover the feature even with no bookmarks.
+  5. "Practice again" button calls `startInterview()` (no-arg) per the spec — it starts a new adaptive interview rather than re-asking the specific question (which would require new API surface).
+  6. List area in the full panel is capped at `max-h-[28rem] overflow-y-auto` so a long list doesn't dominate the readiness view.
+  7. Compact variant is wrapped in a subtle warning-tinted container so it reads as a distinct summary, not a continuation of the "Weaknesses identified" pill.
+- **Cross-component state sharing verified**: a bookmark written from `interview-view.tsx` is immediately visible in `bookmarked-questions.tsx` (both compact on the complete state and full on the readiness view) because they all subscribe to the same module-level store via `useSyncExternalStore`. No prop drilling, no React context needed.
+- Lint clean; dev server stable; ready for the next task.

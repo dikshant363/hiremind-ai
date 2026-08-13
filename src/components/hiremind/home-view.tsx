@@ -3,15 +3,18 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { FileText, Briefcase, Sparkles, ArrowRight, Wand2, ShieldCheck, GitBranch, Upload, HelpCircle } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useHireMind } from "@/lib/store";
 import { DEMO_RESUME, DEMO_JOB, DEMO_JOB_TITLE } from "@/lib/demo";
+import { JOB_TEMPLATES, type JobTemplate } from "@/lib/job-templates";
 import { FileUpload } from "./file-upload";
 import { SessionHistory } from "./session-history";
 import { PipelineProgress } from "./pipeline-progress";
 import { AchievementStrip } from "./achievements";
+import { JobTemplatePicker } from "./job-template-picker";
 
 /** Animated count-up hook — animates from 0 to `target` over `durationMs` with ease-out. */
 function useAnimatedCount(target: number, durationMs = 1500) {
@@ -67,6 +70,21 @@ export function HomeView() {
 
   const onAnalyze = () => analyze({ demo: false });
 
+  // Apply a quick-pick template — pre-fills target role fields and smoothly
+  // scrolls the job input card into view so the user can review before analyze.
+  const onTemplateSelect = (template: JobTemplate) => {
+    setJobTitle(template.jobTitle);
+    setJobText(template.jobDescription);
+    toast.success("Template applied — review and hit Analyze.");
+    if (typeof document !== "undefined") {
+      requestAnimationFrame(() => {
+        document
+          .querySelector('[data-hm="job-input"]')
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    }
+  };
+
   const canAnalyze = resumeText.trim().length > 30 && jobText.trim().length > 30;
 
   const openShortcuts = () => document.dispatchEvent(new CustomEvent("hm-show-shortcuts"));
@@ -102,10 +120,10 @@ export function HomeView() {
             <Sparkles className="h-3 w-3" />
             <span>Evidence-based job readiness · AI-assisted assessment</span>
           </div>
-          <h1 className="relative text-[40px] sm:text-[56px] font-semibold tracking-tight text-balance leading-[1.1] sm:leading-[1.05]">
+          <h1 className="relative hm-heading-display text-[40px] sm:text-[56px] font-semibold tracking-tight text-balance leading-[1.1] sm:leading-[1.05]">
             Know your job
             <br />
-            <span className="hm-text-gradient">readiness.</span>
+            <span className="hm-text-gradient-premium">readiness.</span>
           </h1>
           <p className="relative mt-4 mx-auto max-w-xl text-sm sm:text-base text-foreground/70 leading-relaxed sm:leading-normal text-pretty">
             Upload your resume and choose a target role. HireMind finds your strongest evidence, identifies your biggest gap, and tests it in an adaptive AI interview.
@@ -124,6 +142,9 @@ export function HomeView() {
         {/* Achievement strip — shows unlocked milestones */}
         <AchievementStrip />
 
+        {/* Quick start templates — pre-fill target role fields in one click */}
+        <JobTemplatePicker onSelect={onTemplateSelect} />
+
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -131,7 +152,7 @@ export function HomeView() {
           className="mt-6 sm:mt-8 grid gap-4 md:grid-cols-2 items-stretch"
         >
           {/* Resume input */}
-          <div data-hm="resume-input" className={`hm-card p-4 sm:p-6 flex flex-col transition-[box-shadow] duration-300 ease-out ${resumeText.length > 0 ? "ring-2 ring-accent-blue/20" : ""}`}>
+          <div data-hm="resume-input" className={`hm-card hm-card-depth p-4 sm:p-6 flex flex-col transition-[box-shadow] duration-300 ease-out ${resumeText.length > 0 ? "ring-2 ring-accent-blue/20" : ""}`}>
             <div className="flex items-center gap-2 mb-3">
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
                 <FileText className="h-3.5 w-3.5" />
@@ -156,7 +177,7 @@ export function HomeView() {
           </div>
 
           {/* Target role input */}
-          <div data-hm="job-input" className={`hm-card p-4 sm:p-6 flex flex-col transition-[box-shadow] duration-300 ease-out ${jobText.length > 0 ? "ring-2 ring-accent-blue/20" : ""}`}>
+          <div data-hm="job-input" className={`hm-card hm-card-depth p-4 sm:p-6 flex flex-col transition-[box-shadow] duration-300 ease-out ${jobText.length > 0 ? "ring-2 ring-accent-blue/20" : ""}`}>
             <div className="flex items-center gap-2 mb-3">
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
                 <Briefcase className="h-3.5 w-3.5" />
@@ -213,7 +234,7 @@ export function HomeView() {
               onClick={onAnalyze}
               disabled={!canAnalyze || loading}
               size="lg"
-              className="h-11 sm:h-12 px-6 sm:px-7 rounded-xl text-sm font-medium gap-2 shadow-sm"
+              className={`h-11 sm:h-12 px-6 sm:px-7 rounded-xl text-sm font-medium gap-2 shadow-sm ${canAnalyze && !loading ? "hm-cta-glow" : ""}`}
             >
               {loading ? "Analyzing…" : "Analyze my readiness"}
               {!loading && <ArrowRight className="h-4 w-4" />}

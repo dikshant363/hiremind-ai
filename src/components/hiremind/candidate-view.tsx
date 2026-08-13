@@ -129,34 +129,85 @@ export function CandidateView() {
       </motion.div>
 
       <div className="mt-6 sm:mt-8 grid gap-4 lg:grid-cols-3">
-        {/* Profile summary */}
+        {/* Profile summary — premium depth card with avatar glow, top skills, stat tiles */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.05 }}
-          className="hm-card hm-card-hover p-4 sm:p-6 lg:col-span-1"
+          className="hm-card hm-card-hover hm-card-depth p-4 sm:p-6 lg:col-span-1 relative overflow-hidden"
         >
-          <div className="flex items-center gap-2 mb-4">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-secondary-foreground text-[12px] font-semibold">
+          {/* Subtle accent gradient backdrop in the top-right corner */}
+          <div
+            aria-hidden
+            className="absolute -top-12 -right-12 h-32 w-32 rounded-full opacity-[0.06] pointer-events-none"
+            style={{ background: "radial-gradient(circle, var(--accent-blue), transparent 70%)" }}
+          />
+          {/* Premium avatar with gradient ring + breathing glow */}
+          <div className="flex items-center gap-3 mb-4 relative">
+            <span className="hm-avatar-premium inline-flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-accent-blue/20 to-chart-5/15 text-[18px] font-semibold text-foreground ring-1 ring-accent-blue/20">
               {candidate.name?.[0] ?? "C"}
             </span>
-            <div>
-              <div className="text-sm font-semibold">{candidate.name ?? "Candidate"}</div>
-              <div className="text-[11px] text-muted-foreground">{job.title}</div>
+            <div className="min-w-0 flex-1">
+              <div className="text-[15px] font-semibold tracking-tight truncate hm-heading-section">
+                {candidate.name ?? "Candidate"}
+              </div>
+              <div className="text-[11px] text-muted-foreground truncate">{job.title}</div>
             </div>
+            {isDemo && (
+              <span className="hm-badge-sheen inline-flex items-center rounded-full bg-warning/15 text-warning-foreground px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                Demo
+              </span>
+            )}
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">{candidate.summary}</p>
 
-          <div className="mt-5 space-y-3 text-[12px]">
-            <Stat label="Skills detected" value={candidate.skills.length} />
-            <Stat label="Evidence snippets" value={candidate.evidence.length} />
-            <Stat label="Experience entries" value={candidate.experience.length} />
-            <Stat label="Projects" value={candidate.projects.length} />
-            <Stat label="Education" value={candidate.education.length} />
+          {/* Top 3 strong skills as prominent pills */}
+          {strongSkills.length > 0 && (
+            <div className="mt-4">
+              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Top strengths</div>
+              <div className="flex flex-wrap gap-1.5">
+                {strongSkills.slice(0, 3).map((s) => (
+                  <span
+                    key={s.competency}
+                    className="hm-badge-sheen inline-flex items-center gap-1 rounded-full bg-success/10 text-success-foreground px-2.5 py-1 text-[11px] font-medium"
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                    {s.competency}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Premium stat tiles — 2x2 grid instead of vertical list */}
+          <div className="mt-5 grid grid-cols-2 gap-2">
+            {[
+              { label: "Skills", value: candidate.skills.length, icon: BadgeCheck },
+              { label: "Evidence", value: candidate.evidence.length, icon: Quote },
+              { label: "Experience", value: candidate.experience.length, icon: Briefcase },
+              { label: "Projects", value: candidate.projects.length, icon: FolderGit2 },
+            ].map((stat, i) => {
+              const Icon = stat.icon;
+              return (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: 0.15 + i * 0.05, ease: [0.22, 1, 0.36, 1] }}
+                  className="hm-stat-tile-premium hm-elevated rounded-lg p-2.5"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{stat.label}</span>
+                    <Icon className="h-3 w-3 text-muted-foreground/60" />
+                  </div>
+                  <div className="mt-0.5 text-[18px] font-semibold tabular-nums">{stat.value}</div>
+                </motion.div>
+              );
+            })}
           </div>
 
           {/* Profile completeness ring */}
-          <div className="hm-divider my-4" />
+          <div className="hm-divider-premium my-4" />
           <div className="flex items-center gap-3">
             <ScoreRing value={completeness} size={80} tone={completenessTone} delay={400} />
             <div className="flex-1 min-w-0">

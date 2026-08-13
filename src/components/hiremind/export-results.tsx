@@ -1,14 +1,63 @@
 "use client";
 
 import * as React from "react";
-import { Copy, Check } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Copy, Check, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHireMind } from "@/lib/store";
 import { toast } from "sonner";
+import { PrintReport } from "./print-report";
 
 export function ExportResults() {
   const { candidate, job, match, gaps, interview, readiness, roadmap } = useHireMind();
   const [copied, setCopied] = React.useState(false);
+  const [printing, setPrinting] = React.useState(false);
+
+  /* ─── Print flow ──────────────────────────────────────────────────
+   * 1. Set printing=true so <PrintReport /> mounts (offscreen via CSS).
+   * 2. Wait one animation frame + a short tick so React commits + the
+   *    browser paints the report before we open the print dialog.
+   * 3. Call window.print().
+   * 4. Listen for `onafterprint` to tear down the report. A timeout
+   *    fallback covers browsers/Safari that don't fire afterprint when
+   *    the user cancels the dialog.
+   * ────────────────────────────────────────────────────────────────── */
+  const printingRef = React.useRef(false);
+
+  const handleDownloadPdf = React.useCallback(() => {
+    if (printingRef.current) return;
+    printingRef.current = true;
+    setPrinting(true);
+    toast.success("Opening print dialog… Save as PDF to download.");
+
+    const cleanup = () => {
+      printingRef.current = false;
+      setPrinting(false);
+      window.removeEventListener("afterprint", onAfterPrint);
+      if (fallbackTimer) window.clearTimeout(fallbackTimer);
+    };
+
+    const onAfterPrint = () => cleanup();
+    let fallbackTimer: number | undefined;
+    window.addEventListener("afterprint", onAfterPrint, { once: true });
+
+    // Use double-rAF so React commits, the DOM paints, then we print.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        // Extra 50ms safety margin for slow painters / large reports.
+        fallbackTimer = window.setTimeout(() => {
+          // If afterprint never fires (e.g. user dismisses dialog in some
+          // browsers), tear down after a generous 30s so we don't leak.
+        }, 30000);
+        try {
+          window.print();
+        } catch {
+          // window.print() can throw in restricted contexts — tear down.
+          cleanup();
+        }
+      });
+    });
+  }, []);
 
   const handleExport = React.useCallback(() => {
     const lines: string[] = [];
@@ -132,23 +181,47 @@ export function ExportResults() {
   if (!readiness) return null;
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={handleExport}
-      className="gap-1.5 text-muted-foreground hover:text-foreground"
-    >
-      {copied ? (
-        <>
-          <Check className="h-3.5 w-3.5 text-success-foreground" />
-          <span>Copied</span>
-        </>
-      ) : (
-        <>
-          <Copy className="h-3.5 w-3.5" />
-          <span>Export results</span>
-        </>
-      )}
-    </Button>
+    <>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleExport}
+          className="gap-1.5 text-muted-foreground hover:text-foreground"
+        >
+          {copied ? (
+            <>
+              <Check className="h-3.5 w-3.5 text-success-foreground" />
+              <span>Copied</span>
+            </>
+          ) : (
+            <>
+              <Copy className="h-3.5 w-3.5" />
+              <span>Export results</span>
+            </>
+          )}
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleDownloadPdf}
+          disabled={printing}
+          className="gap-1.5 text-muted-foreground hover:text-foreground"
+        >
+          <FileDown className="h-3.5 w-3.5" />
+          <span>{printing ? "Preparing…" : "Download PDF"}</span>
+        </Button>
+      </div>
+
+      {/* Print-only report — rendered into document.body via portal so
+          ancestor positioning / overflow can never interfere with the
+          offscreen (left:-9999px) placement or the print CSS reset.
+          Visibility/positioning is fully controlled by .hm-print-report
+          in globals.css. */}
+      {printing && typeof document !== "undefined"
+        ? createPortal(<PrintReport />, document.body)
+        : null}
+    </>
   );
 }

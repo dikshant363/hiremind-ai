@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Send, SkipForward, Wand2, CheckCircle2, MessageSquareQuote, Zap, Flame, Mountain, Gauge, RotateCcw, ChevronDown } from "lucide-react";
+import { Sparkles, Send, SkipForward, Wand2, CheckCircle2, MessageSquareQuote, Zap, Flame, Mountain, Gauge, RotateCcw, ChevronDown, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useHireMind } from "@/lib/store";
@@ -11,6 +11,9 @@ import { ScoreRing } from "./shell";
 import { AnswerCoach } from "./answer-coach";
 import { InterviewTimer } from "./interview-timer";
 import { VoiceInput } from "./voice-input";
+import { BookmarkedQuestions } from "./bookmarked-questions";
+import { useQuestionBookmarks, type BookmarkedQuestion } from "@/hooks/use-question-bookmarks";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 /** Maps a difficulty level to its tonal color tokens for pills and badges. */
@@ -59,10 +62,76 @@ const DIFFICULTY_OPTIONS: {
 ];
 
 export function InterviewView() {
-  const { interview, startInterview, submitAnswer, loading, loadingStep, setView, isDemo } = useHireMind();
+  const { interview, startInterview, submitAnswer, loading, loadingStep, setView, isDemo, sessionId } = useHireMind();
+  const { isBookmarked, toggleBookmark } = useQuestionBookmarks();
   const [answer, setAnswer] = React.useState("");
   const [difficulty, setDifficulty] = React.useState<InterviewDifficulty>("auto");
   const [showDifficultySelect, setShowDifficultySelect] = React.useState(false);
+
+  // Reference to the latest answer text so the keyboard shortcut handler
+  // (registered once) can read it without re-binding on every keystroke.
+  const answerRef = React.useRef(answer);
+  React.useEffect(() => {
+    answerRef.current = answer;
+  }, [answer]);
+
+  // Derive current question + bookmark state — null-safe so the bookmark
+  // hooks below can be called unconditionally before the early return for
+  // `!interview` (rules of hooks).
+  const current = interview ? interview.questions[interview.currentIndex] : null;
+  const isComplete = interview?.status === "complete";
+  const currentBookmarked = current ? isBookmarked(current.id) : false;
+
+  // Toggle the bookmark on the current question. Captures the latest answer
+  // text as a snapshot so the user can review both question + their answer
+  // together on the readiness view.
+  const handleToggleBookmark = React.useCallback(() => {
+    if (!current) return;
+    const payload: BookmarkedQuestion = {
+      questionId: current.id,
+      competency: current.competency,
+      category: current.category,
+      text: current.text,
+      difficulty: current.difficulty,
+      bookmarkedAt: new Date().toISOString(),
+      sessionId: sessionId ?? undefined,
+      answerText: answerRef.current.trim() || undefined,
+    };
+    const wasBookmarked = isBookmarked(current.id);
+    toggleBookmark(payload);
+    toast.success(wasBookmarked ? "Removed bookmark" : "Bookmarked", {
+      description: wasBookmarked
+        ? "Removed from your starred questions."
+        : "Saved to your starred questions for review.",
+      duration: 1800,
+    });
+  }, [current, sessionId, isBookmarked, toggleBookmark]);
+
+  // Keyboard shortcut: press "B" to toggle the bookmark on the current
+  // question. Kept local (not added to use-keyboard-shortcuts.ts) because
+  // the bookmark depends on the local answer state which that hook doesn't
+  // own. Ignores key presses while focused on form fields.
+  React.useEffect(() => {
+    if (isComplete || !current) return;
+    const onKey = (e: KeyboardEvent) => {
+      const el = document.activeElement;
+      if (
+        el instanceof HTMLInputElement ||
+        el instanceof HTMLTextAreaElement ||
+        el instanceof HTMLSelectElement ||
+        el?.isContentEditable
+      ) {
+        return;
+      }
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key.toLowerCase() === "b") {
+        e.preventDefault();
+        handleToggleBookmark();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isComplete, current, handleToggleBookmark]);
 
   if (!interview) {
     return (
@@ -172,8 +241,10 @@ export function InterviewView() {
     );
   }
 
-  const current = interview.questions[interview.currentIndex];
-  const isComplete = interview.status === "complete";
+  // At this point `interview` is non-null and we're either on the complete
+  // state or have an active question. `current`, `isComplete`, and the
+  // bookmark hooks are declared above (before the `!interview` early return)
+  // to satisfy the rules of hooks.
 
   if (isComplete) {
     return (
@@ -190,6 +261,7 @@ export function InterviewView() {
             <MessageSquareQuote className="h-3.5 w-3.5" />
             Weaknesses identified: {interview.identifiedWeaknesses.join(", ") || "none — strong performance"}
           </div>
+          <BookmarkedQuestions variant="compact" className="block max-w-md mx-auto text-left" />
           <div className="mt-7 flex flex-col sm:flex-row gap-3 justify-center">
             <Button size="lg" className="h-12 px-7 gap-2" onClick={() => setView("readiness")}>
               See your readiness →
@@ -363,7 +435,33 @@ export function InterviewView() {
               >
                 {current.difficulty}
               </span>
-              <span className="ml-1 inline-flex hm-typing-indicator">
+              <button
+                type="button"
+                onClick={handleToggleBookmark}
+                title="Bookmark this question (B)"
+                aria-label={currentBookmarked ? "Remove bookmark" : "Bookmark this question"}
+                aria-pressed={currentBookmarked}
+                className={cn(
+                  "inline-flex h-6 w-6 items-center justify-center rounded-full transition-all duration-200",
+                  "hover:bg-warning/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning/40",
+                  currentBookmarked
+                    ? "text-warning"
+                    : "text-muted-foreground hover:text-warning normal-case"
+                )}
+              >
+                <motion.span
+                  key={currentBookmarked ? "on" : "off"}
+                  initial={{ scale: 0.6 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                  className="inline-flex"
+                >
+                  <Star
+                    className={cn("h-3.5 w-3.5", currentBookmarked && "fill-warning")}
+                  />
+                </motion.span>
+              </button>
+              <span className="ml-auto inline-flex hm-typing-indicator">
                 <span /><span /><span />
               </span>
             </div>
