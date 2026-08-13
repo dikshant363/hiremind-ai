@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, TrendingDown, Lightbulb, CheckCircle2, AlertTriangle, Sparkles, MessageSquareQuote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHireMind } from "@/lib/store";
-import { CompetencyBar } from "./shell";
+import { CompetencyBar, AnimatedCounter, ScoreRing } from "./shell";
+import { InterviewInsights } from "./interview-insights";
 import type { AnswerEvaluation } from "@/lib/types";
 
 export function EvaluationView() {
@@ -52,6 +53,10 @@ export function EvaluationView() {
   const ev: AnswerEvaluation = lastEvaluation;
   const isComplete = interview.status === "complete";
   const nextQ = interview.questions[interview.currentIndex];
+  const overallPct = Math.round(ev.overall * 100);
+  const tone: "neutral" | "success" | "warning" | "critical" =
+    overallPct >= 70 ? "success" : overallPct >= 50 ? "warning" : "critical";
+  const showConfetti = overallPct >= 75;
 
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-8 py-8 sm:py-14">
@@ -63,31 +68,42 @@ export function EvaluationView() {
         </p>
       </motion.div>
 
-      {/* Dimensions */}
+      {/* Dimensions + Overall Score Ring */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.05 }}
-        className="hm-card hm-card-hover mt-6 sm:mt-8 p-5 sm:p-8"
+        className="hm-card hm-card-hover mt-6 sm:mt-8 p-5 sm:p-8 relative"
       >
-        <div className="grid sm:grid-cols-2 gap-x-8 gap-y-4">
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}>
-            <DimensionBar label="Technical Accuracy" value={ev.technicalAccuracy} />
-          </motion.div>
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.18 }}>
-            <DimensionBar label="Relevance" value={ev.relevance} />
-          </motion.div>
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.26 }}>
-            <DimensionBar label="Depth" value={ev.depth} />
-          </motion.div>
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.34 }}>
-            <DimensionBar label="Communication" value={ev.communication} />
-          </motion.div>
-        </div>
-        <div className="hm-divider my-6" />
-        <div className="flex items-center justify-between">
-          <div className="text-[13px] text-muted-foreground">Overall (weighted aggregate)</div>
-          <div className="text-2xl font-semibold tabular-nums">{Math.round(ev.overall * 100)}%</div>
+        <div className="grid sm:grid-cols-[1fr_auto] gap-6 sm:gap-8 items-center">
+          {/* Dimensions */}
+          <div className="grid sm:grid-cols-2 gap-x-8 gap-y-4">
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}>
+              <DimensionBar label="Technical Accuracy" value={ev.technicalAccuracy} delay={0.15} />
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.18 }}>
+              <DimensionBar label="Relevance" value={ev.relevance} delay={0.22} />
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.26 }}>
+              <DimensionBar label="Depth" value={ev.depth} delay={0.29} />
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.34 }}>
+              <DimensionBar label="Communication" value={ev.communication} delay={0.36} />
+            </motion.div>
+          </div>
+
+          {/* Overall Score Ring */}
+          <div className="flex flex-col items-center justify-center sm:justify-self-center relative">
+            <ConfettiBurst trigger={showConfetti} />
+            <ScoreRing
+              value={overallPct}
+              size={148}
+              label="Overall"
+              caption="Weighted aggregate"
+              tone={tone}
+              delay={300}
+            />
+          </div>
         </div>
       </motion.div>
 
@@ -145,6 +161,9 @@ export function EvaluationView() {
           )}
         </motion.div>
       </div>
+
+      {/* INTERVIEW INSIGHTS — premium post-answer visual breakdown */}
+      <InterviewInsights />
 
       {/* THE WOW MOMENT — what happens next */}
       <AnimatePresence>
@@ -212,12 +231,79 @@ export function EvaluationView() {
   );
 }
 
-function DimensionBar({ label, value }: { label: string; value: number }) {
+/** Subtle particle burst — Apple-like. 10 small dots that radiate outward from
+ *  the score ring center and fade out. Only renders when trigger=true. */
+function ConfettiBurst({ trigger }: { trigger: boolean }) {
+  // Pre-compute random directions on mount so they don't change between renders.
+  const particles = React.useMemo(() => {
+    if (!trigger) return [];
+    const count = 10;
+    return Array.from({ length: count }, (_, i) => {
+      const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4;
+      const distance = 70 + Math.random() * 35;
+      return {
+        id: i,
+        x: Math.cos(angle) * distance,
+        y: Math.sin(angle) * distance,
+        size: 4 + Math.random() * 3,
+        delay: Math.random() * 0.12,
+        color: i % 2 === 0 ? "var(--accent-blue)" : "var(--success)",
+      };
+    });
+  }, [trigger]);
+
+  if (!trigger) return null;
+
+  return (
+    <div className="pointer-events-none absolute inset-0 flex items-center justify-center z-10">
+      {particles.map((p) => (
+        <motion.span
+          key={p.id}
+          initial={{ opacity: 0, x: 0, y: 0, scale: 0 }}
+          animate={{
+            opacity: [0, 1, 0],
+            x: p.x,
+            y: p.y,
+            scale: [0, 1, 0.4],
+          }}
+          transition={{
+            duration: 1.0,
+            delay: 0.4 + p.delay,
+            ease: [0.22, 1, 0.36, 1],
+            times: [0, 0.25, 1],
+          }}
+          style={{
+            position: "absolute",
+            width: p.size,
+            height: p.size,
+            borderRadius: "9999px",
+            background: p.color,
+            boxShadow: `0 0 6px ${p.color}`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function DimensionBar({
+  label,
+  value,
+  delay = 0,
+}: {
+  label: string;
+  value: number;
+  delay?: number;
+}) {
+  const pct = Math.round(value * 100);
   return (
     <div>
       <div className="flex items-center justify-between text-[13px] mb-1.5">
         <span className="font-medium">{label}</span>
-        <span className="font-semibold tabular-nums">{Math.round(value * 100)}%</span>
+        <span className="font-semibold tabular-nums">
+          <AnimatedCounter value={pct} delay={delay} duration={800} />
+          <span className="text-muted-foreground">%</span>
+        </span>
       </div>
       <CompetencyBar
         label=""

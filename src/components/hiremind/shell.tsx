@@ -3,28 +3,55 @@
 import * as React from "react";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
-import { Sun, Moon, BrainCircuit, RotateCcw, Monitor, HelpCircle } from "lucide-react";
+import { Sun, Moon, BrainCircuit, RotateCcw, Monitor, HelpCircle, GitCompare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHireMind, type View } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
-const NAV: { id: View; label: string }[] = [
+type NavItem = {
+  id: View;
+  label: string;
+  shortLabel?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+};
+
+const NAV: NavItem[] = [
   { id: "home", label: "Overview" },
   { id: "candidate", label: "Candidate" },
   { id: "match", label: "Job Match" },
-  { id: "gaps", label: "Skill Gaps" },
+  { id: "gaps", label: "Skill Gaps", shortLabel: "Gaps" },
   { id: "interview", label: "Interview" },
   { id: "readiness", label: "Readiness" },
   { id: "roadmap", label: "Roadmap" },
+  { id: "compare", label: "Compare", shortLabel: "Compare", icon: GitCompare },
 ];
 
 const NAV_REQUIRES_SESSION: View[] = ["candidate", "match", "gaps", "interview", "readiness", "roadmap"];
+/** Compare is gated separately — it needs at least 2 sessions in the DB. */
 
 export function SiteHeader() {
   const { view, setView, sessionId, isDemo, reset, presentationMode, togglePresentationMode } = useHireMind();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
+
+  // Track how many past sessions exist so we can enable the "Compare" nav
+  // item only when there are at least two. Re-fetch whenever the active
+  // session changes (analyze creates a new one) or the view flips back home.
+  const [sessionCount, setSessionCount] = React.useState(0);
+  const refreshCount = React.useCallback(async () => {
+    try {
+      const res = await fetch("/api/session?list=true");
+      if (!res.ok) return;
+      const data = await res.json();
+      setSessionCount(Array.isArray(data.sessions) ? data.sessions.length : 0);
+    } catch {
+      /* ignore — nav item just stays disabled */
+    }
+  }, []);
+  React.useEffect(() => {
+    refreshCount();
+  }, [refreshCount, sessionId, view]);
 
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-background/70 border-b border-border/60 pt-safe">
@@ -49,21 +76,31 @@ export function SiteHeader() {
 
         <nav className="hidden md:flex items-center gap-1">
           {NAV.map((item) => {
-            const disabled = NAV_REQUIRES_SESSION.includes(item.id) && !sessionId;
+            const requiresSession = NAV_REQUIRES_SESSION.includes(item.id);
+            const needsTwoSessions = item.id === "compare";
+            const disabled =
+              (requiresSession && !sessionId) || (needsTwoSessions && sessionCount < 2);
             const active = view === item.id;
+            const Icon = item.icon;
             return (
               <button
                 key={item.id}
                 disabled={disabled}
                 onClick={() => setView(item.id)}
+                title={
+                  needsTwoSessions && sessionCount < 2
+                    ? "Run at least two analyses to unlock Compare"
+                    : undefined
+                }
                 className={cn(
-                  "hm-nav-item px-3 py-1.5 rounded-md text-[13px] font-medium transition-all relative",
+                  "hm-nav-item px-3 py-1.5 rounded-md text-[13px] font-medium transition-all relative inline-flex items-center gap-1.5",
                   active
                     ? "bg-secondary text-secondary-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
                   disabled && "opacity-40 cursor-not-allowed hover:bg-transparent hover:text-muted-foreground"
                 )}
               >
+                {Icon && <Icon className="h-3.5 w-3.5" />}
                 {item.label}
                 {active && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] w-3 rounded-full bg-accent-blue transition-all duration-300" />}
               </button>
@@ -124,10 +161,16 @@ export function SiteHeader() {
         </div>
       </div>
 
-      {/* Mobile nav */}
-      <nav className="md:hidden flex items-center gap-1 overflow-x-auto px-4 pb-2 -mt-1 no-scrollbar pl-safe pr-safe">
+      {/* Mobile nav — gap-0 + flex-1 distributes tabs evenly; whitespace-nowrap
+          keeps each label on one line. 'Gaps' shortLabel prevents "Skill Gaps"
+          from wrapping/clipping at 375px width. px-0.5 keeps all 7 tabs visible
+          inside the 375px viewport without horizontal scroll. */}
+      <nav className="md:hidden flex items-center gap-0 overflow-x-auto px-2 pb-2 -mt-1 no-scrollbar pl-safe pr-safe">
         {NAV.map((item) => {
-          const disabled = NAV_REQUIRES_SESSION.includes(item.id) && !sessionId;
+          const requiresSession = NAV_REQUIRES_SESSION.includes(item.id);
+          const needsTwoSessions = item.id === "compare";
+          const disabled =
+            (requiresSession && !sessionId) || (needsTwoSessions && sessionCount < 2);
           const active = view === item.id;
           return (
             <button
@@ -135,14 +178,14 @@ export function SiteHeader() {
               disabled={disabled}
               onClick={() => setView(item.id)}
               className={cn(
-                "shrink-0 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all relative",
+                "flex-1 min-w-0 whitespace-nowrap px-0.5 py-1.5 rounded-md text-[11px] sm:text-xs font-medium transition-all relative text-center inline-flex items-center justify-center gap-0.5",
                 active
                   ? "bg-secondary text-secondary-foreground"
                   : "text-muted-foreground",
                 disabled && "opacity-40"
               )}
             >
-              {item.label}
+              {item.shortLabel ?? item.label}
               {active && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 w-4 rounded-full bg-accent-blue" />}
             </button>
           );
@@ -180,6 +223,7 @@ export function ScoreRing({
   caption,
   tone = "neutral",
   delay = 0,
+  labelExtra,
 }: {
   value: number;
   size?: number;
@@ -187,6 +231,7 @@ export function ScoreRing({
   caption?: string;
   tone?: "neutral" | "success" | "warning" | "critical";
   delay?: number;
+  labelExtra?: React.ReactNode;
 }) {
   const [display, setDisplay] = React.useState(0);
   const [glowActive, setGlowActive] = React.useState(true);
@@ -303,16 +348,19 @@ export function ScoreRing({
             />
           </div>
         )}
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-5xl font-semibold tracking-tight tabular-nums hm-text-gradient">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-0">
+          <span className="text-5xl font-semibold tracking-tight tabular-nums hm-text-gradient leading-none">
             {display}
           </span>
-          <span className="text-xs text-muted-foreground mt-0.5">/ 100</span>
+          <span className="text-xs text-muted-foreground leading-none mt-1">/ 100</span>
         </div>
       </div>
       {label && (
         <div className="mt-3 text-center">
-          <div className="text-sm font-medium text-foreground">{label}</div>
+          <div className="inline-flex items-center justify-center gap-2 flex-wrap">
+            <div className="text-sm font-medium text-foreground">{label}</div>
+            {labelExtra}
+          </div>
           {caption && <div className="text-xs text-muted-foreground mt-0.5">{caption}</div>}
         </div>
       )}
@@ -330,7 +378,7 @@ export function CompetencyBar({
 }: {
   label: string;
   value: number; // 0..1
-  status: "matched" | "weak" | "unknown" | "gap";
+  status: "matched" | "weak" | "unknown" | "gap" | "accent";
   rightLabel?: string;
   index?: number;
 }) {
@@ -348,14 +396,18 @@ export function CompetencyBar({
       ? "var(--warning)"
       : status === "gap"
       ? "var(--critical)"
+      : status === "accent"
+      ? "var(--accent-blue)"
       : "var(--muted-foreground)";
 
-  // Gradient fill for matched/weak bars
+  // Gradient fill for matched/weak/accent bars
   const background =
     status === "matched"
       ? "linear-gradient(90deg, color-mix(in oklch, var(--success) 85%, var(--accent-blue)), var(--success))"
       : status === "weak"
       ? "linear-gradient(90deg, color-mix(in oklch, var(--warning) 85%, var(--accent-blue)), var(--warning))"
+      : status === "accent"
+      ? "linear-gradient(90deg, color-mix(in oklch, var(--accent-blue) 80%, var(--success)), var(--accent-blue))"
       : color;
 
   return (
@@ -389,6 +441,54 @@ export function StatusPill({ status }: { status: "matched" | "weak" | "unknown" 
       {s.label}
     </span>
   );
+}
+
+/* ----------------------------------------------------------------------------
+ * AnimatedCounter — spring count-up for numeric score displays.
+ * Cubic ease-out with a subtle sine overshoot near the end. Delayed start so
+ * multiple counters on the same view can stagger. Supports an optional suffix
+ * (e.g. "%" or "/100") and an optional className for typography styling.
+ * ------------------------------------------------------------------------- */
+export function AnimatedCounter({
+  value,
+  delay = 0,
+  duration = 900,
+  className,
+}: {
+  value: number;
+  delay?: number; // seconds before animation starts
+  duration?: number; // milliseconds
+  className?: string;
+}) {
+  const [display, setDisplay] = React.useState(0);
+  const [started, setStarted] = React.useState(false);
+
+  React.useEffect(() => {
+    const t = setTimeout(() => setStarted(true), delay * 1000);
+    return () => clearTimeout(t);
+  }, [delay]);
+
+  React.useEffect(() => {
+    if (!started) return;
+    let raf = 0;
+    const start = performance.now();
+    const to = Math.max(0, Math.min(1000, value));
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - start) / duration);
+      // Cubic ease-out + tiny sine overshoot at the very end for a springy feel
+      const eased =
+        p < 0.92
+          ? 1 - Math.pow(1 - p / 0.92, 3)
+          : 1 + 0.012 * Math.sin(((p - 0.92) / 0.08) * Math.PI);
+      setDisplay(Math.round(to * Math.min(1.005, eased)));
+      if (p < 1) raf = requestAnimationFrame(tick);
+      else setDisplay(to);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [started, value, duration]);
+
+  return <span className={cn("font-semibold tabular-nums hm-num-tabular", className)}>{display}</span>;
 }
 
 export function PriorityPill({ priority }: { priority: "critical" | "high" | "medium" | "low" }) {

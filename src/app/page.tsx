@@ -11,6 +11,7 @@ import { InterviewView } from "@/components/hiremind/interview-view";
 import { EvaluationView } from "@/components/hiremind/evaluation-view";
 import { ReadinessView } from "@/components/hiremind/readiness-view";
 import { RoadmapView } from "@/components/hiremind/roadmap-view";
+import { CompareView } from "@/components/hiremind/compare-view";
 import { LoadingOverlay } from "@/components/hiremind/loading-overlay";
 import { ShortcutHint } from "@/components/hiremind/shortcut-hint";
 import { motion } from "framer-motion";
@@ -32,6 +33,10 @@ export default function Home() {
     const { view: hashView, sessionId: hashSession } = parseHash();
     if (hashSession && hashView !== "home") {
       hydrateSession(hashSession, hashView);
+    } else if (hashView !== "home" && !hashSession) {
+      // Views that don't need an active session (e.g. "compare") can be
+      // deep-linked directly — just flip the view, no hydration required.
+      useHireMind.getState().setView(hashView);
     }
   }, [hydrateSession]);
 
@@ -76,6 +81,7 @@ export default function Home() {
           {view === "evaluation" && <EvaluationView />}
           {view === "readiness" && <ReadinessView />}
           {view === "roadmap" && <RoadmapView />}
+          {view === "compare" && <CompareView />}
         </motion.div>
       </main>
       <SiteFooter />

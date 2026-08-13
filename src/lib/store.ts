@@ -30,7 +30,34 @@ export type View =
   | "interview"
   | "evaluation"
   | "readiness"
-  | "roadmap";
+  | "roadmap"
+  | "compare";
+
+/** Lightweight comparison summary returned by /api/session/compare. */
+export interface ComparisonSession {
+  id: string;
+  jobTitle: string;
+  createdAt: string;
+  isDemo: boolean;
+  matchIndex: number | null;
+  readinessIndex: number | null;
+  gapCount: number;
+  topGaps: string[];
+  interviewScore: number | null;
+}
+
+export interface ComparisonDeltas {
+  matchDelta: number | null;
+  readinessDelta: number | null;
+  gapDelta: number;
+  interviewScoreDelta: number | null;
+}
+
+export interface Comparison {
+  a: ComparisonSession;
+  b: ComparisonSession;
+  deltas: ComparisonDeltas;
+}
 
 interface AnalyzeMeta {
   resumeFallback?: boolean;
@@ -76,6 +103,12 @@ interface StoreState {
   error: string | null;
   meta: AnalyzeMeta;
 
+  // Session comparison
+  comparison: Comparison | null;
+  loadingComparison: boolean;
+  loadComparison: (aId: string, bId: string) => Promise<void>;
+  clearComparison: () => void;
+
   // Actions
   analyze: (opts?: { demo?: boolean }) => Promise<void>;
   startInterview: (opts?: { difficulty?: InterviewDifficulty }) => Promise<void>;
@@ -92,7 +125,7 @@ const LOADING_STEPS: Record<string, string> = {
   readiness: "Calculating your job readiness…",
 };
 
-const VALID_VIEWS: View[] = ["home", "candidate", "match", "gaps", "interview", "evaluation", "readiness", "roadmap"];
+const VALID_VIEWS: View[] = ["home", "candidate", "match", "gaps", "interview", "evaluation", "readiness", "roadmap", "compare"];
 
 export function parseHash(): { view: View; sessionId: string | null } {
   if (typeof window === "undefined") return { view: "home", sessionId: null };
@@ -150,6 +183,9 @@ export const useHireMind = create<StoreState>((set, get) => ({
   loadingStep: "",
   error: null,
   meta: {},
+
+  comparison: null,
+  loadingComparison: false,
 
   analyze: async (opts) => {
     set({ loading: true, loadingStep: LOADING_STEPS.analyze, error: null });
@@ -319,7 +355,36 @@ export const useHireMind = create<StoreState>((set, get) => ({
       loadingStep: "",
       error: null,
       meta: {},
+      comparison: null,
+      loadingComparison: false,
     });
     syncHash("home", null);
+  },
+
+  loadComparison: async (aId, bId) => {
+    if (!aId || !bId || aId === bId) {
+      set({ error: "Pick two different sessions to compare." });
+      return;
+    }
+    set({ loadingComparison: true, error: null });
+    try {
+      const res = await fetch(
+        `/api/session/compare?a=${encodeURIComponent(aId)}&b=${encodeURIComponent(bId)}`
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Couldn't load comparison.");
+      set({ comparison: data as Comparison, view: "compare" });
+      // Compare view doesn't need a session id in the URL — it operates on
+      // any two past sessions, so we clear the session param intentionally.
+      syncHash("compare", null);
+    } catch (err) {
+      set({ error: (err as Error).message });
+    } finally {
+      set({ loadingComparison: false });
+    }
+  },
+
+  clearComparison: () => {
+    set({ comparison: null });
   },
 }));

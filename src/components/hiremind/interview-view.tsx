@@ -11,6 +11,14 @@ import { ScoreRing } from "./shell";
 import { AnswerCoach } from "./answer-coach";
 import { cn } from "@/lib/utils";
 
+/** Maps a difficulty level to its tonal color tokens for pills and badges. */
+const DIFFICULTY_TONE: Record<InterviewDifficulty, { bg: string; text: string; ring: string }> = {
+  easy: { bg: "bg-success/15", text: "text-success-foreground", ring: "ring-success/30" },
+  medium: { bg: "bg-accent-blue/15", text: "text-accent-blue-foreground", ring: "ring-accent-blue/30" },
+  hard: { bg: "bg-critical/15", text: "text-critical-foreground", ring: "ring-critical/30" },
+  auto: { bg: "bg-warning/15", text: "text-warning-foreground", ring: "ring-warning/30" },
+};
+
 const DIFFICULTY_OPTIONS: {
   value: InterviewDifficulty;
   label: string;
@@ -85,12 +93,16 @@ export function InterviewView() {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setDifficulty(opt.value)}
                   className={cn(
-                    "group relative rounded-xl border p-3.5 text-left transition-all",
+                    "group relative rounded-xl border p-3.5 text-left transition-all duration-200",
                     isActive
                       ? "border-transparent bg-secondary/60 shadow-sm"
-                      : "border-border/60 bg-card/40 hover:border-border hover:bg-secondary/40"
+                      : "border-border/60 bg-card/40 hover:border-border hover:bg-secondary/40 hover:shadow-[0_0_0_3px_color-mix(in_oklch,var(--hm-tone)_18%,transparent),0_8px_24px_-8px_color-mix(in_oklch,var(--hm-tone)_22%,transparent)]"
                   )}
-                  style={isActive ? { boxShadow: `0 0 0 2px color-mix(in oklch, ${opt.tone} 50%, transparent), 0 4px 12px -4px color-mix(in oklch, ${opt.tone} 30%, transparent)` } : undefined}
+                  style={
+                    isActive
+                      ? { boxShadow: `0 0 0 2px color-mix(in oklch, ${opt.tone} 50%, transparent), 0 4px 12px -4px color-mix(in oklch, ${opt.tone} 30%, transparent)` }
+                      : ({ "--hm-tone": opt.tone } as React.CSSProperties)
+                  }
                 >
                   <div className="flex items-start gap-2.5">
                     <span
@@ -205,6 +217,7 @@ export function InterviewView() {
     setAnswer("");
   };
 
+  const wordCount = answer.trim().split(/\s+/).filter(Boolean).length;
   const progress = ((interview.currentIndex) / interview.totalQuestions) * 100;
 
   return (
@@ -268,9 +281,18 @@ export function InterviewView() {
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             className="hm-card hm-card-hover mt-6 sm:mt-8 p-6 sm:p-10"
           >
-            <div className="text-[11px] font-semibold text-accent-blue-foreground uppercase tracking-wider">
-              {current.competency} · {current.difficulty}
-              <span className="ml-2 inline-flex hm-typing-indicator">
+            <div className="flex items-center gap-2 text-[11px] font-semibold text-accent-blue-foreground uppercase tracking-wider">
+              <span>{current.competency}</span>
+              <span
+                className={cn(
+                  "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+                  DIFFICULTY_TONE[current.difficulty].bg,
+                  DIFFICULTY_TONE[current.difficulty].text
+                )}
+              >
+                {current.difficulty}
+              </span>
+              <span className="ml-1 inline-flex hm-typing-indicator">
                 <span /><span /><span />
               </span>
             </div>
@@ -298,17 +320,30 @@ export function InterviewView() {
                 <Textarea
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
+                  onKeyDown={(e) => {
+                    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                      e.preventDefault();
+                      if (!loading && answer.trim().length >= 5) {
+                        onSubmit();
+                      }
+                    }
+                  }}
                   placeholder="Write your answer here. Take your time — depth matters more than length."
                   className="min-h-[180px] sm:min-h-[220px] resize-none text-sm leading-relaxed bg-transparent border-border/60 hm-focus-ring transition-all duration-200"
                   disabled={loading}
                 />
                 <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
-                  <span>{answer.trim().split(/\s+/).filter(Boolean).length} words</span>
+                  <span>{wordCount} words</span>
                   <span>Tip: explain tradeoffs, not just keywords</span>
                 </div>
 
-                <div className="mt-5 flex flex-col sm:flex-row gap-3">
-                  <Button onClick={onSubmit} size="lg" disabled={loading || answer.trim().length < 5} className="h-11 sm:h-12 px-5 sm:px-6 gap-2">
+                <div className="mt-5 flex flex-col sm:flex-row sm:flex-wrap gap-2.5 sm:items-center">
+                  <Button
+                    onClick={onSubmit}
+                    size="lg"
+                    disabled={loading || answer.trim().length < 5}
+                    className="h-11 sm:h-12 px-5 sm:px-5 gap-2"
+                  >
                     {loading ? (
                       <>
                         <Sparkles className="h-4 w-4 hm-thinking" />
@@ -320,10 +355,30 @@ export function InterviewView() {
                       </>
                     )}
                   </Button>
+                  {wordCount > 5 && !loading && (
+                    <motion.span
+                      initial={{ opacity: 0, x: -4 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="hidden sm:inline-flex items-center gap-1 text-[10px] text-muted-foreground"
+                    >
+                      <kbd className="rounded border border-border/60 bg-muted/50 px-1 py-0.5 font-sans text-[9px] leading-none text-muted-foreground/90">⌘</kbd>
+                      <span className="text-muted-foreground/60">+</span>
+                      <kbd className="rounded border border-border/60 bg-muted/50 px-1 py-0.5 font-sans text-[9px] leading-none text-muted-foreground/90">Enter</kbd>
+                    </motion.span>
+                  )}
                   {isDemo && (
-                    <Button onClick={onDemoAnswer} variant="outline" size="lg" disabled={loading} className="h-11 sm:h-12 px-5 gap-2">
+                    <Button
+                      onClick={onDemoAnswer}
+                      variant="outline"
+                      size="lg"
+                      disabled={loading}
+                      className="h-11 sm:h-12 px-4 sm:px-4 gap-2"
+                      title="Press D to use the scripted demo answer"
+                    >
                       <Wand2 className="h-4 w-4" />
-                      Use scripted demo answer
+                      Scripted answer
+                      <kbd className="hidden sm:inline-flex items-center justify-center rounded border border-border/60 bg-muted/60 px-1.5 py-0.5 text-[9px] font-mono font-semibold leading-none text-muted-foreground/90">D</kbd>
                     </Button>
                   )}
                   <Button
@@ -334,7 +389,7 @@ export function InterviewView() {
                       submitAnswer(current.id, "I'd like to skip this one.");
                       setAnswer("");
                     }}
-                    className="h-11 sm:h-12 px-5 text-muted-foreground gap-2"
+                    className="h-11 sm:h-12 px-4 sm:px-4 text-muted-foreground gap-2"
                   >
                     <SkipForward className="h-4 w-4" /> Skip
                   </Button>
@@ -355,7 +410,13 @@ export function InterviewView() {
             <div className="text-[11px] text-muted-foreground uppercase tracking-wider mb-2">Previous answers</div>
             <div className="space-y-2">
               {interview.evaluations.map((ev, i) => (
-                <div key={ev.questionId} className="hm-elevated rounded-xl p-4">
+                <motion.div
+                  key={ev.questionId}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }}
+                  className="hm-elevated rounded-xl p-4"
+                >
                   <div className="flex items-center justify-between">
                     <div className="text-[12px] font-medium">
                       Q{i + 1}. {ev.competency}
@@ -370,7 +431,7 @@ export function InterviewView() {
                       <span className="ml-1 text-critical-foreground">· Drilled into {ev.detectedGap}</span>
                     )}
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>

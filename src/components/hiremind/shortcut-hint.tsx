@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Keyboard } from "lucide-react";
 
 const SHORTCUTS = [
-  { keys: "1–7", action: "Switch view (1=Home, 2=Candidate, …)" },
-  { keys: "d", action: "Load demo candidate (from Home)" },
+  { keys: "1–8", action: "Switch view (1=Home, 2=Candidate, … 8=Compare)" },
+  { keys: "d", action: "Load demo candidate (Home) or scripted answer (Interview)" },
   { keys: "p", action: "Toggle presentation mode" },
   { keys: "t", action: "Toggle dark/light theme" },
   { keys: "Esc", action: "Go back to Home view" },

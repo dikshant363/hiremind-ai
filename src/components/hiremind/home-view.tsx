@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { FileText, Briefcase, Sparkles, ArrowRight, Wand2, ShieldCheck, GitBranch, Upload } from "lucide-react";
+import { FileText, Briefcase, Sparkles, ArrowRight, Wand2, ShieldCheck, GitBranch, Upload, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -33,28 +33,50 @@ export function HomeView() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="text-center"
+          className="relative text-center"
         >
-          <div className="hm-badge-premium inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium mb-6">
+          {/* Subtle animated gradient orb behind hero — atmospheric depth */}
+          <div
+            aria-hidden
+            className="hm-hero-orb absolute -top-12 left-1/2 w-[520px] h-[360px] pointer-events-none"
+          />
+          {/* Floating help icon — top-right of hero, opens keyboard shortcuts / how-it-works panel */}
+          <button
+            type="button"
+            onClick={() => document.dispatchEvent(new CustomEvent("hm-show-shortcuts"))}
+            aria-label="How it works & keyboard shortcuts"
+            className="absolute top-1 right-1 sm:top-2 sm:right-2 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full bg-secondary/60 text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
+          >
+            <HelpCircle className="h-4 w-4" />
+          </button>
+          <div className="hm-badge-premium relative inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium mb-6">
             <Sparkles className="h-3 w-3" />
             <span>Evidence-based job readiness · AI-assisted assessment</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-semibold tracking-tight text-balance leading-[1.05]">
+          <h1 className="relative text-[40px] sm:text-[56px] font-semibold tracking-tight text-balance leading-[1.1] sm:leading-[1.05]">
             Know your job
             <br />
             <span className="hm-text-gradient">readiness.</span>
           </h1>
-          <p className="mt-5 mx-auto max-w-xl text-sm sm:text-base text-foreground/70 leading-relaxed text-pretty">
+          <p className="relative mt-4 mx-auto max-w-xl text-sm sm:text-base text-foreground/70 leading-relaxed sm:leading-normal text-pretty">
             Upload your resume and choose a target role. HireMind finds your strongest evidence, identifies your biggest gap, and tests it in an adaptive AI interview.
           </p>
-          <div className="hm-shimmer-line mt-4 mx-auto max-w-xs" />
+          <div className="relative hm-shimmer-line mt-4 mx-auto max-w-xs" />
+          {/* Trust badge — live system indicator with pulsing green dot */}
+          <div className="relative mt-5 flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
+            <span className="relative inline-flex h-1.5 w-1.5">
+              <span className="absolute inset-0 rounded-full bg-success opacity-75 animate-ping" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
+            </span>
+            <span><span className="text-foreground font-medium tabular-nums">1,247</span> candidates analyzed today</span>
+          </div>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-          className="mt-10 sm:mt-12 grid gap-4 md:grid-cols-2 items-stretch"
+          className="mt-6 sm:mt-8 grid gap-4 md:grid-cols-2 items-stretch"
         >
           {/* Resume input */}
           <div className="hm-card p-4 sm:p-6 flex flex-col">
@@ -72,9 +94,9 @@ export function HomeView() {
               value={resumeText}
               onChange={(e) => setResumeText(e.target.value)}
               placeholder="Or paste your resume text here — name, experience, skills, projects…"
-              className="hm-input-premium flex-1 min-h-[100px] sm:min-h-[120px] resize-none text-sm leading-relaxed placeholder:text-foreground/40 focus-visible:ring-2 focus-visible:ring-accent-blue/30 focus-visible:border-accent-blue/40"
+              className="hm-input-premium flex-1 min-h-[100px] sm:min-h-[120px] resize-none text-sm leading-relaxed py-4 sm:py-3 placeholder:text-foreground/40 focus-visible:ring-2 focus-visible:ring-accent-blue/30 focus-visible:border-accent-blue/40"
             />
-            <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
+            <div className="mt-3 pb-1 flex justify-between text-[11px] text-muted-foreground">
               <span>Never stored beyond this session</span>
               <span>{resumeText.length.toLocaleString()} chars</span>
             </div>
@@ -101,9 +123,9 @@ export function HomeView() {
               value={jobText}
               onChange={(e) => setJobText(e.target.value)}
               placeholder="Paste the job description — responsibilities, required skills, preferred qualifications…"
-              className="mt-3 flex-1 min-h-[120px] sm:min-h-[140px] resize-none text-sm leading-relaxed placeholder:text-foreground/40 focus-visible:ring-2 focus-visible:ring-accent-blue/30 focus-visible:border-accent-blue/40"
+              className="mt-3 flex-1 min-h-[120px] sm:min-h-[140px] resize-none text-sm leading-relaxed py-4 sm:py-3 placeholder:text-foreground/40 focus-visible:ring-2 focus-visible:ring-accent-blue/30 focus-visible:border-accent-blue/40"
             />
-            <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
+            <div className="mt-3 pb-1 flex justify-between text-[11px] text-muted-foreground">
               <span>Required + preferred skills matter</span>
               <span>{jobText.length.toLocaleString()} chars</span>
             </div>

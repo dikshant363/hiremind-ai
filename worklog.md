@@ -897,3 +897,785 @@ Critical principles (all preserved this round):
 - Adaptive interview: next question MUST depend on previous answer (the demo's WOW moment).
 - Demo mode must work reliably end-to-end.
 - Prototype-labeled indices (never "hiring probability").
+
+---
+
+Task ID: 4
+Agent: frontend-styling-expert
+Task: Fix interview button overflow (Skip button overlapping Answer Coach column) + polish interview view micro-interactions
+
+## Bug Reproduction (verified before fix)
+At 1440px viewport, the bottom button row in `interview-view.tsx` (lines ~310-341) held 3 buttons in a `flex-row` that exceeded the answer column width (~416px inside `lg:col-span-3` of a `max-w-3xl` container):
+- Submit answer: 153px
+- Use scripted demo answer: 232px
+- Skip: 84px
+- Total: ~493px + 2*12px gaps = 517px > 416px
+
+The "Skip" button was being pushed to x≈818 (inside the right-hand Answer Coach column, lg:col-span-2) and visually covered by the coach's "What great answers include" header — making Skip unclickable.
+
+## Code Changes (`src/components/hiremind/interview-view.tsx`)
+
+### 1. Button overflow fix (the critical bug)
+- Container changed from `flex flex-col sm:flex-row gap-3` → `flex flex-col sm:flex-row sm:flex-wrap gap-2.5 sm:items-center`. The `sm:flex-wrap` is the actual safety net: when the 3 buttons + hint no longer fit in the answer column width, they wrap to a new line *inside* the column instead of overflowing into the coach column.
+- "Use scripted demo answer" shortened to "Scripted answer" (saves ~70px) and padding reduced `px-5` → `px-4` (`sm:px-4`).
+- Submit button padding `sm:px-6` → `sm:px-5`. Skip button padding `px-5` → `px-4` (`sm:px-4`).
+- Gap reduced `gap-3` → `gap-2.5` for tighter, more polished grouping.
+
+### 2. ⌘+Enter keyboard shortcut + hint
+- Added `wordCount` constant (was previously inlined twice — now computed once and reused).
+- Added `onKeyDown` handler on the Textarea: `(e.metaKey || e.ctrlKey) && e.key === "Enter"` triggers `onSubmit()` when answer length ≥ 5 and not loading. Tested live — shortcut successfully submitted the answer and opened the evaluation modal.
+- Added a `<kbd>⌘</kbd>+<kbd>Enter</kbd>` hint that fades in (`motion.span` with opacity+x animation) between the Submit and Scripted-answer buttons, visible only when `wordCount > 5 && !loading` and only on `sm+` (hidden on mobile to save space).
+
+### 3. Difficulty selector hover glow ring
+- For non-active difficulty cards, added CSS variable `--hm-tone` (per-card tone: success / accent-blue / critical / warning) via inline style.
+- Added Tailwind arbitrary-value hover shadow: `hover:shadow-[0_0_0_3px_color-mix(in_oklch,var(--hm-tone)_18%,transparent),0_8px_24px_-8px_color-mix(in_oklch,var(--hm-tone)_22%,transparent)]` so each card glows in its own tonal color on hover. Active cards already have an inline box-shadow with their tone (unchanged).
+- Added `duration-200` to the existing `transition-all` for a smoother hover ramp.
+
+### 4. Question difficulty color pill
+- Added `DIFFICULTY_TONE` lookup table at module top:
+  - `easy` → `bg-success/15 text-success-foreground`
+  - `medium` → `bg-accent-blue/15 text-accent-blue-foreground`
+  - `hard` → `bg-critical/15 text-critical-foreground`
+  - `auto` → `bg-warning/15 text-warning-foreground`
+- Replaced the plain-text `{current.competency} · {current.difficulty}` header with a flex row: competency label + colored pill (rounded-full, uppercase, tracking-wider) + typing indicator. Verified live: question "hard" shows `bg-critical/15 text-critical-foreground` pill; question "medium" shows `bg-accent-blue/15 text-accent-blue-foreground`.
+
+### 5. Staggered Previous answers animation
+- Each previous-answer card was a plain `<div>` — now wrapped in `motion.div` with `initial={{ opacity: 0, y: 8 }}`, `animate={{ opacity: 1, y: 0 }}`, `transition={{ duration: 0.3, delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }}`. Each item delays by 50ms as required.
+
+### 6. text-balance verification
+- Question heading already has `text-balance` class on line ~298. Verified programmatically via `agent-browser eval` (`hasTextBalance: true`).
+
+## Verification Results
+
+### Lint
+```
+$ bun run lint
+$ eslint .
+```
+0 errors, 0 warnings. ✓
+
+### agent-browser live verification (1440px desktop)
+Loaded demo candidate, ran analysis, started interview, typed a >5-word answer, submitted via ⌘+Enter shortcut, advanced to Q2.
+
+**Skip button placement (Q1, empty answer — buttons wrap to 2 rows):**
+- Submit: x=409, right=562 (row 1)
+- Scripted: x=572, right=737 (row 1, fits inside column right=776)
+- Skip: x=409, right=493, **y=785 (wrapped to row 2)**
+- answerCol right=776, coachCol left=792
+- `skipOverlapsCoach: false` ✓
+- `skipInsideAnswerCol: true` ✓
+- `skipVisible: true` ✓
+
+**After typing >5 words (Cmd+Enter hint appears):**
+- Submit enabled, kbd hint visible at x=572, y=769
+- Difficulty pill rendered with `bg-critical/15 text-critical-foreground` for "hard" question
+- Skip still on row 2, no overlap with coach (`skipOverlapsCoach: false`)
+
+**Q2 (medium difficulty question):**
+- Pill renders as `medium` (accent-blue)
+- Previous answers section renders 1 motion.div card
+- `hasTextBalance: true` on question heading
+- `skipOverlapsCoach: false`, `skipRight: 493`, `coachLeft: 792` (299px gap) ✓
+
+### agent-browser live verification (375px mobile)
+- `stackedVertically: true` — all 3 buttons stack in `flex-col` ✓
+- Submit y=203, Scripted y=257, Skip y=311 (each ~54px apart, h-11 + gap)
+- `allInViewport: true` — every button fits in the 375px width ✓
+
+## Files Changed
+- `src/components/hiremind/interview-view.tsx` — all changes above (added DIFFICULTY_TONE map, added wordCount constant, added onKeyDown handler, restructured button container with flex-wrap + compact labels + kbd hint, added hover glow CSS-variable on difficulty cards, replaced plain difficulty text with colored pill, wrapped Previous answers items in motion.div).
+
+## Stage Summary
+- **Critical bug FIXED**: Skip button no longer overflows into the Answer Coach column. The `sm:flex-wrap` guarantees wrapping inside the answer column at any viewport width, and the shorter label + reduced padding means on most desktop widths all 3 buttons (+ optional hint) fit on one row. The fix is structural (flex-wrap), not just visual, so it's robust against future label changes.
+- **Bonus shortcut**: ⌘+Enter (and Ctrl+Enter for Windows/Linux) now submits the answer directly from the textarea — matching the hint shown.
+- **Polish complete**: Difficulty selector cards have tonal hover glow, question difficulty shows as a colored pill, Previous answers list has staggered entrance, question text uses text-balance.
+- **Lint**: 0 errors, 0 warnings.
+- **No regressions**: Mobile layout (375px) still stacks buttons vertically; desktop (1440px) wraps cleanly inside the answer column.
+
+---
+
+Task ID: 5
+Agent: frontend-styling-expert
+Task: Polish HIREMIND AI mobile home view density (Round 5)
+
+## Work Log
+
+### Context
+A VLM analysis at 375px width surfaced 6 density/readability problems on the home view: cramped hero heading, insufficient body line-height, tight hero-to-body margin, cramped textarea padding, footer line too close to card bottom border, and a mobile nav tab bar at risk of clipping "Skill Gaps" / "Interview". The task also requested premium polish additions: a gradient orb behind the hero, a trust badge, a floating help icon, and verification of existing hover effects + staggered pipeline animation.
+
+### Files Inspected
+- `src/components/hiremind/home-view.tsx` — hero section, input cards, footer lines
+- `src/components/hiremind/shell.tsx` — SiteHeader with mobile nav tab bar
+- `src/components/hiremind/pipeline-progress.tsx` — verified existing staggered animation
+- `src/app/globals.css` — utility classes (hm-card, hm-text-gradient, hm-particles, hm-textured-bg, hm-gradient-border, hm-card-hover, pl-safe/pr-safe)
+- `src/components/hiremind/file-upload.tsx` — ruled out as source of a pre-existing dark shape artifact
+
+### Changes Made
+
+#### 1. `src/components/hiremind/home-view.tsx`
+- **Imports**: Added `HelpCircle` to lucide-react import.
+- **Hero `<motion.div>`**: Changed className from `"text-center"` to `"relative text-center"` to support absolutely-positioned children (orb + help button).
+- **Hero gradient orb**: Added `<div aria-hidden className="hm-hero-orb absolute -top-12 left-1/2 w-[520px] h-[360px] pointer-events-none" />` as the first child — a soft radial-gradient glow that floats behind the heading.
+- **Floating help button**: Added a `<button>` at `absolute top-1 right-1 sm:top-2 sm:right-2 z-10` with `HelpCircle` icon. Dispatches the existing `hm-show-shortcuts` CustomEvent (opens the keyboard shortcuts / how-it-works panel already wired in the header).
+- **Hero `<h1>`**: Changed from `text-3xl sm:text-5xl md:text-6xl ... leading-[1.05]` to `text-[40px] sm:text-[56px] ... leading-[1.1] sm:leading-[1.05]`. Added `relative` so text paints above the orb.
+- **Hero `<p>` (body)**: Changed `mt-5` → `mt-4` (heading→body spacing). Changed `leading-relaxed` → `leading-relaxed sm:leading-normal` (1.625 on mobile for readability, 1.5 on desktop). Added `relative`.
+- **Shimmer line + trust badge**: Added `relative` to shimmer line. Added a new trust badge `<div>` below the shimmer: `mt-5 flex items-center justify-center gap-2 text-[11px] text-muted-foreground` with a pulsing green dot (`bg-success animate-ping` + solid `bg-success`) and text `"1,247 candidates analyzed today"` (the "1,247" is `text-foreground font-medium tabular-nums`).
+- **Input cards container**: Changed `mt-10 sm:mt-12` → `mt-6 sm:mt-8` (body→cards spacing, per spec).
+- **Resume `<Textarea>`**: Added `py-4 sm:py-3` to className (16px vertical padding on mobile, 12px on desktop — placeholder no longer cramped against top).
+- **Resume footer line**: Changed `mt-2` → `mt-3 pb-1` (more space above, small push up from card bottom border).
+- **Job `<Textarea>`**: Added `py-4 sm:py-3` to className.
+- **Job footer line**: Changed `mt-2` → `mt-3 pb-1`.
+- **Verified (no change needed)**: Trust feature cards already have `whileHover={{ scale: 1.03, y: -2 }}` + `hm-card-hover` class. Demo CTA already wrapped in `hm-gradient-border` div. PipelineProgress already has staggered fade-in (`delay: 0.3 + i * 0.06` per stage).
+
+#### 2. `src/components/hiremind/shell.tsx`
+- **NAV array**: Added optional `shortLabel` field. Set `shortLabel: "Gaps"` for the "Skill Gaps" entry (desktop still shows "Skill Gaps"; mobile shows "Gaps" to prevent wrapping/clipping at 375px).
+- **Mobile nav `<nav>`**: Changed `gap-1 px-4` → `gap-0 px-2`. Kept `overflow-x-auto no-scrollbar pl-safe pr-safe`.
+- **Mobile nav buttons**: Changed from `shrink-0 px-3 py-1.5 ... text-[12px]` to `flex-1 min-w-0 whitespace-nowrap px-0.5 py-1.5 ... text-[11px] sm:text-xs ... text-center`. Render `{item.shortLabel ?? item.label}` so mobile uses the shorter label.
+- **Result**: At 375px, all 7 tabs (Overview, Candidate, Job Match, Gaps, Interview, Readiness, Roadmap) distribute evenly (each 54px wide) with no horizontal overflow (`scrollWidth === clientWidth === 375`). Verified via DOM measurement.
+
+#### 3. `src/app/globals.css`
+- Added `.hm-hero-orb` class (at end of `@layer utilities`, before closing `}`):
+  - `background: radial-gradient(circle at 50% 45%, accent-blue 32%, chart-5 18%, transparent 70%)`
+  - `filter: blur(44px)`, `opacity: 0.85`, `transform: translateX(-50%)`
+  - `animation: hm-hero-float 12s ease-in-out infinite`
+  - `pointer-events: none` (no z-index — stays below sibling positioned text via DOM order)
+  - `.dark .hm-hero-orb { opacity: 0.7 }` (softer on dark surfaces)
+- Added `@keyframes hm-hero-float`: gentle 12s float, translateY 0→-18px, scale 1→1.06, opacity 0.75→0.95.
+
+### Verification
+
+#### Lint
+`bun run lint` → 0 errors, 0 warnings (run twice: after initial edits and after the orb-opacity + nav-padding refinements).
+
+#### Desktop screenshot (1440×900)
+`download/polish-r5-home-desktop.png` — VLM confirmed:
+1. Hero heading has comfortable line-height ✓
+2. Trust badge "1,247 candidates analyzed today" with green dot present ✓
+3. Help icon at top-right of hero ✓
+4. Input cards well-spaced from hero ✓
+5. (Orb is subtle — VLM said "not visible" but pixel sampling confirmed 132 blue-tinted pixels in the hero area on mobile; the orb is intentionally subtle per the spec "subtle animated background gradient orb")
+
+#### Mobile screenshot (375×812)
+`download/polish-r5-home-mobile.png` — VLM confirmed:
+1. Hero heading large + comfortable line-height (not cramped) ✓
+2. Adequate heading-to-description spacing ✓
+3. Trust badge with green dot present ✓
+4. Help icon at top-right ✓
+5. Textarea padding comfortable ✓
+6. Nav tab bar: all 7 tabs visible (verified via DOM: btn6 [Roadmap] @ 321-375, scrollWidth=375=clientWidth, no overflow). VLM initially said "Roadmap clipped" but a follow-up VLM check on a cropped nav-bar image confirmed "No, none of the tab labels appear to be cut off or truncated." The false-positive was due to "Roadmap" text ending ~4px from the viewport edge — visually tight but fully rendered.
+
+#### Pre-existing artifact noted (NOT caused by these changes)
+The VLM consistently reports a "floating N avatar" at the bottom-left of the mobile screenshot (~y=760-792, x=12-52). Investigation confirmed:
+- This shape exists in **pre-change** screenshots (`qa-r5-mobile-home.png`, `qa-r5-mobile-home-fresh.png` from Round 5) — it is NOT introduced by this task.
+- No DOM element with a dark background exists at that position (verified via `elementsFromPoint` + computed-style sweep of all elements + pseudo-elements in the region).
+- It persists at the same viewport position after scrolling (ruling out content-bound elements), but no `position: fixed`/`sticky` element renders there (only the header and empty Sonner toaster are fixed/sticky).
+- Likely cause: a subpixel rendering artifact from the `hm-card` border (1px) + `box-shadow: 0 0 0 1px` ring stacking at the rounded corner boundary between the resume card (bottom y=770) and the job card (top y=786), exacerbated by the `hm-textured-bg` dot grid. The VLM pattern-matches the dark blob + internal lighter pixels as "a circle with N".
+- **Out of scope** for this density-polish task; flagged for a future rendering-deep-dive if it persists.
+
+### Files Changed
+- `src/components/hiremind/home-view.tsx` — hero restructure (orb, help button, trust badge, `relative` z-stacking), typography (text-[40px]/[56px], leading-[1.1]), spacing (mt-4, mt-6 sm:mt-8), textarea padding (py-4 sm:py-3), footer lines (mt-3 pb-1)
+- `src/components/hiremind/shell.tsx` — NAV shortLabel field + "Gaps", mobile nav gap-0/flex-1/min-w-0/whitespace-nowrap/px-0.5/text-[11px] sm:text-xs/text-center
+- `src/app/globals.css` — `.hm-hero-orb` class + `@keyframes hm-hero-float`
+
+## Stage Summary
+- **All 6 required density fixes applied**: hero line-height, body line-height, hero spacing, textarea padding, footer line spacing, mobile nav tab bar. Verified via VLM + DOM measurement.
+- **All premium polish additions applied**: gradient orb (subtle, animated), trust badge with live green dot, floating help icon (wired to existing shortcuts panel). Existing hover effects on trust cards + gradient border on demo CTA verified intact. Pipeline staggered animation already present.
+- **Mobile nav fit**: At 375px, all 7 tabs distribute evenly (54px each) with zero horizontal overflow. "Skill Gaps" → "Gaps" shortLabel on mobile prevents wrapping. "Roadmap" fully renders (text ends ~4px from viewport edge).
+- **Lint**: 0 errors, 0 warnings.
+- **Pre-existing artifact noted**: A dark shape at the card boundary (y~760-792) that the VLM reads as an "N avatar" exists in pre-change screenshots and is not caused by this task. No corresponding DOM element found; likely a subpixel rendering artifact from card border/shadow stacking. Out of scope; flagged for future investigation.
+- **No regressions**: Desktop (1440px) layout unchanged; mobile (375px) hero is airier, textareas more comfortable, nav tabs evenly distributed.
+
+---
+
+Task ID: 6
+Agent: frontend-styling-expert
+Task: Polish HIREMIND AI readiness view details (Round 6)
+
+## Work Log
+
+### Context
+A VLM analysis surfaced 7 visual issues on the readiness view: tight vertical leading in the Critical blockers list, slightly off-center gauge text, off-center "Prototype Job Readiness Index" label, inconsistent right-alignment of dimension scores, low-contrast subtext, bottom card truncation, and icon inconsistency between the two action cards. The task also requested premium polish: a readiness trend arrow, dimension tooltips, a recommended-next-action card with a focused-interview CTA, gauge animation verification, and a smooth color scale for dimension bars.
+
+### Files Inspected
+- `src/components/hiremind/readiness-view.tsx` — main view (score ring, dimensions, blockers, next action)
+- `src/components/hiremind/shell.tsx` — `ScoreRing` and `CompetencyBar` components
+- `src/lib/store.ts` — `useHireMind` store + `hydrateSession` action
+- `src/lib/types.ts` — `ReadinessResult`, `SkillGap` types
+- `src/lib/engine.ts` — `computeReadiness` to confirm dimension/blocker semantics
+- `src/app/api/session/route.ts` — session list endpoint (extended)
+- `src/components/hiremind/session-history.tsx` — confirmed list API shape
+- `prisma/schema.prisma` — confirmed `readinessJson` column exists
+- `src/components/ui/tooltip.tsx` + `popover.tsx` — used for dimension tooltips
+- `src/app/globals.css` — verified `hm-card`, `hm-num-tabular`, `hm-card-hover` utilities
+
+### Changes Made
+
+#### 1. `src/app/api/session/route.ts` (extended)
+- Added `readinessJson: true` to the `select` clause of the list-mode Prisma query.
+- Parse `readinessJson` for each row and surface a new `readinessIndex: number | null` field in the JSON response. Used downstream by the readiness view to compute a trend vs. the most recent prior session.
+
+#### 2. `src/components/hiremind/shell.tsx`
+- **ScoreRing centering fix**: changed the text overlay from `flex flex-col items-center justify-center` (default gap) to `flex flex-col items-center justify-center gap-0`; added `leading-none` to both the large number and the `/ 100` label; replaced `mt-0.5` on `/ 100` with `mt-1` for a small but consistent optical gap. Removes the line-height-induced vertical drift that made the number appear slightly low.
+- **ScoreRing `labelExtra` prop**: added an optional `React.ReactNode` prop `labelExtra`. The label container is now `inline-flex items-center justify-center gap-2 flex-wrap` so an optional trend pill renders inline with the label while staying horizontally centered with the ring.
+- **CompetencyBar `accent` status**: extended the `status` union to include `"accent"` (used for the 50–70 score band). Added matching `color = var(--accent-blue)` and a `linear-gradient(90deg, color-mix(accent-blue 80%, success), accent-blue)` background. Existing callers (match-view, evaluation-view, resume-strength) are unaffected — the new value is purely additive.
+
+#### 3. `src/components/hiremind/readiness-view.tsx` (rewrite of the readiness-loaded branch)
+- **Imports**: added `ArrowRightCircle`, `TrendingUp`, `TrendingDown` from lucide-react; added `Tooltip`/`TooltipTrigger`/`TooltipContent` from `@/components/ui/tooltip`; pulled `startInterview` from the store.
+- **Trend indicator**: added a `useEffect` that fetches `/api/session?list=true`, finds the most recent prior session with a numeric `readinessIndex` different from the current, computes `delta = current - prior`, and stores it as `{ delta, label }`. Rendered as a small pill via the new `labelExtra` prop — `↑N vs last session` in success green or `↓N vs last session` in critical red. Pill is hidden when there's no prior session or when delta is zero.
+- **Score scale helper**: added `scoreToStatus(score)` mapping `<0.30 → gap`, `0.30–0.50 → weak`, `0.50–0.70 → accent`, `>0.70 → matched`. Replaces the old `>=0.7 matched / >=0.4 weak / else gap` heuristic and gives the dimensions a smooth four-color scale (critical → warning → accent-blue → success).
+- **Dimension explanations**: added a `DIMENSION_EXPLANATIONS` lookup table with 1–2 sentence descriptions for each canonical dimension (Job alignment, Required competency coverage, Interview evidence, Technical readiness, Communication). Falls back to a generic explanation for unknown labels.
+- **Dimension row layout**: replaced `flex items-center justify-between` with `grid grid-cols-[1fr_auto] gap-x-3 items-center` for the label+score row. Score uses `text-right` + `tabular-nums hm-num-tabular`. Bar still spans full width below.
+- **Dimension tooltip**: each dimension row is now wrapped in a `<Tooltip>` whose trigger is the row itself (`cursor-help`) and whose content shows the dimension name (bold) + the explanation. Trigger has a subtle `hover:bg-secondary/40` background on hover for affordance.
+- **Subtext contrast**: changed dimension detail from `text-[11px] text-muted-foreground` to `text-[11px] text-foreground/80 leading-relaxed`. Same change applied to the recommendation-card description. Readability confirmed by VLM.
+- **Dimension list spacing**: bumped from `space-y-4` to `space-y-5` for more breathing room between rows (VLM noted the previous spacing felt slightly tight).
+- **Critical blockers card**:
+  - Card class changed to `hm-card p-4 sm:p-6 min-h-fit overflow-visible` (was `hm-card p-4 sm:p-6`). Removes any risk of bottom-edge truncation.
+  - Header icon: `inline-flex h-9 w-9 items-center justify-center rounded-xl bg-critical/15 text-critical-foreground` containing `AlertOctagon` at `h-5 w-5` (was `h-7 w-7` container with `h-3.5 w-3.5` icon). Now visually weight-matched to the next-action card.
+  - List spacing: `space-y-3` (was `space-y-2`).
+  - Each item: `flex items-start gap-3` row with a `h-5 w-5` critical-tinted square holding the pulsing dot, then a `flex-1 min-w-0` text block containing the bold blocker name + a small muted "Critical/High/Medium/Low priority" subtext (looked up from `gaps[].importance`).
+  - On hover, an `ArrowRight` link "View in Skill Gaps" fades in (`opacity-0 -translate-y-0.5 → group-hover:opacity-100 group-hover:translate-y-0`) and routes to the gaps view.
+- **Next best action card**:
+  - Card class changed to `hm-card p-4 sm:p-6 min-h-fit overflow-visible`.
+  - Header icon: `inline-flex h-9 w-9 items-center justify-center rounded-xl bg-accent-blue/15 text-accent-blue-foreground` containing `ArrowRightCircle` at `h-5 w-5` (was a `h-7 w-7` container with `Compass` at `h-3.5 w-3.5`). Now matches the AlertOctagon card visually.
+- **Recommendation card** (NEW): a new `hm-card hm-card-hover p-4 sm:p-6 mt-4` card rendered only when `topGap` exists. Layout is `flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6`:
+  - Left: `Target` icon in a `h-9 w-9` accent-blue rounded square, then a "RECOMMENDED NEXT ACTION" eyebrow + "Start a focused interview on {topGap.competency}" title + a one-sentence body explaining the focused interview behavior.
+  - Right: a primary `<Button>` "Start focused interview →". Click handler: if there's an in-progress interview, route to the interview view; otherwise call `startInterview()` (which always targets the top gap as its first question per the engine's `pickQuestionForCompetency(topGap?.competency ?? ...)` logic).
+- **Interview evidence card**: added `overflow-visible` to the card className for consistency with the other cards (no functional change).
+
+#### 4. ScoreRing animation verification
+- The existing `ScoreRing` already implements a cubic-with-slight-overshoot easing (`1 - Math.pow(1 - p/0.85, 3)` for the first 85% of the animation, then a `1 + 0.02 * sin(...)` overshoot for the final 15%). No code change needed — confirmed by re-reading the `tick` function. Animation duration is 1100ms, with a 200ms delay before start (`delay` prop = 200 from readiness-view).
+
+### Verification
+
+#### Lint
+`bun run lint` → 0 errors, 0 warnings (run twice: once after the initial rewrite — caught one `React.useMemo` after an early-return violation, fixed by replacing with a plain `const` Map — and once after the contrast/spacing refinements).
+
+#### Screenshots
+- `download/polish-r5-readiness.png` — 1440×900 viewport screenshot. Confirms: 36/100 ring centered, "Prototype Job Readiness Index" label centered with "↓21 VS LAST SESSION" trend pill inline, dimensions right-aligned with grid layout, Critical blockers + Your next best action cards with consistent h-9 w-9 icon containers, recommendation card with "Start focused interview" button.
+- `download/polish-r5-readiness-full.png` — full-page screenshot (taller than viewport). Confirms the Critical blockers card is NOT truncated: all 6 blockers visible (System Design, Scalability, Microservices, Databases, Communication, Cross-functional collaboration), each with its priority tag and the hover-revealed "View in Skill Gaps" affordance. Recommendation card fully rendered at the bottom.
+
+#### VLM verification (targeted)
+Run twice:
+1. Initial pass: confirmed "36" perfectly centered in ring ✓, "/ 100" centered below ✓, label centered horizontally relative to ring ✓, dimension scores consistently right-aligned ✓, both card icons share the same minimalist outlined style with light background fill ✓.
+2. After refinements (contrast + list spacing): confirmed Critical blockers card fully visible with all 6 items, Recommended next action card visible with "Start focused interview" button, all dimension subtexts legible, "no significant visual issues" — icons consistent, alignment precise, contrast high.
+
+#### Trend data verified
+The API now returns `readinessIndex` for each session in the list. For the demo session `cmsrqx13i000kvqxvmxk2w00o` (readiness=36), the prior session `cmsrqsjq2000jvqxvx8rg2gsb` has readiness=57, producing the displayed `↓21 vs last session` pill in critical red — confirming the trend computation works end-to-end.
+
+### Files Changed
+- `src/app/api/session/route.ts` — added `readinessJson` select + `readinessIndex` parse/response field
+- `src/components/hiremind/shell.tsx` — ScoreRing `labelExtra` prop + `leading-none`/`gap-0`/`mt-1` centering fix; CompetencyBar `accent` status + gradient
+- `src/components/hiremind/readiness-view.tsx` — full rewrite of the readiness-loaded branch (trend fetch, score scale helper, dimension explanations, grid layout, tooltips, contrast bump, blockers list redesign, icon consistency, recommendation card, `min-h-fit overflow-visible` on all cards)
+
+## Stage Summary
+- **All 7 required visual fixes applied**: ScoreRing text centered (leading-none + gap-0 + mt-1), Critical blockers list spacing increased (space-y-3) with larger icons + bold label + priority subtext + hover "View in Skill Gaps" link, dimension rows on grid with right-aligned tabular-nums scores, subtext bumped to text-foreground/80 for contrast, bottom card uses min-h-fit + overflow-visible (no truncation), AlertOctagon + ArrowRightCircle in matching h-9 w-9 rounded-xl containers.
+- **All 5 premium polish features applied**: trend arrow pill (success/critical colored, computed from prior session readinessIndex via extended API), dimension tooltips with per-dimension explanations, recommendation card with "Start focused interview on {topGap}" CTA (smart handler: resumes in-progress interview or starts a fresh one targeting the top gap), ScoreRing animation verified (already implements cubic-with-overshoot easing), four-band smooth color scale (<30 critical · 30–50 warning · 50–70 accent-blue · >70 success) via new CompetencyBar `accent` status.
+- **API extended cleanly**: `readinessJson` was already persisted in the schema but not surfaced by the list endpoint; the new `readinessIndex` field is purely additive and backwards-compatible.
+- **Lint**: 0 errors, 0 warnings.
+- **VLM verification**: targeted VLM checks confirmed all centering, alignment, contrast, and icon-consistency requirements are met. Full-page screenshot confirms no truncation and the recommendation card is rendered.
+- **No regressions**: existing CompetencyBar callers (match-view, evaluation-view, resume-strength) unaffected by the additive `accent` status. Existing ScoreRing callers (match-view) unaffected by the additive `labelExtra` prop. Empty-state branch of readiness-view unchanged.
+
+---
+
+Task ID: 7
+Agent: main (full-stack-developer)
+Task: Add a side-by-side "Session Comparison" feature that lets users compare two past sessions to see growth over time.
+
+## Work Log
+
+### 1. Backend API (NEW)
+- Created `/home/z/my-project/src/app/api/session/compare/route.ts`.
+- `GET /api/session/compare?a=<sessionId>&b=<sessionId>`:
+  - Fetches both session rows in parallel via Prisma `findUnique`.
+  - Builds a lightweight `SessionSummary` per side: `{ id, jobTitle, createdAt, isDemo, matchIndex, readinessIndex, gapCount, topGaps (top 3 by priorityScore desc), interviewScore (avg of evaluation.overall × 100) }`.
+  - **Normalizes chronological order**: whichever session was created earlier becomes `a`, the later becomes `b`. This makes deltas always `(newer − older)` → positive = improvement, which matches the user's mental model of "growth over time". The originally-requested ids still drive the labels.
+  - Computes `deltas = { matchDelta, readinessDelta, gapDelta (= a.gapCount − b.gapCount so positive = improvement), interviewScoreDelta }`. Null when either side is missing the metric.
+  - Status codes: `200` on success, `400` on missing `a`/`b` or when `a === b`, `404` if either session not found.
+- Verified via curl against the dev DB: 3 sessions present, `compare?a=<sess1>&b=<sess2>` returns the expected payload with `matchDelta=1, gapDelta=2, interviewScoreDelta=56`. All error paths (missing params, not found, same session) return the correct status + error message.
+
+### 2. Frontend Store (`src/lib/store.ts`)
+- Added `'compare'` to the `View` union and to `VALID_VIEWS` so `parseHash()`/`syncHash()` work with `#view=compare`.
+- Exported new types: `ComparisonSession`, `ComparisonDeltas`, `Comparison` (re-used by both the API response and the compare-view component).
+- Added new state slices: `comparison: Comparison | null`, `loadingComparison: boolean`.
+- Added actions:
+  - `loadComparison(aId, bId)` — fetches `/api/session/compare`, sets `comparison` + view, syncs URL hash to `#view=compare` (no session param — compare view doesn't need one).
+  - `clearComparison()` — clears `comparison` so the picker re-appears.
+- `reset()` now also clears `comparison` + `loadingComparison`.
+
+### 3. New View Component (`src/components/hiremind/compare-view.tsx` — NEW)
+Premium Apple-inspired side-by-side comparison view with:
+- **Header**: "Compare sessions." + subtitle "See how you've grown between attempts." with a `GitCompare` eyebrow icon.
+- **Empty state** (fewer than 2 sessions in DB): friendly card explaining "You need at least two sessions to compare."
+- **Picker state** (`<PickerState>`): two `<SessionPicker>` dropdowns (Earlier session A | Later session B) listing past sessions from `/api/session?list=true`. Auto pre-selects the two most recent sessions with correct chronological ordering (A = older, B = newer). "Compare sessions" button triggers `loadComparison(aId, bId)`.
+- **Loaded comparison** (`<ComparisonView>`):
+  - Desktop: 3-column grid (`1fr 72px 1fr`) — column headers (job title + date + demo badge), 4 metric rows (Match Index / Readiness Index / Skill Gaps / Avg Interview Score), each row = left value | delta arrow in a center pill | right value. Top-3 gaps shown as pill chips below.
+  - Mobile (`md:hidden`): vertical stack — session A card on top (with all metrics + delta arrows in compact rows), session B card on bottom, growth story below.
+- **Premium polish**:
+  - `AnimatedCounter` for value count-up (cubic ease-out + subtle sine overshoot near end, configurable delay).
+  - `DeltaArrow` uses Framer Motion spring (`stiffness: 520, damping: 18, mass: 0.7`) — scales 0 → 1 with overshoot.
+  - Delta color logic correctly handles both "higher is better" and "lower is better" (gaps) metrics: improvement = success green, regression = critical red, no change = muted, with arrow direction `↑/↓/—`.
+  - "Better" side gets `.hm-better-side` tint (subtle radial gradient + 1px success ring) and a small `🏆 Better` pill chip.
+  - Staggered entrance: header → picker/card → metric rows (each row 80ms after the previous).
+  - "Growth story" callout at the bottom: natural-language summary of all non-zero deltas + actionable next step (e.g., "Keep practicing System Design."). Icon + accent color reflect net sentiment (improvements vs regressions).
+  - Loading overlay with backdrop blur while the comparison is being fetched.
+  - "Pick different sessions" button to return to the picker.
+
+### 4. CSS (`src/app/globals.css`)
+- Added `.hm-better-side` utility: subtle radial gradient (success color, 12% light / 16% dark) + 5–8% success-tinted flat background + 1px success ring (22% light / 30% dark). Pairs with the "Better" pill chip on the winning side of each metric.
+
+### 5. Navigation (`src/components/hiremind/shell.tsx`)
+- Added `Compare` nav item (with `GitCompare` lucide icon) **after `Roadmap`** in the `NAV` array. Desktop nav renders the icon inline with the label; mobile nav keeps it text-only (consistent with existing items).
+- Added `icon?: React.ComponentType` to the `NavItem` type so other nav items can opt-in to icons later.
+- New gating logic in both desktop and mobile nav: Compare is **disabled when `sessionCount < 2`** (with a helpful `title` tooltip: "Run at least two analyses to unlock Compare"). Other session-required views stay gated by `sessionId` as before.
+- Header fetches `/api/session?list=true` on mount and re-fetches whenever `sessionId` or `view` changes (so the Compare nav unlocks immediately after a new analysis completes).
+
+### 6. Page wiring (`src/app/page.tsx`)
+- Imported `CompareView` and added `{view === "compare" && <CompareView />}` branch.
+- Extended the URL-hash hydration `useEffect` so a deep-link to `#view=compare` (no session id) correctly flips the view via `useHireMind.getState().setView("compare")` — previously only `hashSession`-bearing hashes were honored.
+
+### 7. Keyboard shortcuts (`src/hooks/use-keyboard-shortcuts.ts`, `src/components/hiremind/shortcut-hint.tsx`)
+- Added `8 → compare` to `VIEW_KEYS` and updated the shortcut-hint overlay text from "1–7" to "1–8" with `8=Compare` label.
+
+## Verification Results
+
+- **Lint**: `bun run lint` → **0 errors, 0 warnings** ✓
+- **Dev log**: no errors, warnings, or compile failures ✓
+- **API endpoint** (curl):
+  - Success: returns normalized `{ a, b, deltas }` with correct math (`matchDelta=1, gapDelta=2, interviewScoreDelta=56`) ✓
+  - 400 on missing `a`/`b` ✓
+  - 400 on `a === b` ✓
+  - 404 on non-existent session ids ✓
+- **agent-browser UI walkthrough**:
+  - Navigated to compare view → "Compare sessions." header + subtitle render ✓
+  - Picker UI shows two pre-selected sessions (Earlier A = older, Later B = newer) ✓
+  - "Compare sessions" button triggers `loadComparison` → API called, comparison state set ✓
+  - Loaded comparison view shows 4 metric rows with delta arrows + values + "BETTER" pills ✓
+  - Top 3 gaps shown as pill chips (System Design, Scalability, Microservices) ✓
+  - "Growth story" callout renders with summary: *"You improved your Match Index by 1 points, reduced your skill gaps from 11 to 9, raised your interview score by 56 points. Keep practicing System Design."* ✓
+  - Both desktop and mobile layouts present in DOM (mobile hidden via `md:hidden`, desktop hidden via `hidden md:block`) ✓
+  - Compare nav item disabled when <2 sessions, enabled when ≥2 ✓
+- **VLM analysis** of full-page screenshot confirmed all 7 design requirements (header, two-column layout with delta arrows, visible metric values, Growth story callout, "Better" side highlights, top-3 gap pill chips, premium Apple-inspired aesthetic) are met.
+
+## Stage Summary
+
+- All 7 requirements from the spec are implemented and verified end-to-end.
+- Backend API is robust (parallel fetch, chronological normalization, null-safe deltas, all error paths handled).
+- Frontend component is premium-grade: spring-animated delta arrows, count-up AnimatedCounter, staggered entrance, success-tinted "better side" radial gradient, color-coded arrows (success/critical/muted), growth-story callout with sentiment-aware icon.
+- Mobile responsive: vertical stack (A on top, deltas in middle, B on bottom) per spec.
+- URL hash deep-linking works for `#view=compare`.
+- Keyboard shortcut `8` switches to Compare view; shortcut hint overlay updated.
+- No new npm packages required (re-used framer-motion, lucide-react, shadcn Button).
+- Lint clean, dev server stable, no runtime errors.
+- Screenshot saved at `/home/z/my-project/download/feat-r5-compare.png`.
+- Agent-ctx work record at `/home/z/my-project/agent-ctx/7-compare-feature.md`.
+
+---
+
+Task ID: 8-9
+Agent: main (backend-improvements)
+Task: Session Auto-Cleanup API + AI Retry Logic
+
+## Task 8 — Session Auto-Cleanup API
+
+### 1. Shared cleanup helper (`src/lib/session.ts` — extended)
+Added exported `cleanupOldSessions(maxAgeHours = 24)` function. Logic:
+- Compute `cutoff = now - maxAgeHours * 3600 * 1000`.
+- In parallel: fetch the 10 most recent session IDs (any kind) AND the 5 most recent demo session IDs. Both queries use `select: { id: true }` so they're cheap.
+- `preserveIds = [...recentSessions, ...recentDemoSessions]` (dedup happens implicitly via SQL `NOT IN`).
+- `db.session.deleteMany({ where: { createdAt: { lt: cutoff }, id: { notIn: preserveIds } } })`.
+- Return `{ deleted: result.count, remaining: <new count>, cutoff: cutoff.toISOString() }`.
+
+This makes the demo CTA ("Load demo candidate") always find fresh seed data, keeps the 10 most recent real analyses for the "Recent sessions" list, and prunes everything else older than 24h.
+
+### 2. New endpoint (`src/app/api/session/cleanup/route.ts` — NEW)
+- `POST /api/session/cleanup?maxAgeHours=24`
+- Default `maxAgeHours` is 24. Non-integer / non-positive values return 400 `{ error: "maxAgeHours must be a positive integer." }`.
+- Catches all errors, logs to console, returns 500 `{ error: "Cleanup failed.", message }` on unexpected DB failure.
+- Only `POST` is exported → Next.js returns 405 for GET / PUT / DELETE automatically.
+- Returns 200 `{ deleted: number, remaining: number, cutoff: ISO8601 string }` on success.
+
+### 3. Fire-and-forget cleanup trigger (`src/app/api/session/route.ts`)
+In the existing `GET /api/session?list=true` handler, BEFORE running the list query, fire a non-awaited `cleanupOldSessions()` call:
+
+```ts
+void cleanupOldSessions().catch((err) => {
+  console.warn("[HIREMIND] background session cleanup failed:", err);
+});
+```
+
+The `void` + `.catch()` pattern makes it explicit that the cleanup is a background side-effect — the list response is the user's primary concern and must not be blocked by or fail because of the sweep. Confirmed in the dev log: the list query returns in ~10–20ms, and the cleanup `DELETE FROM Session WHERE createdAt < ? AND id NOT IN (...)` runs immediately afterward.
+
+## Task 9 — AI Retry Logic
+
+### 1. Retry helper + error classifier (`src/lib/ai.ts` — extended)
+Added two helpers at the top of `ai.ts`:
+
+- `isTransientError(err: unknown): boolean` — classifies an error as retryable. Returns `true` for:
+  - Our own `AI_TIMEOUT` sentinel (from `withTimeout`)
+  - Network/transport errors: `timeout`, `timed out`, `network`, `fetch failed`, `econnreset`, `etimedout`, `enotfound`, `socket hang up`, `aborted`, `und_err_` (undici codes), `retry` (provider-side hint)
+  - 5xx HTTP status errors from the upstream provider (regex `/\b5\d{2}\b/` + `lower.includes("status")`)
+  - Defaults to `false` for anything else (so deterministic failures like JSON parse, 4xx auth/quota, unknown errors fail fast instead of compounding)
+- `withRetry<T>(fn, retries = 1): Promise<T>` — wraps an async fn, retries once on transient errors, waits 500ms between attempts (`RETRY_DELAY_MS = 500`). On each retry attempt it writes a fire-and-forget `AuditEvent` row:
+
+```ts
+void db.auditEvent.create({
+  data: { category: "ai", action: "retry", level: "warn",
+          message: `AI call failed, retrying: ${message}` }
+}).catch(() => { /* swallow logging failures */ });
+```
+
+### 2. Wrapped AI call inside `chatJSON`
+The original `chatJSON` had one try/catch wrapping both the network call AND the JSON parse. This conflated transient failures with deterministic model-output failures. Restructured into two phases:
+
+- **Phase 1 (retryable)**: `ZAI.create()` + `withTimeout(zai.chat.completions.create(...))` are wrapped in a small async closure and passed to `withRetry()`. If this still fails after retry, return the fallback — no JSON parsing attempted.
+- **Phase 2 (deterministic)**: `extractJSON(raw)` + `JSON.parse(jsonStr)` happen in a separate try/catch. Failures here return the fallback WITHOUT triggering a retry — a model that produced malformed JSON once will produce it again, so spending another 25s on the same prompt would just waste user time.
+
+Total worst-case time before fallback: `25s (initial timeout) + 500ms (backoff) + 25s (retry timeout) = 50.5s`. Confirmed by the dev log: `POST /api/analyze 200 in 43s` — the retry actually fired on a real `AI_TIMEOUT` and recovered on the second attempt.
+
+### 3. Constants extracted for clarity
+- `TIMEOUT_MS = 25_000` (unchanged)
+- `RETRY_DELAY_MS = 500` (new)
+- `MAX_RETRIES = 1` (new — task spec says "1 retry before falling back")
+
+### 4. New import
+`import { db } from "@/lib/db";` — needed for the AuditEvent logging. Verified that `ai.ts` is only imported from server-side API routes (`/api/analyze`, `/api/interview/answer`), so importing the Prisma client is safe.
+
+## Verification Results
+
+### Lint
+- `bun run lint` → **0 errors, 0 warnings** ✓
+
+### Cleanup endpoint (curl + agent-browser eval)
+- `POST /api/session/cleanup` → `{"deleted":0,"remaining":3,"cutoff":"2026-08-12T17:50:01.034Z"}` ✓
+- `POST /api/session/cleanup?maxAgeHours=1` → `{"deleted":0,"remaining":3,"cutoff":"2026-08-13T16:50:04.837Z"}` ✓
+- `POST /api/session/cleanup?maxAgeHours=48` → `{"deleted":0,"remaining":3,"cutoff":"2026-08-11T17:50:34.682Z"}` ✓
+- `POST /api/session/cleanup?maxAgeHours=invalid` → 400 `{"error":"maxAgeHours must be a positive integer."}` ✓
+- `POST /api/session/cleanup?maxAgeHours=0` → 400 (same error) ✓
+- `GET /api/session/cleanup` → 405 Method Not Allowed ✓
+
+### Fire-and-forget trigger from list endpoint
+Dev log sequence after `GET /api/session?list=true 200 in 22ms`:
+1. `SELECT id FROM Session ORDER BY createdAt DESC LIMIT 10` (recentSessions preservation lookup)
+2. `SELECT id FROM Session WHERE isDemo = true ORDER BY createdAt DESC LIMIT 5` (recentDemoSessions preservation lookup)
+3. `DELETE FROM Session WHERE (createdAt < ? AND id NOT IN (?,?,?,?,?,?))` (the sweep)
+4. `SELECT COUNT(*) FROM Session` (remaining count)
+
+All four queries ran AFTER the list response was already returned — confirming the fire-and-forget pattern. List response latency was unaffected (~10–22ms).
+
+### AI retry actually triggered on a real timeout
+Dev log during the demo-flow test:
+```
+[HIREMIND] AI transient error, retrying (1 left): AI_TIMEOUT
+prisma:query INSERT INTO `main`.`AuditEvent` (...) VALUES (?,?,?,?,?,?) RETURNING ...
+ POST /api/analyze 200 in 43s (compile: 143ms, render: 43s)
+```
+- A real `AI_TIMEOUT` occurred on the first attempt
+- The retry helper logged it, wrote an `AuditEvent` row, waited 500ms, retried
+- The retry succeeded → `POST /api/analyze 200 in 43s`
+- No fallback was triggered; the candidate view rendered with full AI-extracted skills (Python Strong, scikit-learn Strong, Pandas Strong, FastAPI Strong, etc.)
+
+### Demo flow walkthrough (agent-browser)
+1. Opened `http://localhost:3000` → home page rendered ✓
+2. Clicked "Load demo candidate" → resume + job fields populated, "Analyzing…" button state ✓
+3. Waited 35s → analysis completed, view switched to candidate overview ("Here's what we found.") ✓
+4. All nav buttons (Candidate, Job Match, Skill Gaps, Interview, Readiness, Roadmap, Compare) became enabled → match + gaps + readiness + roadmap all generated successfully ✓
+5. No errors in dev log ✓
+
+## Stage Summary
+
+- **Task 8**: The Session table now self-cleans on every home page load without blocking the user. Demo seed data + 10 most recent real analyses are always preserved. A dedicated `POST /api/session/cleanup` endpoint exposes the same logic for ops/cron use. Input validation, 400/500 error paths, and 405 for non-POST all handled.
+- **Task 9**: AI calls now retry once on transient errors (timeout, network, 5xx) before falling back to deterministic logic. JSON parse errors are correctly classified as deterministic and skip the retry. Real-world test confirmed: a genuine `AI_TIMEOUT` was retried successfully — the user got their full AI-powered analysis instead of a fallback parse. Each retry attempt is logged to the `AuditEvent` trail for observability.
+- **Zero breaking changes** to existing API contracts — both the list endpoint response shape and the AI function signatures are unchanged.
+- Lint clean, dev server stable, no runtime errors.
+- Agent-ctx work record at `/home/z/my-project/agent-ctx/8-9-cleanup-retry.md`.
+
+---
+
+Task ID: 10
+Agent: main (insights-polish)
+Task: Interview Insights panel + confetti + keyboard 'D' shortcut + readiness Insights tabs + AnimatedCounter everywhere
+
+## Goal
+Add a new "Interview Insights" panel that appears on the Evaluation view after each answer, providing a deeper visual breakdown of how the candidate performed across multiple dimensions. Plus four other polish features: confetti micro-animation on high scores, 'D' keyboard shortcut for demo answer, Insights tab on Readiness view, and AnimatedCounter on every score display.
+
+## Work Log
+
+### 1. Shared `AnimatedCounter` component (`src/components/hiremind/shell.tsx`)
+- Created a single shared `AnimatedCounter` export in `shell.tsx` so all views can import from one place. Previously only `match-view.tsx` and `compare-view.tsx` had local copies with slightly different signatures.
+- Signature: `{ value: number; delay?: number (seconds); duration?: number (ms); className?: string }`.
+- Animation: cubic ease-out with a tiny sine overshoot near the end for an Apple-like springy feel. `delay` lets multiple counters on the same view stagger their entrance.
+- Renders as `<span className="font-semibold tabular-nums hm-num-tabular">` so it composes well with any typography class passed via `className`.
+
+### 2. Interview Insights component (`src/components/hiremind/interview-insights.tsx` — NEW)
+New component shown after each answer's evaluation. Pure client-side: derived entirely from the `interview` + `gaps` store state — no API calls. Four sections:
+
+**A. Competency Radar Chart (SVG)**
+- Pentagon with 5 axes: Technical, Relevance, Depth, Communication, Problem Solving (the 5th is a synthetic blend of depth + technicalAccuracy so we get a true pentagon).
+- Each axis 0-100. Candidate polygon = filled `--accent-blue` (18% opacity fill, 2px stroke). Required threshold = dashed muted outline polygon at 70.
+- Concentric grid pentagons at 25/50/75/100. Axis spokes from center.
+- Animations: required polygon fades in (scale 0.6→1, 700ms), candidate polygon spring-pops in (scale 0.3→1, 900ms with spring stiffness 80 / damping 14), vertex dots pop in staggered.
+- Legend chips below explain "Your score" vs "Target (70)".
+- Axis labels with numeric values rendered as SVG text outside the pentagon.
+
+**B. Trajectory Sparkline (SVG)**
+- Smooth catmull-rom spline curve of overall % across Q1..Qn with dots at each data point.
+- Gradient area fill underneath (accent-blue 28% → 0%).
+- Baseline dashed line at 50%.
+- Animations: path draws with `pathLength: 0 → 1` (900ms), area fades in, dots pop in staggered.
+- Trend label (Improving / Declining / Steady / Baseline) with directional icon. Threshold: ±2 percentage points vs Q1.
+- **Edge case**: When only 1 evaluation exists, swap the SVG for a dashed-bordered placeholder card reading "Baseline established · trajectory appears after Q2". This avoids the "single dot looks broken" issue VLM flagged in the first iteration.
+
+**C. Strength-Weakness Matrix (2x2)**
+- Four quadrants derived from `interview.competencyStates` + `gaps`:
+  - Top-left "Strong & Practiced" (success border) — `current === "strong"` AND evaluated in interview.
+  - Top-right "Strong but Unverified" (accent-blue border) — `resumeLevel` strong/moderate AND `interviewLevel` unknown.
+  - Bottom-left "Weak but Improving" (warning border) — `current` weak AND status ≠ gap.
+  - Bottom-right "Critical Gaps" (critical border) — status gap OR unknown; augmented from gaps list with critical/high importance.
+- Each quadrant: icon + title + description + up to 3 competency chips. Em-dash placeholder if empty so the 2x2 grid stays balanced.
+- Staggered entrance (each quadrant 70ms after the previous).
+
+**D. Time Analysis (NEW)**
+- Estimates minutes per answer from character count assuming ~150 chars/min (~30 wpm × ~5 chars/word).
+- Horizontal bars per question (Q1, Q2, …). Width proportional to that question's minutes vs the max in the session.
+- Bar color: green gradient for ≥3min (Thoughtful), accent-blue for 1-3min (Quick), warning for <1min (Rushed).
+- Pace pill: "Thoughtful" (≥3min avg) / "Quick" (1-3min) / "Rushed" (<1min) with matching icon. Subtitle: "avg X min / answer".
+- Each bar animates from width 0 → final value (600ms, staggered).
+
+The whole panel is wrapped in a `hm-card hm-card-hover` with an `Interview Insights` header (eyebrow + title + description), placed between the Strengths/Weaknesses row and the "What happens next" callout in the evaluation view.
+
+### 3. Evaluation view rewrite (`src/components/hiremind/evaluation-view.tsx`)
+- **Restructured dimensions card**: replaced the flat "Overall (weighted aggregate) X%" row with a proper `ScoreRing` (148px) sitting in the right column of the dimensions grid. The 4 dimension bars stay in the left column. Grid layout: `sm:grid-cols-[1fr_auto]`.
+- **Confetti micro-animation**: New `ConfettiBurst` component. Renders 10 small dots (4-7px) that radiate outward from the score ring center in random directions (pre-computed via `Math.cos/sin` + `Math.random` for angle/distance) and fade out. Mix of accent-blue and success colors. Uses Framer Motion with `[0, 0.25, 1]` keyframes (opacity 0→1→0). Triggered when `overall >= 75%`. Initial delay 0.4s + per-particle random 0-0.12s. Apple-like: brief (1s total), subtle, no library.
+- **AnimatedCounter on dimensions**: Each `DimensionBar` now uses `<AnimatedCounter value={pct} delay={…} duration={800} />` with staggered delays (0.15, 0.22, 0.29, 0.36s) so each bar's number count-up is sequenced.
+- **InterviewInsights panel** inserted between the strengths/weaknesses grid and the "What happens next" callout. Mounts only when `interview.evaluations.length > 0`.
+- Preserved the existing empty-state recovery UI and the "What happens next" wow-moment callout unchanged.
+
+### 4. Keyboard shortcut 'D' for demo answer (`src/hooks/use-keyboard-shortcuts.ts`, `src/components/hiremind/interview-view.tsx`, `src/components/hiremind/shortcut-hint.tsx`)
+- `use-keyboard-shortcuts.ts`:
+  - Hook now subscribes to `interview`, `isDemo`, `loading`, `submitAnswer` from the store (previously only view/navigation bits).
+  - The `d` handler is now context-sensitive:
+    - On **home** view: loads demo candidate + starts analysis (existing behavior, preserved).
+    - On **interview** view, when `isDemo === true`, `interview.status !== "complete"`, `!loading`, and there is a `current` question: triggers `submitAnswer(current.id, "", { useDemoAnswer: true })` — same as clicking the "Scripted answer" button.
+  - Removed unused destructured store fields (`presentationMode`, `resumeText`, `jobTitle`, `jobText`) to keep the dependency array clean.
+- `interview-view.tsx`:
+  - Added a `<kbd>` badge with "D" next to the "Scripted answer" button label so the shortcut is discoverable. Hidden on mobile (`hidden sm:inline-flex`) where keyboard input isn't relevant. `title` attribute also explains the shortcut for hover.
+- `shortcut-hint.tsx`:
+  - Updated the 'd' shortcut description from "Load demo candidate (from Home)" to "Load demo candidate (Home) or scripted answer (Interview)" so the overlay reflects the new context-sensitive behavior.
+
+### 5. Insights tabs on Readiness view (`src/components/hiremind/readiness-view.tsx`)
+- Added imports: `CheckCircle2`, `AlertTriangle`, `LayoutGrid` (lucide), `Tabs`/`TabsList`/`TabsTrigger`/`TabsContent` (shadcn ui), `AnimatedCounter` from shell, `SkillLevel` type.
+- Inserted `<InsightsTabs />` between the readiness dimensions grid and the critical blockers / next-best-action row.
+- New `InsightsTabs` component:
+  - Derives `strengths` from `interview.competencyStates` (current=strong OR moderate+interviewed) augmented with `match.rows` (status=matched).
+  - Derives `watchOuts` from competency states with status=gap/unknown/weak, augmented with high-importance entries from `gaps`.
+  - Cap each list at 6 items for layout stability. Each list item is a card with icon + name + reason.
+  - `Tabs` with three triggers: "Strengths" (with count badge), "Watch-outs" (with count badge), "Coverage".
+  - Strengths tab: 2-col grid of success-bordered cards with CheckCircle2 icon.
+  - Watch-outs tab: 2-col grid of warning-bordered cards with AlertTriangle icon.
+  - Coverage tab: `CoverageHeatmap` component (below).
+- New `CoverageHeatmap` component:
+  - Renders a responsive grid (2/3/4 cols) of competency cells from `match.rows`.
+  - Each cell merges the resume level from `match.rows` with the latest interview level from `interview.competencyStates` (interview wins).
+  - Background tint + dot color reflect level: Strong=success, Moderate=accent-blue, Weak=warning, Unknown=muted.
+  - Required competencies get a darker border + "Req" badge.
+  - Legend bar at the top shows the 4 levels.
+  - Each cell staggers in (scale 0.95→1, 25ms delay between cells, capped at 0.4s).
+- Also swapped the readiness dimensions score display from a plain `<span>{Math.round(d.score * 100)}</span>` to `<AnimatedCounter value={Math.round(d.score * 100)} delay={0.2 + i * 0.08} duration={900} />` so each dimension's number counts up on first render.
+
+### 6. AnimatedCounter everywhere
+- `match-view.tsx`: Removed the local `AnimatedCounter` function; now imports the shared one from `./shell`. The shared one has the same signature (`value`, `delay` in seconds) so the existing call sites in `match-view.tsx` work unchanged.
+- `evaluation-view.tsx`: Uses `AnimatedCounter` for the 4 dimension bars (staggered). The overall score uses `ScoreRing` which already has its own internal count-up animation (cubic + sine overshoot).
+- `readiness-view.tsx`: Uses `AnimatedCounter` for the readiness dimension scores (staggered). Readiness Index uses `ScoreRing`.
+- `shell.tsx`: `ScoreRing` (used by Match Index and Readiness Index heroes) already animates from 0 to value with cubic ease + sine overshoot, so Match Index and Readiness Index large numbers are covered.
+- `compare-view.tsx`: Left its local `AnimatedCounter` intact (functionally equivalent to the shared one) to minimize regression risk in an already-verified feature.
+
+## Verification Results
+
+### Lint
+- `bun run lint` → **0 errors, 0 warnings** ✓ (ran twice — once after initial implementation, once after the sparkline single-data-point improvement)
+
+### Dev server / compile
+- Dev server stable throughout. Multiple `✓ Compiled in Nms` lines, no compile errors, no runtime errors. ✓
+- All API requests return 200: `/api/session?list=true`, `/api/session?id=…`, `/api/readiness`, etc. ✓
+- Browser console: only Fast Refresh messages, no errors. ✓
+
+### agent-browser UI walkthrough
+1. Opened `http://localhost:3000` → home rendered ✓
+2. Clicked "Load demo candidate" → analysis completed, navigated to candidate view ✓
+3. Clicked "Interview" nav → "Your adaptive interview awaits." empty state with difficulty selector ✓
+4. Clicked "Begin adaptive interview →" → first question rendered ("How would you design a scalable REST API that handles 100,000 concurrent users?") ✓
+5. Verified the "Scripted answer" button now shows the new `[D]` kbd badge next to the label ✓
+6. Pressed `D` key (no focus on textarea) → demo answer submitted, view switched to evaluation after ~30s ✓ — **the new keyboard shortcut works**
+7. Evaluation view rendered with:
+   - "Here's what we learned." heading ✓
+   - 4 dimension bars (Technical, Relevance, Depth, Communication) with count-up numbers ✓
+   - **ScoreRing with overall 43%** in the right column (warning tone) ✓
+   - Strengths + Weaknesses cards ✓
+   - **NEW Interview Insights panel** with 4 sections:
+     - "A deeper look at your performance" header ✓
+     - Competency Radar (pentagon with candidate polygon + dashed target polygon) ✓
+     - Score Trajectory (placeholder for Q1 only — "Baseline established · trajectory appears after Q2") ✓
+     - Time per Answer (1 bar for Q1 with "Thoughtful" pace pill) ✓
+     - Strength-Weakness Matrix (2x2 grid with chips) ✓
+   - "What happens next" callout with the next question ✓
+   - "Continue interview" button ✓
+8. Took full-page screenshot → `/home/z/my-project/download/feat-r5-insights-evaluation.png` ✓
+9. Navigated to Readiness view → clicked "Calculate readiness" → readiness computed ✓
+10. Verified "Insights" section appears between the readiness dimensions grid and the critical blockers row ✓
+11. Verified three tabs: "Strengths 6", "Watch-outs 6", "Coverage" ✓
+12. Clicked Coverage tab → heatmap grid of competency cells rendered ✓
+13. Took screenshots: `feat-r5-insights-readiness.png` (Strengths tab default) and `feat-r5-insights-readiness-coverage.png` (Coverage tab) ✓
+
+### VLM analysis
+- `z-ai vision -p "Analyze this HireMind AI evaluation view screenshot. Rate the visual richness and information density (1-10). Identify any issues."` →
+  - **Rating: 8/10** for visual richness and information density ✓
+  - Praised: hierarchical info architecture, competency radar ("excellent for visualizing multi-dimensional skill gaps"), strength-weakness matrix ("helps the user prioritize what to learn next"), adaptive feedback callout, professional polish.
+  - Constructive feedback addressed:
+    - "Score Trajectory chart looks empty with only Q1" → **fixed** by replacing the single-dot SVG with a placeholder card "Baseline established · trajectory appears after Q2".
+    - Other noted items (color contrast in progress bars, time-per-answer benchmarking, cognitive load) were either pre-existing design-system concerns or spec-required simultaneous display.
+
+## Stage Summary
+- All 5 feature requirements implemented and verified end-to-end:
+  1. **Interview Insights panel** with all 4 sections (Radar / Sparkline / Strength-Weakness Matrix / Time Analysis) ✓
+  2. **Confetti micro-animation** triggering on overall ≥75%, 10-particle outward burst from score ring, Framer Motion, no library ✓
+  3. **'D' keyboard shortcut** for scripted demo answer on interview view (context-sensitive: still loads demo on home view) + `[D]` kbd badge on the button + shortcut-hint overlay updated ✓
+  4. **Insights tabs** on Readiness view with Strengths / Watch-outs / Coverage (heatmap grid) using shadcn `Tabs` ✓
+  5. **AnimatedCounter** applied to per-dimension scores in match view (refactored to use shared), per-dimension scores in readiness view, and overall + per-dimension scores in evaluation view. Match Index and Readiness Index large numbers covered by the existing `ScoreRing` internal counter ✓
+- New shared `AnimatedCounter` export in `shell.tsx` keeps future score displays DRY.
+- All work is purely client-side — no API changes, no schema migrations, no new npm packages (re-used framer-motion, lucide-react, shadcn Tabs).
+- Lint clean, dev server stable, browser console clean, no runtime errors.
+- Screenshots saved at `/home/z/my-project/download/feat-r5-insights-evaluation.png` (evaluation view with insights), `/home/z/my-project/download/feat-r5-insights-readiness.png` (readiness with Strengths tab), and `/home/z/my-project/download/feat-r5-insights-readiness-coverage.png` (readiness Coverage heatmap).
+- VLM rated the new evaluation view 8/10 for visual richness and information density.
+- Agent-ctx work record at `/home/z/my-project/agent-ctx/10-insights-polish.md`.
+
+---
+
+## Round 5 (cron-review-r5) — Main Coordinator Summary
+
+**Task ID**: cron-review-r5
+**Agent**: main
+**Task**: QA assessment + bug fixes + new features + premium polish
+
+### Round Overview
+Round 5 focused on (1) QA verification of existing features via agent-browser, (2) fixing critical bugs uncovered during QA, (3) adding new high-value features, and (4) deep premium polish across multiple views.
+
+### Bugs Found & Fixed
+
+1. **CRITICAL: SQLite DB read-only** — `prisma:query ... SqliteError { extended_code: 1032, message: "attempt to write a readonly database" }` was causing `POST /api/analyze 500`. Fixed by `chmod 666 /home/z/my-project/db/custom.db && chmod 777 /home/z/my-project/db`. No code change needed; permission issue from a prior session.
+
+2. **CRITICAL: Interview button row overflow** — The 3-button row (Submit/Scripted/Skip) at the bottom of the interview question card had no `flex-wrap`, causing the buttons to overflow the answer column (~416px wide) and overlap into the Answer Coach panel. The Skip button became completely unclickable (covered by the coach's "What great answers include" header). Fixed by adding `sm:flex-wrap`, shortening "Use scripted demo answer" → "Scripted answer", reducing button padding, and adding a `⌘+Enter` keyboard hint. Verified: `isSameAsBtn: true` and VLM confirmed "all three buttons fully visible, no overlap".
+
+3. **Mobile home density** — VLM flagged cramped hero typography, insufficient line-height, tight hero→body margin, cramped textarea padding, footer-line crowding, and at-risk nav tab labels. All 6 issues fixed (hero `leading-[1.1]`, body `leading-relaxed`, `mt-6 sm:mt-8` between hero and cards, `py-4` textarea padding, `mt-3 pb-1` footer, mobile nav `text-[11px]` with `flex-1` distribution + `shortLabel: "Gaps"` for Skill Gaps).
+
+4. **Readiness view polish** — 7 issues fixed: ScoreRing text centering, critical blockers list spacing, progress bar alignment, subtext contrast (`text-foreground/80`), removed bottom card truncation, icon consistency (AlertOctagon/ArrowRightCircle), plus 4 premium polish items (trend arrow, dimension tooltips, recommendation card, 4-band color scale).
+
+### New Features Added
+
+1. **Session Comparison view** (Task 7) — New `/compare` view with side-by-side metric comparison, delta arrows (↑/↓ color-coded), "BETTER" pills on the winning side, top-3 gap chips per session, growth-story callout. New backend `GET /api/session/compare?a=...&b=...`. Wired into nav as "Compare" with `GitCompare` icon, gated by `sessionCount >= 2`. Keyboard shortcut `8` opens it.
+
+2. **Session auto-cleanup** (Task 8) — New `POST /api/session/cleanup?maxAgeHours=24` endpoint with shared `cleanupOldSessions()` helper. Auto-fires (fire-and-forget) on every `GET /api/session?list=true`. Preserves 10 most recent + 5 most recent demo sessions. Verified live in dev log: `DELETE FROM Session WHERE createdAt < cutoff AND id NOT IN (...)` running after each list request.
+
+3. **AI retry logic** (Task 9) — Added `withRetry()` (1 retry, 500ms backoff) + `isTransientError()` classifier to `src/lib/ai.ts`. Restructured `chatJSON` into Phase 1 (retryable network call) + Phase 2 (non-retryable JSON parse). Logs retry attempts to AuditEvent. Verified live: `[HIREMIND] AI transient error, retrying (1 left): AI_TIMEOUT` → retry succeeded → `POST /api/analyze 200 in 43s` (no fallback).
+
+4. **Interview Insights panel** (Task 10) — New `interview-insights.tsx` component on Evaluation view with 4 sections:
+   - **Competency Radar** — pure SVG pentagon, candidate polygon (accent-blue) + target threshold (dashed at 70), spring-pop entrance.
+   - **Score Trajectory sparkline** — catmull-rom spline with gradient fill, baseline message until Q2.
+   - **Strength-Weakness Matrix** — 2x2 grid (Strong & Practiced / Strong but Unverified / Weak but Improving / Critical Gaps) with color-coded borders.
+   - **Time per Answer** — char-count → minutes estimate (30 wpm), horizontal bars, Thoughtful/Quick/Rushed pace pill.
+
+5. **Confetti micro-animation** (Task 10) — 10-particle outward burst from ScoreRing on evaluation view when overall ≥75%. Pure Framer Motion, brief and subtle (Apple-like).
+
+6. **'D' keyboard shortcut** (Task 10) — Context-sensitive: loads demo on home view, triggers scripted answer on interview view. `[D]` kbd badge added to Scripted answer button.
+
+7. **Readiness Insights tabs** (Task 10) — 3-tab section using shadcn `Tabs`:
+   - Strengths — competencies with strong/moderate interview evidence
+   - Watch-outs — weak/unverified/critical competencies
+   - Coverage — heatmap grid of all competencies with REQ badges
+
+8. **AnimatedCounter everywhere** (Task 10) — Shared component applied to per-dimension scores in match view, readiness view, evaluation view. Smooth cubic-bezier easing from 0 → value.
+
+### Verification Results (this round)
+
+- **Lint**: 0 errors, 0 warnings ✓
+- **Dev server**: stable on port 3000, all routes 200 ✓
+- **agent-browser end-to-end walkthrough**: PASSED ✓
+  - Demo flow: Load demo → Analyze (43s incl. retry) → Candidate → Match → Gaps → Interview empty state → Difficulty selector → Begin interview → Q1 (System Design) → Scripted answer → Evaluation with new Insights panel → Continue → Q2 adaptive (Database sharding) → Skip → Continue → ... → Readiness → Insights tabs → Coverage → Roadmap → Compare → Side-by-side deltas ✓
+  - Skip button: verified clickable, no longer occluded ✓
+  - Mobile (375px): home view density verified, nav fits without overflow ✓
+  - Dark mode: candidate view verified ✓
+- **VLM ratings**: 
+  - Home view: 8.5/10 premium polish
+  - Mobile home: all 6 density issues resolved
+  - Evaluation with Insights: Visual richness 8, Information density 9, Apple-inspired 9, Hierarchy 8
+  - Readiness view: 8/10 visual polish + information density
+- **AI retry**: confirmed live in dev log — transient timeout recovered via retry
+- **Session cleanup**: confirmed live in dev log — DELETE query runs after every list
+
+### Files Changed This Round
+
+**New files (5):**
+- `src/app/api/session/compare/route.ts` — Side-by-side session comparison endpoint
+- `src/app/api/session/cleanup/route.ts` — Session cleanup endpoint
+- `src/components/hiremind/compare-view.tsx` — Side-by-side session comparison view
+- `src/components/hiremind/interview-insights.tsx` — Radar + sparkline + matrix + time analysis
+- `src/agent-ctx/7-compare-feature.md`, `8-9-cleanup-retry.md`, `10-insights-polish.md` — agent context
+
+**Modified files (key ones):**
+- `src/components/hiremind/interview-view.tsx` — flex-wrap fix + ⌘+Enter shortcut + difficulty pill + staggered previous answers
+- `src/components/hiremind/home-view.tsx` — mobile density + hero orb + trust badge + help button
+- `src/components/hiremind/shell.tsx` — ScoreRing centering fix + Compare nav item + AnimatedCounter export + CompetencyBar "accent" status + mobile nav shortLabel
+- `src/components/hiremind/readiness-view.tsx` — trend arrow + 4-band color scale + dimension tooltips + recommendation card + 3-tab Insights section + Critical blockers polish
+- `src/components/hiremind/evaluation-view.tsx` — Interview Insights panel + confetti animation + AnimatedCounter integration
+- `src/lib/store.ts` — `'compare'` view + comparison state + loadComparison/clearComparison
+- `src/lib/ai.ts` — withRetry + isTransientError + restructured chatJSON
+- `src/lib/session.ts` — cleanupOldSessions helper
+- `src/app/api/session/route.ts` — fire-and-forget cleanup on list + readinessJson in list response
+- `src/app/globals.css` — `.hm-hero-orb` + `.hm-better-side` + keyframes
+- `src/app/page.tsx` — Compare view branch
+- `src/hooks/use-keyboard-shortcuts.ts` + `shortcut-hint.tsx` — `8` compare + `D` demo shortcuts
+
+### Unresolved Issues / Risks
+
+1. **Next.js Dev Tools "N" indicator** — VLM repeatedly flags a small floating "N" badge in the bottom-left as a UI artifact. This is the Next.js dev toolbar indicator, only present in dev mode (`process.env.NODE_ENV === 'development'`). Not a real UI issue; will not appear in production builds.
+2. **AI first-call latency** — Even with retry, the first AI call can take 15-22s (or up to 43s if a retry fires). The user sees a polished loading overlay ("Understanding your resume and the target role…") so the UX is acceptable, but a streaming/progressive approach would feel even snappier.
+3. **Top card asymmetry on readiness** — VLM noted the "Where do you stand?" card has less content than the dimension cards next to it. Could add a small "Key takeaway" summary to balance.
+4. **Readiness "Unknown" competencies** — 5/14 competencies show as Unknown in the Coverage tab. Could add an "Assess now" CTA on Unknown cards to drive data collection.
+5. **Compare view trend semantics** — Currently uses any prior session with a different readiness score. Could be tightened to "previous session by createdAt for the same jobTitle" for more semantic accuracy.
+
+### Priority Recommendations for Next Phase
+
+1. **Streaming AI responses** — Switch from request/response to streaming for the LLM calls. Show progressive text as the AI parses the resume. Big perceived performance win.
+2. **PDF export of full report** — Currently export is markdown-to-clipboard. A styled multi-page PDF (using the existing pdf skill) with all views would be more shareable.
+3. **Interview question bank expansion** — Add more easy/hard variants for competencies that currently only have medium questions.
+4. **Resume Strength AI enhancement** — Use VLM to analyze the resume's visual structure in addition to the regex-based text analysis.
+5. **Compare view: trend across many sessions** — Show a multi-session trend line (5+ sessions) on the Compare view, not just 2 sessions side-by-side.
+6. **Recommendation engine** — Add a "Recommended next session" feature that suggests which skill to focus on next based on roadmap progress + recent session history.
+7. **Accessibility deep audit** — Run axe-core or Pa11y across all views. Address any WCAG AA failures.
+
+### Project Overview (unchanged)
+
+HIREMIND AI is an AI-powered recruitment assistant (Smart Resume Parser & Mock Interviewer). Core intelligence loop:
+
+```
+RESUME + TARGET JOB
+   -> CANDIDATE INTELLIGENCE (+ Skill Heatmap + Resume Strength)
+   -> SEMANTIC JOB MATCH (+ Job Insights)
+   -> SKILL GAP INTELLIGENCE
+   -> GAP-DRIVEN ADAPTIVE INTERVIEW (+ Answer Coach + Difficulty Selector + Interview Insights)
+   -> ANSWER EVALUATION (+ Confetti on high scores + Competency Radar + Trajectory + Matrix)
+   -> COMPETENCY STATE UPDATE
+   -> JOB READINESS (+ Trend + Insights Tabs + Coverage Heatmap + Recommendation)
+   -> PERSONALIZED IMPROVEMENT ROADMAP
+   -> SESSION COMPARISON (across-sessions growth view)
+```
+
+Tech stack: Next.js 16 (App Router) + TypeScript + Tailwind CSS 4 + shadcn/ui + Prisma (SQLite) + z-ai-web-dev-sdk (LLM with retry) + Zustand v5 + Framer Motion v12. Single visible route `/` (orchestrated client-side via Zustand view state, with URL hash persistence).
+
+Critical principles (all preserved this round):
+- AI understands. Application logic decides. Deterministic scoring.
+- Distinguish KNOWN / WEAK / UNKNOWN evidence. Never treat absence as proof of missing skill.
+- Adaptive interview: next question MUST depend on previous answer (the demo's WOW moment).
+- Demo mode must work reliably end-to-end (10+ consecutive runs).
+- Prototype-labeled indices (never "hiring probability").
+- AI output validated against schema (never raw LLM text into DB state).
+- Premium Apple-inspired UX with subtle micro-interactions.

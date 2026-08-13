@@ -20,8 +20,11 @@ import type {
 } from "./types";
 import { normalizeSkill } from "./taxonomy";
 import { evidenceStrength } from "./text";
+import { db } from "@/lib/db";
 
 const TIMEOUT_MS = 25_000;
+const RETRY_DELAY_MS = 500;
+const MAX_RETRIES = 1;
 
 async function withTimeout<T>(p: Promise<T>, ms = TIMEOUT_MS): Promise<T> {
   return Promise.race([
@@ -30,20 +33,121 @@ async function withTimeout<T>(p: Promise<T>, ms = TIMEOUT_MS): Promise<T> {
   ]);
 }
 
-async function chatJSON<T>(system: string, user: string, fallback: T): Promise<{ data: T; usedFallback: boolean; raw?: string }> {
+/**
+ * Classify an error as transient (worth retrying) or deterministic (skip retry).
+ *
+ * Transient errors include:
+ *   - Network failures (fetch, ECONNRESET, ETIMEDOUT, socket hang up, aborted)
+ *   - Our own AI_TIMEOUT sentinel
+ *   - 5xx HTTP errors from the upstream provider
+ *
+ * Deterministic errors include:
+ *   - JSON parse / SyntaxError (bad model output)
+ *   - 4xx HTTP errors (auth, bad request, quota — won't fix themselves)
+ *   - Anything we can't classify as transient defaults to "do not retry" so we
+ *     fail fast instead of compounding a hopeless situation.
+ */
+function isTransientError(err: unknown): boolean {
+  const message = (err as Error)?.message ?? String(err);
+  if (!message) return false;
+  const lower = message.toLowerCase();
+  // Our own timeout sentinel.
+  if (lower.includes("ai_timeout")) return true;
+  // Network / transport class.
+  if (
+    lower.includes("timeout") ||
+    lower.includes("timed out") ||
+    lower.includes("network") ||
+    lower.includes("fetch failed") ||
+    lower.includes("econnreset") ||
+    lower.includes("etimedout") ||
+    lower.includes("enotfound") ||
+    lower.includes("socket hang up") ||
+    lower.includes("aborted") ||
+    lower.includes("und_err_") /* undici error codes */ ||
+    lower.includes("retry") // provider-side retry hint
+  ) {
+    return true;
+  }
+  // 5xx HTTP status from upstream provider.
+  if (/\b5\d{2}\b/.test(lower) && lower.includes("status")) return true;
+  return false;
+}
+
+/**
+ * Retry helper. Wraps an async fn and retries on transient errors only.
+ * JSON parse / validation / 4xx errors are deterministic and propagate
+ * immediately — there's no point burning another 15s on a response shape
+ * the model can't produce.
+ *
+ * On each retry attempt we log a warning to the AuditEvent trail (fire-and-
+ * forget) so operators can observe flakiness trends without bouncing logs.
+ *
+ * Total worst-case time before fallback:
+ *   25s (initial timeout) + 500ms (backoff) + 25s (retry timeout) = 50.5s
+ */
+async function withRetry<T>(fn: () => Promise<T>, retries = MAX_RETRIES): Promise<T> {
   try {
-    const zai = await ZAI.create();
-    const completion = await withTimeout(
-      zai.chat.completions.create({
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: user },
-        ],
-        thinking: { type: "disabled" },
-      })
+    return await fn();
+  } catch (err) {
+    if (retries <= 0) throw err;
+    if (!isTransientError(err)) throw err;
+
+    const message = (err as Error)?.message ?? String(err);
+    console.warn(
+      `[HIREMIND] AI transient error, retrying (${retries} left): ${message}`
     );
-    const raw = completion.choices[0]?.message?.content ?? "";
-    // Extract JSON from the response (handles ```json fences)
+
+    // Fire-and-forget audit log — don't let observability break the call path.
+    void db.auditEvent
+      .create({
+        data: {
+          category: "ai",
+          action: "retry",
+          level: "warn",
+          message: `AI call failed, retrying: ${message}`,
+        },
+      })
+      .catch(() => {
+        /* swallow logging failures */
+      });
+
+    await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+    return withRetry(fn, retries - 1);
+  }
+}
+
+async function chatJSON<T>(system: string, user: string, fallback: T): Promise<{ data: T; usedFallback: boolean; raw?: string }> {
+  // Phase 1: get a raw completion string from the model, with retry on transient
+  // errors (timeout / network). JSON parsing is excluded from retry because a
+  // malformed response is deterministic — retrying would just waste 25 more
+  // seconds producing the same broken JSON.
+  let raw = "";
+  try {
+    const fetchCompletion = async () => {
+      const zai = await ZAI.create();
+      return withTimeout(
+        zai.chat.completions.create({
+          messages: [
+            { role: "system", content: system },
+            { role: "user", content: user },
+          ],
+          thinking: { type: "disabled" },
+        })
+      );
+    };
+    const completion = await withRetry(fetchCompletion);
+    raw = completion.choices[0]?.message?.content ?? "";
+  } catch (err) {
+    console.warn(
+      "[HIREMIND] AI call failed after retry, using fallback:",
+      (err as Error).message
+    );
+    return { data: fallback, usedFallback: true };
+  }
+
+  // Phase 2: parse JSON — deterministic. No retry.
+  try {
     const jsonStr = extractJSON(raw);
     if (!jsonStr) {
       return { data: fallback, usedFallback: true, raw };
@@ -51,8 +155,11 @@ async function chatJSON<T>(system: string, user: string, fallback: T): Promise<{
     const parsed = JSON.parse(jsonStr);
     return { data: parsed as T, usedFallback: false, raw };
   } catch (err) {
-    console.warn("[HIREMIND] AI call failed, using fallback:", (err as Error).message);
-    return { data: fallback, usedFallback: true };
+    console.warn(
+      "[HIREMIND] AI response JSON parse failed (deterministic, no retry), using fallback:",
+      (err as Error).message
+    );
+    return { data: fallback, usedFallback: true, raw };
   }
 }
 

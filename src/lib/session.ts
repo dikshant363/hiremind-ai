@@ -110,3 +110,58 @@ export async function createSessionRecord(opts: {
   });
   return row.id;
 }
+
+/**
+ * Cleanup old sessions.
+ *
+ * - Sessions older than `maxAgeHours` (default 24h) are deleted.
+ * - The 10 most recent sessions are ALWAYS preserved (regardless of age).
+ * - The 5 most recent demo sessions are ALWAYS preserved (regardless of age),
+ *   so the "Load demo candidate" CTA on the home page always has fresh seed data.
+ *
+ * Returns the count of deleted rows, the remaining row count, and the ISO8601
+ * cutoff timestamp that was used. Safe to call fire-and-forget from the session
+ * list endpoint — every home page load triggers a background sweep.
+ */
+export async function cleanupOldSessions(
+  maxAgeHours = 24
+): Promise<{ deleted: number; remaining: number; cutoff: string }> {
+  const cutoff = new Date(Date.now() - maxAgeHours * 60 * 60 * 1000);
+
+  // Preserve the 10 most recent sessions (any kind) and the 5 most recent demo
+  // sessions. Run both lookups in parallel — they hit different sort orders but
+  // both touch the same index so this is cheap.
+  const [recentSessions, recentDemoSessions] = await Promise.all([
+    db.session.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      select: { id: true },
+    }),
+    db.session.findMany({
+      where: { isDemo: true },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: { id: true },
+    }),
+  ]);
+
+  const preserveIds = [
+    ...recentSessions.map((s) => s.id),
+    ...recentDemoSessions.map((s) => s.id),
+  ];
+
+  const result = await db.session.deleteMany({
+    where: {
+      createdAt: { lt: cutoff },
+      id: { notIn: preserveIds },
+    },
+  });
+
+  const remaining = await db.session.count();
+
+  return {
+    deleted: result.count,
+    remaining,
+    cutoff: cutoff.toISOString(),
+  };
+}

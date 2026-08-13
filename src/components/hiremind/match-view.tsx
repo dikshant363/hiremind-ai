@@ -5,28 +5,9 @@ import { motion } from "framer-motion";
 import { ArrowRight, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHireMind } from "@/lib/store";
-import { ScoreRing, CompetencyBar, StatusPill } from "./shell";
+import { ScoreRing, CompetencyBar, StatusPill, AnimatedCounter } from "./shell";
 import { JobInsights } from "./job-insights";
 import type { MatchStatus } from "@/lib/types";
-
-/** Animated number counter for score displays */
-function AnimatedCounter({ value, delay = 0 }: { value: number; delay?: number }) {
-  const [display, setDisplay] = React.useState(0);
-  React.useEffect(() => {
-    const start = performance.now();
-    const dur = 700;
-    let raf = 0;
-    const tick = (t: number) => {
-      const p = Math.min(1, (t - start) / dur);
-      const eased = 1 - Math.pow(1 - p, 3);
-      setDisplay(Math.round(value * eased));
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    const timeout = setTimeout(() => { raf = requestAnimationFrame(tick); }, delay * 1000);
-    return () => { clearTimeout(timeout); cancelAnimationFrame(raf); };
-  }, [value, delay]);
-  return <span className="font-semibold tabular-nums hm-num-tabular">{display}</span>;
-}
 
 export function MatchView() {
   const { match, setView } = useHireMind();

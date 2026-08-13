@@ -12,19 +12,34 @@ const VIEW_KEYS: Record<string, View> = {
   "5": "interview",
   "6": "readiness",
   "7": "roadmap",
+  "8": "compare",
 };
 
 /**
  * Keyboard shortcuts hook for power users and demo presenters.
- * - 1-7: Switch to corresponding nav view
- * - d: Load demo candidate (from home view)
+ * - 1-8: Switch to corresponding nav view
+ * - d: Load demo candidate (from home view) OR trigger scripted demo answer
+ *      (from interview view, only when session is a demo and interview active)
  * - p: Toggle presentation mode
  * - t: Toggle theme
  * - Escape: Go back to home view
  * - ?: Show shortcut hint overlay
  */
 export function useKeyboardShortcuts() {
-  const { view, setView, sessionId, presentationMode, togglePresentationMode, resumeText, jobTitle, jobText, setResumeText, setJobTitle, setJobText, analyze } = useHireMind();
+  const {
+    view,
+    setView,
+    sessionId,
+    togglePresentationMode,
+    setResumeText,
+    setJobTitle,
+    setJobText,
+    analyze,
+    interview,
+    isDemo,
+    loading,
+    submitAnswer,
+  } = useHireMind();
   const [showHints, setShowHints] = useState(false);
 
   const handleKeyDown = useCallback(
@@ -35,7 +50,7 @@ export function useKeyboardShortcuts() {
         el instanceof HTMLInputElement ||
         el instanceof HTMLTextAreaElement ||
         el instanceof HTMLSelectElement ||
-        (el?.isContentEditable)
+        el?.isContentEditable
       ) {
         return;
       }
@@ -57,7 +72,7 @@ export function useKeyboardShortcuts() {
         return;
       }
 
-      // 1-7: switch views
+      // 1-8: switch views
       if (VIEW_KEYS[key]) {
         const target = VIEW_KEYS[key];
         // Views that need a session should only work if we have one
@@ -68,14 +83,33 @@ export function useKeyboardShortcuts() {
         return;
       }
 
-      // d: Load demo candidate
-      if (key === "d" && view === "home") {
-        e.preventDefault();
-        setResumeText(DEMO_RESUME);
-        setJobTitle(DEMO_JOB_TITLE);
-        setJobText(DEMO_JOB);
-        analyze({ demo: true });
-        return;
+      // d: context-sensitive demo shortcut.
+      //  - On home view: load demo candidate and start analysis.
+      //  - On interview view with a demo session and an active question:
+      //    trigger the scripted demo answer (same as the "Scripted answer" button).
+      if (key === "d") {
+        if (view === "home") {
+          e.preventDefault();
+          setResumeText(DEMO_RESUME);
+          setJobTitle(DEMO_JOB_TITLE);
+          setJobText(DEMO_JOB);
+          analyze({ demo: true });
+          return;
+        }
+        if (
+          view === "interview" &&
+          isDemo &&
+          interview &&
+          interview.status !== "complete" &&
+          !loading
+        ) {
+          const current = interview.questions[interview.currentIndex];
+          if (current) {
+            e.preventDefault();
+            submitAnswer(current.id, "", { useDemoAnswer: true });
+          }
+          return;
+        }
       }
 
       // p: Toggle presentation mode
@@ -93,7 +127,20 @@ export function useKeyboardShortcuts() {
         return;
       }
     },
-    [view, setView, sessionId, togglePresentationMode, setResumeText, setJobTitle, setJobText, analyze]
+    [
+      view,
+      setView,
+      sessionId,
+      togglePresentationMode,
+      setResumeText,
+      setJobTitle,
+      setJobText,
+      analyze,
+      interview,
+      isDemo,
+      loading,
+      submitAnswer,
+    ]
   );
 
   useEffect(() => {
