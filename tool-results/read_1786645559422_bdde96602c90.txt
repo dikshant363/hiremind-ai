@@ -1,0 +1,1045 @@
+     1→@import "tailwindcss";
+     2→@import "tw-animate-css";
+     3→
+     4→@custom-variant dark (&:is(.dark *));
+     5→
+     6→@theme inline {
+     7→  --color-background: var(--background);
+     8→  --color-foreground: var(--foreground);
+     9→  --font-sans: var(--font-geist-sans);
+    10→  --font-mono: var(--font-geist-mono);
+    11→  --color-sidebar-ring: var(--sidebar-ring);
+    12→  --color-sidebar-border: var(--sidebar-border);
+    13→  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    14→  --color-sidebar-accent: var(--sidebar-accent);
+    15→  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    16→  --color-sidebar-primary: var(--sidebar-primary);
+    17→  --color-sidebar-foreground: var(--sidebar-foreground);
+    18→  --color-sidebar: var(--sidebar);
+    19→  --color-chart-5: var(--chart-5);
+    20→  --color-chart-4: var(--chart-4);
+    21→  --color-chart-3: var(--chart-3);
+    22→  --color-chart-2: var(--chart-2);
+    23→  --color-chart-1: var(--chart-1);
+    24→  --color-ring: var(--ring);
+    25→  --color-input: var(--input);
+    26→  --color-border: var(--border);
+    27→  --color-destructive: var(--destructive);
+    28→  --color-accent-foreground: var(--accent-foreground);
+    29→  --color-accent: var(--accent);
+    30→  --color-muted-foreground: var(--muted-foreground);
+    31→  --color-muted: var(--muted);
+    32→  --color-secondary-foreground: var(--secondary-foreground);
+    33→  --color-secondary: var(--secondary);
+    34→  --color-primary-foreground: var(--primary-foreground);
+    35→  --color-primary: var(--primary);
+    36→  --color-popover-foreground: var(--popover-foreground);
+    37→  --color-popover: var(--popover);
+    38→  --color-card-foreground: var(--card-foreground);
+    39→  --color-card: var(--card);
+    40→  --radius-sm: calc(var(--radius) - 4px);
+    41→  --radius-md: calc(var(--radius) - 2px);
+    42→  --radius-lg: var(--radius);
+    43→  --radius-xl: calc(var(--radius) + 4px);
+    44→
+    45→  /* HIREMIND semantic tokens — premium Apple-inspired palette */
+    46→  --color-success: var(--success);
+    47→  --color-success-foreground: var(--success-foreground);
+    48→  --color-warning: var(--warning);
+    49→  --color-warning-foreground: var(--warning-foreground);
+    50→  --color-critical: var(--critical);
+    51→  --color-critical-foreground: var(--critical-foreground);
+    52→  --color-surface: var(--surface);
+    53→  --color-surface-foreground: var(--surface-foreground);
+    54→  --color-elevated: var(--elevated);
+    55→  --color-elevated-foreground: var(--elevated-foreground);
+    56→  --color-accent-blue: var(--accent-blue);
+    57→  --color-accent-blue-foreground: var(--accent-blue-foreground);
+    58→}
+    59→
+    60→/* LIGHT — warm-neutral "soft white" surface, deep charcoal text.
+    61→   The accent is a restrained slate-blue (no neon indigo). */
+    62→:root {
+    63→  --radius: 0.875rem;
+    64→
+    65→  /* Surfaces — very light warm neutral, never pure #FFF */
+    66→  --background: oklch(0.985 0.003 95);
+    67→  --foreground: oklch(0.18 0.005 270);
+    68→  --surface: oklch(1 0 0);
+    69→  --surface-foreground: oklch(0.18 0.005 270);
+    70→  --elevated: oklch(0.997 0.002 95);
+    71→  --elevated-foreground: oklch(0.18 0.005 270);
+    72→
+    73→  --card: oklch(1 0 0);
+    74→  --card-foreground: oklch(0.18 0.005 270);
+    75→  --popover: oklch(1 0 0);
+    76→  --popover-foreground: oklch(0.18 0.005 270);
+    77→
+    78→  /* Primary = charcoal (used sparingly for primary CTAs) */
+    79→  --primary: oklch(0.22 0.01 270);
+    80→  --primary-foreground: oklch(0.985 0.003 95);
+    81→
+    82→  --secondary: oklch(0.965 0.005 95);
+    83→  --secondary-foreground: oklch(0.22 0.01 270);
+    84→  --muted: oklch(0.962 0.005 95);
+    85→  --muted-foreground: oklch(0.48 0.01 270);
+    86→  --accent: oklch(0.955 0.008 95);
+    87→  --accent-foreground: oklch(0.22 0.01 270);
+    88→
+    89→  /* Restrained slate-blue accent — only for important interactive elements */
+    90→  --accent-blue: oklch(0.52 0.04 250);
+    91→  --accent-blue-foreground: oklch(0.99 0.002 95);
+    92→
+    93→  /* Status — soft, never alarming */
+    94→  --success: oklch(0.72 0.13 155);
+    95→  --success-foreground: oklch(0.18 0.04 155);
+    96→  --warning: oklch(0.78 0.13 75); /* refined amber — deeper, less muddy than gold */
+    97→  --warning-foreground: oklch(0.27 0.06 75);
+    98→  --critical: oklch(0.66 0.16 25);
+    99→  --critical-foreground: oklch(0.18 0.05 25);
+   100→
+   101→  --destructive: oklch(0.66 0.16 25);
+   102→  --border: oklch(0.92 0.004 95);
+   103→  --input: oklch(0.93 0.004 95);
+   104→  --ring: oklch(0.52 0.04 250);
+   105→
+   106→  --chart-1: oklch(0.52 0.04 250);     /* accent blue */
+   107→  --chart-2: oklch(0.72 0.13 155);     /* success green */
+   108→  --chart-3: oklch(0.78 0.13 75);      /* refined amber */
+   109→  --chart-4: oklch(0.66 0.16 25);      /* critical red */
+   110→  --chart-5: oklch(0.55 0.05 305);     /* soft violet */
+   111→
+   112→  --sidebar: oklch(0.985 0.003 95);
+   113→  --sidebar-foreground: oklch(0.18 0.005 270);
+   114→  --sidebar-primary: oklch(0.22 0.01 270);
+   115→  --sidebar-primary-foreground: oklch(0.985 0.003 95);
+   116→  --sidebar-accent: oklch(0.955 0.008 95);
+   117→  --sidebar-accent-foreground: oklch(0.22 0.01 270);
+   118→  --sidebar-border: oklch(0.92 0.004 95);
+   119→  --sidebar-ring: oklch(0.52 0.04 250);
+   120→}
+   121→
+   122→/* DARK — deep charcoal, slightly lighter elevated surfaces, soft white type */
+   123→.dark {
+   124→  --background: oklch(0.155 0.005 270);
+   125→  --foreground: oklch(0.97 0.003 95);
+   126→  --surface: oklch(0.185 0.006 270);
+   127→  --surface-foreground: oklch(0.97 0.003 95);
+   128→  --elevated: oklch(0.205 0.006 270);
+   129→  --elevated-foreground: oklch(0.97 0.003 95);
+   130→
+   131→  --card: oklch(0.195 0.006 270);
+   132→  --card-foreground: oklch(0.97 0.003 95);
+   133→  --popover: oklch(0.205 0.006 270);
+   134→  --popover-foreground: oklch(0.97 0.003 95);
+   135→
+   136→  --primary: oklch(0.96 0.003 95);
+   137→  --primary-foreground: oklch(0.18 0.005 270);
+   138→  --secondary: oklch(0.24 0.006 270);
+   139→  --secondary-foreground: oklch(0.97 0.003 95);
+   140→  --muted: oklch(0.23 0.006 270);
+   141→  --muted-foreground: oklch(0.7 0.008 270);
+   142→  --accent: oklch(0.25 0.008 270);
+   143→  --accent-foreground: oklch(0.97 0.003 95);
+   144→
+   145→  --accent-blue: oklch(0.7 0.05 250);
+   146→  --accent-blue-foreground: oklch(0.16 0.01 270);
+   147→
+   148→  --success: oklch(0.7 0.12 155);
+   149→  --success-foreground: oklch(0.16 0.03 155);
+   150→  --warning: oklch(0.78 0.13 75); /* refined amber — consistent with light mode */
+   151→  --warning-foreground: oklch(0.18 0.05 75);
+   152→  --critical: oklch(0.66 0.16 25);
+   153→  --critical-foreground: oklch(0.18 0.05 25);
+   154→
+   155→  --destructive: oklch(0.66 0.16 25);
+   156→  --border: oklch(1 0 0 / 8%);
+   157→  --input: oklch(1 0 0 / 12%);
+   158→  --ring: oklch(0.7 0.05 250);
+   159→
+   160→  --chart-1: oklch(0.7 0.05 250);
+   161→  --chart-2: oklch(0.7 0.12 155);
+   162→  --chart-3: oklch(0.78 0.13 75); /* match refined amber */
+   163→  --chart-4: oklch(0.66 0.16 25);
+   164→  --chart-5: oklch(0.65 0.06 305);
+   165→
+   166→  --sidebar: oklch(0.155 0.005 270);
+   167→  --sidebar-foreground: oklch(0.97 0.003 95);
+   168→  --sidebar-primary: oklch(0.96 0.003 95);
+   169→  --sidebar-primary-foreground: oklch(0.18 0.005 270);
+   170→  --sidebar-accent: oklch(0.24 0.006 270);
+   171→  --sidebar-accent-foreground: oklch(0.97 0.003 95);
+   172→  --sidebar-border: oklch(1 0 0 / 8%);
+   173→  --sidebar-ring: oklch(0.7 0.05 250);
+   174→}
+   175→
+   176→@layer base {
+   177→  * {
+   178→    @apply border-border outline-ring/50;
+   179→  }
+   180→  html {
+   181→    -webkit-font-smoothing: antialiased;
+   182→    text-rendering: optimizeLegibility;
+   183→  }
+   184→  body {
+   185→    @apply bg-background text-foreground;
+   186→    font-feature-settings: "ss01", "cv01", "cv03";
+   187→    letter-spacing: -0.011em;
+   188→  }
+   189→
+   190→  /* Headings — tight, premium letter spacing */
+   191→  h1, h2, h3, h4 {
+   192→    letter-spacing: -0.025em;
+   193→  }
+   194→
+   195→  /* Custom scrollbar — ultra-subtle, premium */
+   196→  ::-webkit-scrollbar {
+   197→    width: 8px;
+   198→    height: 8px;
+   199→  }
+   200→  ::-webkit-scrollbar-track {
+   201→    background: transparent;
+   202→  }
+   203→  ::-webkit-scrollbar-thumb {
+   204→    background: color-mix(in oklch, var(--muted-foreground) 18%, transparent);
+   205→    border-radius: 999px;
+   206→    border: 3px solid transparent;
+   207→    background-clip: padding-box;
+   208→  }
+   209→  ::-webkit-scrollbar-thumb:hover {
+   210→    background: color-mix(in oklch, var(--muted-foreground) 35%, transparent);
+   211→    background-clip: padding-box;
+   212→  }
+   213→
+   214→  /* Selection */
+   215→  ::selection {
+   216→    background: color-mix(in oklch, var(--accent-blue) 22%, transparent);
+   217→  }
+   218→
+   219→  /* Smooth focus-visible ring transitions for all interactive elements */
+   220→  button, a, input, textarea, select, [role="button"] {
+   221→    transition: box-shadow 0.2s ease, outline 0.2s ease;
+   222→  }
+   223→  button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, [role="button"]:focus-visible {
+   224→    box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent-blue) 15%, transparent);
+   225→    outline: none;
+   226→  }
+   227→}
+   228→
+   229→@layer utilities {
+   230→  /* Premium soft card surface with subtle depth — Round 4 refined shadow stack:
+   231→     layered close + ambient shadow + 1px ring for crisp edge definition. */
+   232→  .hm-card {
+   233→    background: var(--card);
+   234→    border: 1px solid var(--border);
+   235→    border-radius: calc(var(--radius) + 6px);
+   236→    box-shadow:
+   237→      0 1px 3px -1px rgba(0, 0, 0, 0.06),
+   238→      0 1px 2px -1px rgba(0, 0, 0, 0.04),
+   239→      0 0 0 1px color-mix(in oklch, var(--border) 60%, transparent);
+   240→    transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+   241→  }
+   242→  .hm-card:hover {
+   243→    box-shadow:
+   244→      0 8px 24px -8px rgba(0, 0, 0, 0.08),
+   245→      0 4px 8px -4px rgba(0, 0, 0, 0.04);
+   246→  }
+   247→  /* Dark mode: deeper shadow values (rgba(0,0,0,0.3)) so depth is still perceptible
+   248→     on dark surfaces; ring retained for crisp edge. */
+   249→  .dark .hm-card {
+   250→    box-shadow:
+   251→      0 1px 3px -1px rgba(0, 0, 0, 0.3),
+   252→      0 1px 2px -1px rgba(0, 0, 0, 0.2),
+   253→      0 0 0 1px color-mix(in oklch, var(--border) 60%, transparent);
+   254→  }
+   255→  .dark .hm-card:hover {
+   256→    box-shadow:
+   257→      0 8px 24px -8px rgba(0, 0, 0, 0.3),
+   258→      0 4px 8px -4px rgba(0, 0, 0, 0.25);
+   259→  }
+   260→
+   261→  .hm-elevated {
+   262→    background: var(--elevated);
+   263→    border: 1px solid var(--border);
+   264→    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+   265→  }
+   266→  .hm-elevated:hover {
+   267→    box-shadow: 0 2px 8px color-mix(in oklch, var(--foreground) 4%, transparent);
+   268→  }
+   269→  .dark .hm-elevated:hover {
+   270→    box-shadow: 0 2px 8px color-mix(in oklch, var(--foreground) 2%, transparent);
+   271→  }
+   272→
+   273→  /* Soft inner section divider */
+   274→  .hm-divider {
+   275→    background: linear-gradient(
+   276→      to right,
+   277→      transparent,
+   278→      color-mix(in oklch, var(--border) 90%, transparent),
+   279→      transparent
+   280→    );
+   281→    height: 1px;
+   282→  }
+   283→  /* Dark mode: dividers need slightly more opacity to remain visible */
+   284→  .dark .hm-divider {
+   285→    background: linear-gradient(
+   286→      to right,
+   287→      transparent,
+   288→      color-mix(in oklch, var(--border) 70%, var(--muted)),
+   289→      transparent
+   290→    );
+   291→  }
+   292→
+   293→  /* Gradient text — used very sparingly for the hero number */
+   294→  .hm-text-gradient {
+   295→    background: linear-gradient(
+   296→      180deg,
+   297→      var(--foreground) 0%,
+   298→      color-mix(in oklch, var(--foreground) 75%, var(--muted-foreground)) 100%
+   299→    );
+   300→    -webkit-background-clip: text;
+   301→    background-clip: text;
+   302→    -webkit-text-fill-color: transparent;
+   303→  }
+   304→  /* Dark mode: softer gradient to avoid jarring bright→dim on dark bg */
+   305→  .dark .hm-text-gradient {
+   306→    background: linear-gradient(
+   307→      180deg,
+   308→      var(--foreground) 0%,
+   309→      color-mix(in oklch, var(--foreground) 82%, var(--muted-foreground)) 100%
+   310→    );
+   311→    -webkit-background-clip: text;
+   312→    background-clip: text;
+   313→    -webkit-text-fill-color: transparent;
+   314→  }
+   315→
+   316→  /* Subtle ambient background — premium soft radial wash */
+   317→  .hm-ambient {
+   318→    background:
+   319→      radial-gradient(60% 50% at 20% 10%, color-mix(in oklch, var(--accent-blue) 8%, transparent), transparent 60%),
+   320→      radial-gradient(50% 50% at 90% 20%, color-mix(in oklch, var(--chart-5) 6%, transparent), transparent 60%),
+   321→      var(--background);
+   322→  }
+   323→  /* Dark mode: slightly stronger ambient wash so gradients remain visible */
+   324→  .dark .hm-ambient {
+   325→    background:
+   326→      radial-gradient(60% 50% at 20% 10%, color-mix(in oklch, var(--accent-blue) 12%, transparent), transparent 60%),
+   327→      radial-gradient(50% 50% at 90% 20%, color-mix(in oklch, var(--chart-5) 10%, transparent), transparent 60%),
+   328→      var(--background);
+   329→  }
+   330→
+   331→  /* Calm "thinking" pulse for AI processing states */
+   332→  .hm-thinking {
+   333→    animation: hm-thinking 2.4s ease-in-out infinite;
+   334→  }
+   335→  @keyframes hm-thinking {
+   336→    0%, 100% { opacity: 0.45; transform: translateY(0); }
+   337→    50% { opacity: 1; transform: translateY(-2px); }
+   338→  }
+   339→
+   340→  /* Soft fade-up reveal */
+   341→  .hm-reveal {
+   342→    animation: hm-reveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+   343→  }
+   344→  @keyframes hm-reveal {
+   345→    from { opacity: 0; transform: translateY(10px); }
+   346→    to { opacity: 1; transform: translateY(0); }
+   347→  }
+   348→
+   349→  .hm-fade {
+   350→    animation: hm-fade 0.4s ease both;
+   351→  }
+   352→  @keyframes hm-fade {
+   353→    from { opacity: 0; }
+   354→    to { opacity: 1; }
+   355→  }
+   356→
+   357→  /* ─── Premium animation keyframes ─── */
+   358→
+   359→  /* Shimmer / shine sweep — subtle diagonal light sweep */
+   360→  @keyframes hm-shimmer {
+   361→    0% { transform: translateX(-100%) skewX(-15deg); }
+   362→    100% { transform: translateX(200%) skewX(-15deg); }
+   363→  }
+   364→
+   365→  /* Ring glow pulse — soft radiance behind score ring */
+   366→  @keyframes hm-ring-glow {
+   367→    0% { opacity: 0; transform: scale(0.92); }
+   368→    30% { opacity: 0.6; transform: scale(1.04); }
+   369→    60% { opacity: 0.3; transform: scale(1); }
+   370→    100% { opacity: 0; transform: scale(0.98); }
+   371→  }
+   372→
+   373→  /* Animated gradient border rotation */
+   374→  @keyframes hm-gradient-spin {
+   375→    0% { --hm-gradient-angle: 0deg; }
+   376→    100% { --hm-gradient-angle: 360deg; }
+   377→  }
+   378→
+   379→  /* Subtle floating dot drift — CSS-only particles */
+   380→  @keyframes hm-float-1 {
+   381→    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+   382→    25% { transform: translate(12px, -18px) scale(1.1); opacity: 0.5; }
+   383→    50% { transform: translate(-8px, -30px) scale(0.95); opacity: 0.35; }
+   384→    75% { transform: translate(15px, -12px) scale(1.05); opacity: 0.45; }
+   385→  }
+   386→  @keyframes hm-float-2 {
+   387→    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.25; }
+   388→    33% { transform: translate(-15px, -22px) scale(1.08); opacity: 0.4; }
+   389→    66% { transform: translate(10px, -14px) scale(0.92); opacity: 0.3; }
+   390→  }
+   391→  @keyframes hm-float-3 {
+   392→    0%, 100% { transform: translate(0, 0); opacity: 0.2; }
+   393→    50% { transform: translate(8px, -25px); opacity: 0.4; }
+   394→  }
+   395→
+   396→  /* Typing indicator dots */
+   397→  @keyframes hm-typing-dot {
+   398→    0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+   399→    30% { opacity: 1; transform: translateY(-3px); }
+   400→  }
+   401→
+   402→  /* Typewriter reveal — character-by-character */
+   403→  @keyframes hm-typewriter {
+   404→    from { width: 0; }
+   405→    to { width: 100%; }
+   406→  }
+   407→
+   408→  /* Subtle pulse for critical items */
+   409→  @keyframes hm-subtle-pulse {
+   410→    0%, 100% { opacity: 1; }
+   411→    50% { opacity: 0.7; }
+   412→  }
+   413→
+   414→  /* Timeline draw-in */
+   415→  @keyframes hm-draw-in {
+   416→    from { clip-path: inset(0 0 100% 0); }
+   417→    to { clip-path: inset(0 0 0 0); }
+   418→  }
+   419→
+   420→  /* Checkmark pop */
+   421→  @keyframes hm-check-pop {
+   422→    0% { transform: scale(0); opacity: 0; }
+   423→    60% { transform: scale(1.15); opacity: 1; }
+   424→    100% { transform: scale(1); opacity: 1; }
+   425→  }
+   426→
+   427→  /* ─── Premium utility classes ─── */
+   428→
+   429→  /* Shimmer overlay — position this absolutely inside an overflow:hidden container */
+   430→  .hm-shimmer::after {
+   431→    content: "";
+   432→    position: absolute;
+   433→    inset: 0;
+   434→    background: linear-gradient(
+   435→      105deg,
+   436→      transparent 40%,
+   437→      color-mix(in oklch, var(--foreground) 6%, var(--card)) 50%,
+   438→      transparent 60%
+   439→    );
+   440→    animation: hm-shimmer 1.8s ease-in-out 1s 1 both;
+   441→    pointer-events: none;
+   442→    border-radius: inherit;
+   443→  }
+   444→
+   445→  /* Animated gradient border using background-clip trick */
+   446→  .hm-gradient-border {
+   447→    --hm-gradient-angle: 0deg;
+   448→    position: relative;
+   449→    background: var(--card);
+   450→    border-radius: calc(var(--radius) + 6px);
+   451→    overflow: hidden;
+   452→  }
+   453→  .hm-gradient-border::before {
+   454→    content: "";
+   455→    position: absolute;
+   456→    inset: 0;
+   457→    padding: 1.5px;
+   458→    border-radius: inherit;
+   459→    background: conic-gradient(
+   460→      from var(--hm-gradient-angle, 0deg),
+   461→      var(--accent-blue),
+   462→      var(--chart-5),
+   463→      var(--accent-blue)
+   464→    );
+   465→    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+   466→    -webkit-mask-composite: xor;
+   467→    mask-composite: exclude;
+   468→    animation: hm-gradient-spin 3s linear infinite;
+   469→    pointer-events: none;
+   470→  }
+   471→
+   472→  /* Gradient border for critical/gap items */
+   473→  .hm-gradient-border-critical {
+   474→    --hm-gradient-angle: 0deg;
+   475→    position: relative;
+   476→    background: var(--card);
+   477→    border-radius: calc(var(--radius) + 6px);
+   478→    overflow: hidden;
+   479→  }
+   480→  .hm-gradient-border-critical::before {
+   481→    content: "";
+   482→    position: absolute;
+   483→    inset: 0;
+   484→    padding: 1.5px;
+   485→    border-radius: inherit;
+   486→    background: conic-gradient(
+   487→      from var(--hm-gradient-angle, 0deg),
+   488→      var(--critical),
+   489→      var(--warning),
+   490→      var(--critical)
+   491→    );
+   492→    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+   493→    -webkit-mask-composite: xor;
+   494→    mask-composite: exclude;
+   495→    animation: hm-gradient-spin 4s linear infinite;
+   496→    pointer-events: none;
+   497→  }
+   498→
+   499→  /* Micro-shine on hover for competency bars */
+   500→  .hm-bar-shine {
+   501→    position: relative;
+   502→    overflow: hidden;
+   503→  }
+   504→  .hm-bar-shine::after {
+   505→    content: "";
+   506→    position: absolute;
+   507→    top: 0;
+   508→    left: -100%;
+   509→    width: 60%;
+   510→    height: 100%;
+   511→    background: linear-gradient(
+   512→      105deg,
+   513→      transparent 40%,
+   514→      color-mix(in oklch, currentColor 15%, transparent) 50%,
+   515→      transparent 60%
+   516→    );
+   517→    transition: left 0.5s ease;
+   518→    pointer-events: none;
+   519→    border-radius: inherit;
+   520→  }
+   521→  .hm-bar-shine:hover::after {
+   522→    left: 150%;
+   523→  }
+   524→
+   525→  /* Typing indicator */
+   526→  .hm-typing-indicator {
+   527→    display: inline-flex;
+   528→    align-items: center;
+   529→    gap: 3px;
+   530→  }
+   531→  .hm-typing-indicator span {
+   532→    width: 4px;
+   533→    height: 4px;
+   534→    border-radius: 50%;
+   535→    background: var(--muted-foreground);
+   536→  }
+   537→  .hm-typing-indicator span:nth-child(1) { animation: hm-typing-dot 1.2s ease-in-out infinite 0ms; }
+   538→  .hm-typing-indicator span:nth-child(2) { animation: hm-typing-dot 1.2s ease-in-out infinite 150ms; }
+   539→  .hm-typing-indicator span:nth-child(3) { animation: hm-typing-dot 1.2s ease-in-out infinite 300ms; }
+   540→
+   541→  /* CSS-only floating dot particles — apply to background container */
+   542→  .hm-particles {
+   543→    position: relative;
+   544→    overflow: hidden;
+   545→  }
+   546→  .hm-particles::before,
+   547→  .hm-particles::after {
+   548→    content: "";
+   549→    position: absolute;
+   550→    width: 3px;
+   551→    height: 3px;
+   552→    border-radius: 50%;
+   553→    background: color-mix(in oklch, var(--accent-blue) 20%, transparent);
+   554→    pointer-events: none;
+   555→  }
+   556→  .hm-particles::before {
+   557→    top: 15%;
+   558→    right: 18%;
+   559→    animation: hm-float-1 8s ease-in-out infinite;
+   560→  }
+   561→  .hm-particles::after {
+   562→    top: 45%;
+   563→    left: 12%;
+   564→    width: 2px;
+   565→    height: 2px;
+   566→    animation: hm-float-2 10s ease-in-out infinite 1s;
+   567→  }
+   568→
+   569→  /* Additional particle dots via nested pseudo (requires a wrapper) */
+   570→  .hm-particles-inner::before,
+   571→  .hm-particles-inner::after {
+   572→    content: "";
+   573→    position: absolute;
+   574→    width: 2px;
+   575→    height: 2px;
+   576→    border-radius: 50%;
+   577→    background: color-mix(in oklch, var(--chart-5) 15%, transparent);
+   578→    pointer-events: none;
+   579→  }
+   580→  .hm-particles-inner::before {
+   581→    top: 60%;
+   582→    right: 8%;
+   583→    animation: hm-float-3 12s ease-in-out infinite 2s;
+   584→  }
+   585→  .hm-particles-inner::after {
+   586→    top: 25%;
+   587→    left: 25%;
+   588→    width: 1.5px;
+   589→    height: 1.5px;
+   590→    animation: hm-float-1 14s ease-in-out infinite 3s;
+   591→  }
+   592→
+   593→  /* Focus-visible ring transition — smooth, premium */
+   594→  .hm-focus-ring {
+   595→    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+   596→  }
+   597→  .hm-focus-ring:focus-visible {
+   598→    box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent-blue) 18%, transparent),
+   599→                0 0 0 1px color-mix(in oklch, var(--accent-blue) 50%, transparent);
+   600→    outline: none;
+   601→  }
+   602→
+   603→  /* Score ring glow layer */
+   604→  .hm-ring-glow {
+   605→    position: absolute;
+   606→    inset: -8px;
+   607→    border-radius: 50%;
+   608→    animation: hm-ring-glow 1.4s ease-out forwards;
+   609→    pointer-events: none;
+   610→  }
+   611→
+   612→  /* Subtle pulse for critical priority pills */
+   613→  .hm-pulse-critical {
+   614→    animation: hm-subtle-pulse 2.5s ease-in-out infinite;
+   615→  }
+   616→
+   617→  /* Timeline draw-in */
+   618→  .hm-timeline-draw {
+   619→    animation: hm-draw-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+   620→  }
+   621→
+   622→  /* Checkmark pop-in animation */
+   623→  .hm-check-pop {
+   624→    animation: hm-check-pop 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+   625→  }
+   626→
+   627→  /* Progress step dots */
+   628→  .hm-step-dot {
+   629→    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+   630→  }
+   631→  .hm-step-dot-active {
+   632→    background: var(--accent-blue);
+   633→    transform: scale(1.3);
+   634→    box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent-blue) 15%, transparent);
+   635→  }
+   636→  .hm-step-dot-complete {
+   637→    background: var(--success);
+   638→  }
+   639→
+   640→  /* Typewriter reveal */
+   641→  .hm-typewriter {
+   642→    display: inline-block;
+   643→    overflow: hidden;
+   644→    white-space: nowrap;
+   645→    animation: hm-typewriter 0.8s steps(16, end) 0.5s both;
+   646→  }
+   647→
+   648→  /* Radial glow for WOW moments */
+   649→  .hm-radial-glow {
+   650→    position: relative;
+   651→  }
+   652→  .hm-radial-glow::before {
+   653→    content: "";
+   654→    position: absolute;
+   655→    inset: -40px;
+   656→    border-radius: 50%;
+   657→    background: radial-gradient(
+   658→      circle,
+   659→      color-mix(in oklch, var(--accent-blue) 8%, transparent),
+   660→      transparent 70%
+   661→    );
+   662→    pointer-events: none;
+   663→    animation: hm-ring-glow 2s ease-out forwards;
+   664→  }
+   665→  .dark .hm-radial-glow::before {
+   666→    background: radial-gradient(
+   667→      circle,
+   668→      color-mix(in oklch, var(--accent-blue) 14%, transparent),
+   669→      transparent 70%
+   670→    );
+   671→  }
+   672→
+   673→  /* ─── Skeleton Loading ─── */
+   674→  .hm-skeleton {
+   675→    background: linear-gradient(
+   676→      90deg,
+   677→      var(--muted) 25%,
+   678→      color-mix(in oklch, var(--muted) 60%, var(--card)) 50%,
+   679→      var(--muted) 75%
+   680→    );
+   681→    background-size: 200% 100%;
+   682→    animation: hm-skeleton-pulse 1.5s ease-in-out infinite;
+   683→    border-radius: calc(var(--radius) - 2px);
+   684→  }
+   685→  @keyframes hm-skeleton-pulse {
+   686→    0% { background-position: 200% 0; }
+   687→    100% { background-position: -200% 0; }
+   688→  }
+   689→
+   690→  /* ─── Mobile Utilities ─── */
+   691→  /* Hide scrollbar for horizontally scrolling containers */
+   692→  .no-scrollbar {
+   693→    -ms-overflow-style: none;
+   694→    scrollbar-width: none;
+   695→  }
+   696→  .no-scrollbar::-webkit-scrollbar {
+   697→    display: none;
+   698→  }
+   699→
+   700→  /* Safe area padding for mobile devices (notch/bottom bar) */
+   701→  .pb-safe {
+   702→    padding-bottom: env(safe-area-inset-bottom, 0px);
+   703→  }
+   704→  .pt-safe {
+   705→    padding-top: env(safe-area-inset-top, 0px);
+   706→  }
+   707→  .pl-safe {
+   708→    padding-left: env(safe-area-inset-left, 0px);
+   709→  }
+   710→  .pr-safe {
+   711→    padding-right: env(safe-area-inset-right, 0px);
+   712→  }
+   713→
+   714→  /* ─── Presentation Mode ─── */
+   715→  /* When data-presentation="true" is on html/body, scale up font sizes ~20% */
+   716→  [data-presentation="true"] {
+   717→    font-size: 118.8%; /* ~20% larger base */
+   718→  }
+   719→  [data-presentation="true"] .hm-nav-item {
+   720→    font-size: 15px;
+   721→    padding: 6px 14px;
+   722→  }
+   723→  [data-presentation="true"] .hm-footer-hide {
+   724→    display: none;
+   725→  }
+   726→
+   727→  /* ─── Premium VLM-polish utilities ─── */
+   728→
+   729→  /* Evidence quote — italic, left-border accent, softer muted color */
+   730→  .hm-evidence-quote {
+   731→    font-style: italic;
+   732→    color: color-mix(in oklch, var(--muted-foreground) 90%, var(--foreground));
+   733→    border-left: 2px solid color-mix(in oklch, var(--border) 60%, var(--muted-foreground));
+   734→    padding-left: 8px;
+   735→    line-height: 1.5;
+   736→  }
+   737→  .dark .hm-evidence-quote {
+   738→    color: color-mix(in oklch, var(--muted-foreground) 85%, var(--foreground));
+   739→    border-left-color: color-mix(in oklch, var(--border) 70%, var(--muted-foreground));
+   740→  }
+   741→
+   742→  /* Premium input — softer background, focus ring with glow */
+   743→  .hm-input-premium {
+   744→    background: color-mix(in oklch, var(--card) 92%, var(--muted));
+   745→    border-color: color-mix(in oklch, var(--border) 80%, var(--muted-foreground));
+   746→    transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+   747→  }
+   748→  .hm-input-premium:focus-visible {
+   749→    box-shadow:
+   750→      0 0 0 3px color-mix(in oklch, var(--accent-blue) 18%, transparent),
+   751→      0 0 0 1px color-mix(in oklch, var(--accent-blue) 40%, transparent);
+   752→    border-color: color-mix(in oklch, var(--accent-blue) 45%, var(--border));
+   753→    outline: none;
+   754→  }
+   755→  .dark .hm-input-premium {
+   756→    background: color-mix(in oklch, var(--card) 88%, var(--muted));
+   757→  }
+   758→
+   759→  /* Vertical divider between buttons — 1px wide x 16px tall, with opacity */
+   760→  .hm-divider-vertical {
+   761→    width: 1px;
+   762→    height: 16px;
+   763→    background: color-mix(in oklch, var(--muted-foreground) 35%, transparent);
+   764→    flex-shrink: 0;
+   765→  }
+   766→  .dark .hm-divider-vertical {
+   767→    background: color-mix(in oklch, var(--muted-foreground) 30%, transparent);
+   768→  }
+   769→
+   770→  /* Void box — visual placeholder for "missing evidence" */
+   771→  .hm-void-box {
+   772→    border: 1px dashed color-mix(in oklch, var(--muted-foreground) 35%, var(--border));
+   773→    background: color-mix(in oklch, var(--muted) 50%, transparent);
+   774→    color: color-mix(in oklch, var(--muted-foreground) 80%, var(--foreground));
+   775→    border-radius: 8px;
+   776→    transition: border-color 0.2s ease, background 0.2s ease;
+   777→  }
+   778→  .hm-void-box:hover {
+   779→    border-color: color-mix(in oklch, var(--accent-blue) 40%, var(--border));
+   780→    background: color-mix(in oklch, var(--accent-blue) 6%, var(--muted));
+   781→  }
+   782→  .dark .hm-void-box {
+   783→    border-color: color-mix(in oklch, var(--muted-foreground) 30%, transparent);
+   784→    background: color-mix(in oklch, var(--muted) 30%, transparent);
+   785→  }
+   786→
+   787→  /* Premium badge — subtle gradient bg, refined border */
+   788→  .hm-badge-premium {
+   789→    background: linear-gradient(
+   790→      180deg,
+   791→      color-mix(in oklch, var(--accent-blue) 8%, var(--card)),
+   792→      color-mix(in oklch, var(--accent-blue) 5%, var(--card))
+   793→    );
+   794→    border: 1px solid color-mix(in oklch, var(--accent-blue) 22%, var(--border));
+   795→    /* Use accent-blue directly so text is readable on the soft tinted bg
+   796→       (accent-blue-foreground is near-white in light mode and would vanish). */
+   797→    color: var(--accent-blue);
+   798→  }
+   799→  .dark .hm-badge-premium {
+   800→    background: linear-gradient(
+   801→      180deg,
+   802→      color-mix(in oklch, var(--accent-blue) 14%, transparent),
+   803→      color-mix(in oklch, var(--accent-blue) 8%, transparent)
+   804→    );
+   805→    border: 1px solid color-mix(in oklch, var(--accent-blue) 30%, transparent);
+   806→    color: var(--accent-blue);
+   807→  }
+   808→
+   809→  /* ─── Round 4 Premium Polish ─── */
+   810→  /* New utility classes extending the premium design system.
+   811→     Refinements to .hm-card shadow stack were applied in place above. */
+   812→
+   813→  /* AI insight callout — soft accent-blue tinted box with thin left accent border.
+   814→     Use for AI-generated insights, reasoning notes, or contextual hints. */
+   815→  .hm-insight-callout {
+   816→    background: color-mix(in oklch, var(--accent-blue) 7%, var(--card));
+   817→    border-left: 2px solid color-mix(in oklch, var(--accent-blue) 35%, var(--border));
+   818→    padding: 8px 12px;
+   819→    border-radius: calc(var(--radius) - 2px);
+   820→  }
+   821→  .dark .hm-insight-callout {
+   822→    /* Slightly stronger tint on dark surface so the callout reads as a distinct block */
+   823→    background: color-mix(in oklch, var(--accent-blue) 12%, transparent);
+   824→    border-left-color: color-mix(in oklch, var(--accent-blue) 45%, transparent);
+   825→  }
+   826→
+   827→  /* Premium stat tile — soft gradient bg with inset top highlight for tactile depth.
+   828→     Use for KPI numbers, metric cards, score breakdowns. */
+   829→  .hm-stat-tile {
+   830→    border-radius: calc(var(--radius) + 4px);
+   831→    border: 1px solid color-mix(in oklch, var(--border) 40%, transparent);
+   832→    background: linear-gradient(
+   833→      180deg,
+   834→      var(--card),
+   835→      color-mix(in oklch, var(--card) 70%, var(--muted))
+   836→    );
+   837→    box-shadow:
+   838→      inset 0 1px 0 color-mix(in oklch, white 4%, transparent),
+   839→      0 1px 2px color-mix(in oklch, var(--foreground) 3%, transparent);
+   840→    transition: transform 0.25s ease, box-shadow 0.25s ease;
+   841→  }
+   842→  .hm-stat-tile:hover {
+   843→    transform: translateY(-1px);
+   844→    box-shadow:
+   845→      inset 0 1px 0 color-mix(in oklch, white 6%, transparent),
+   846→      0 4px 12px -4px color-mix(in oklch, var(--foreground) 8%, transparent);
+   847→  }
+   848→  .dark .hm-stat-tile {
+   849→    background: linear-gradient(
+   850→      180deg,
+   851→      var(--card),
+   852→      color-mix(in oklch, var(--card) 60%, var(--muted))
+   853→    );
+   854→    box-shadow:
+   855→      inset 0 1px 0 color-mix(in oklch, white 6%, transparent),
+   856→      0 1px 2px rgba(0, 0, 0, 0.3);
+   857→  }
+   858→  .dark .hm-stat-tile:hover {
+   859→    box-shadow:
+   860→      inset 0 1px 0 color-mix(in oklch, white 8%, transparent),
+   861→      0 4px 12px -4px rgba(0, 0, 0, 0.3);
+   862→  }
+   863→
+   864→  /* Pulsing glow for "live" / real-time indicators (e.g. live transcription dot).
+   865→     Uses --success token (green) to signal "active & healthy". */
+   866→  .hm-glow-pulse {
+   867→    box-shadow: 0 0 0 0 color-mix(in oklch, var(--success) 50%, transparent);
+   868→    animation: hm-glow-pulse 2s ease-in-out infinite;
+   869→  }
+   870→  @keyframes hm-glow-pulse {
+   871→    0% {
+   872→      box-shadow: 0 0 0 0 color-mix(in oklch, var(--success) 50%, transparent);
+   873→    }
+   874→    100% {
+   875→      box-shadow: 0 0 0 6px color-mix(in oklch, var(--success) 0%, transparent);
+   876→    }
+   877→  }
+   878→  .dark .hm-glow-pulse {
+   879→    /* Slightly stronger starting glow on dark surfaces for visibility */
+   880→    box-shadow: 0 0 0 0 color-mix(in oklch, var(--success) 60%, transparent);
+   881→  }
+   882→
+   883→  /* Premium card hover — spring-easing lift + accent-blue glow combined with
+   884→     an elevated shadow. Note: --shadow-elevated isn't a defined token, so we
+   885→     compose the elevated shadow inline with the same intent (layered close +
+   886→     ambient). Apply alongside .hm-card for premium hover treatment. */
+   887→  .hm-card-hover {
+   888→    transition:
+   889→      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+   890→      box-shadow 0.3s ease;
+   891→  }
+   892→  .hm-card-hover:hover {
+   893→    transform: translateY(-2px);
+   894→    box-shadow:
+   895→      0 8px 24px -8px color-mix(in oklch, var(--accent-blue) 18%, transparent),
+   896→      0 4px 12px -4px color-mix(in oklch, var(--foreground) 8%, transparent);
+   897→  }
+   898→  .dark .hm-card-hover:hover {
+   899→    box-shadow:
+   900→      0 8px 24px -8px color-mix(in oklch, var(--accent-blue) 22%, transparent),
+   901→      0 4px 12px -4px rgba(0, 0, 0, 0.3);
+   902→  }
+   903→
+   904→  /* Tabular numerals for premium numeric alignment — use on score displays,
+   905→     metric values, or anywhere numbers should align column-wise. Purely
+   906→     typographic; no dark variant needed. */
+   907→  .hm-num-tabular {
+   908→    font-variant-numeric: tabular-nums;
+   909→    letter-spacing: -0.01em;
+   910→  }
+   911→
+   912→  /* Horizontal shimmer accent line — sweeps left-to-right via the existing
+   913→     hm-shimmer keyframe. Best used inside an overflow:hidden parent so the
+   914→     sweep stays contained. Useful as a premium section delimiter. */
+   915→  .hm-shimmer-line {
+   916→    height: 1px;
+   917→    background: linear-gradient(
+   918→      to right,
+   919→      transparent,
+   920→      color-mix(in oklch, var(--accent-blue) 40%, transparent),
+   921→      transparent
+   922→    );
+   923→    animation: hm-shimmer 2.4s ease-in-out infinite;
+   924→  }
+   925→
+   926→  /* Soft divider — fades at edges for gentle section breaks (vs .hm-divider
+   927→     which has a more solid middle band). */
+   928→  .hm-divider-soft {
+   929→    height: 1px;
+   930→    background: linear-gradient(
+   931→      to right,
+   932→      transparent,
+   933→      color-mix(in oklch, var(--border) 80%, transparent),
+   934→      transparent
+   935→    );
+   936→  }
+   937→
+   938→  /* Better-side tint for comparison views — a subtle radial gradient + soft
+   939→     success-tinted bg to highlight the "winning" session for a given metric.
+   940→     Pairs with the "Better" pill chip + tabular value cell. */
+   941→  .hm-better-side {
+   942→    background:
+   943→      radial-gradient(
+   944→        120% 100% at 50% 0%,
+   945→        color-mix(in oklch, var(--success) 12%, transparent) 0%,
+   946→        transparent 70%
+   947→      ),
+   948→      color-mix(in oklch, var(--success) 5%, transparent);
+   949→    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--success) 22%, transparent);
+   950→  }
+   951→  .dark .hm-better-side {
+   952→    background:
+   953→      radial-gradient(
+   954→        120% 100% at 50% 0%,
+   955→        color-mix(in oklch, var(--success) 16%, transparent) 0%,
+   956→        transparent 70%
+   957→      ),
+   958→      color-mix(in oklch, var(--success) 8%, transparent);
+   959→    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--success) 30%, transparent);
+   960→  }
+   961→  .dark .hm-divider-soft {
+   962→    /* Dark mode: blend border with muted so the divider stays visible against
+   963→       dark surfaces without being too harsh. */
+   964→    background: linear-gradient(
+   965→      to right,
+   966→      transparent,
+   967→      color-mix(in oklch, var(--border) 65%, var(--muted)),
+   968→      transparent
+   969→    );
+   970→  }
+   971→
+   972→  /* Premium tag/chip — smaller pill variant of hm-badge-premium.
+   973→     Use for inline labels, status tags, or category markers. */
+   974→  .hm-tag-premium {
+   975→    display: inline-flex;
+   976→    align-items: center;
+   977→    border-radius: 9999px;
+   978→    padding: 2px 8px;
+   979→    font-size: 10px;
+   980→    line-height: 1.4;
+   981→    text-transform: uppercase;
+   982→    letter-spacing: 0.05em;
+   983→    font-weight: 600;
+   984→    background: linear-gradient(
+   985→      180deg,
+   986→      color-mix(in oklch, var(--accent-blue) 6%, var(--card)),
+   987→      color-mix(in oklch, var(--accent-blue) 3%, var(--card))
+   988→    );
+   989→    border: 1px solid color-mix(in oklch, var(--accent-blue) 22%, var(--border));
+   990→    color: var(--accent-blue);
+   991→  }
+   992→  .dark .hm-tag-premium {
+   993→    background: linear-gradient(
+   994→      180deg,
+   995→      color-mix(in oklch, var(--accent-blue) 14%, transparent),
+   996→      color-mix(in oklch, var(--accent-blue) 8%, transparent)
+   997→    );
+   998→    border: 1px solid color-mix(in oklch, var(--accent-blue) 30%, transparent);
+   999→    color: var(--accent-blue);
+  1000→  }
+  1001→
+  1002→  /* Premium texture — subtle dot-grid background pattern.
+  1003→     Use on hero sections or large empty backgrounds that need a hint of texture
+  1004→     without overpowering content. */
+  1005→  .hm-textured-bg {
+  1006→    background-image: radial-gradient(
+  1007→      color-mix(in oklch, var(--muted-foreground) 8%, transparent) 1px,
+  1008→      transparent 1px
+  1009→    );
+  1010→    background-size: 16px 16px;
+  1011→  }
+  1012→  .dark .hm-textured-bg {
+  1013→    /* Slightly stronger dot opacity on dark surfaces so the grid is perceptible */
+  1014→    background-image: radial-gradient(
+  1015→      color-mix(in oklch, var(--muted-foreground) 12%, transparent) 1px,
+  1016→      transparent 1px
+  1017→    );
+  1018→  }
+  1019→
+  1020→  /* ─── Hero gradient orb — soft atmospheric glow behind hero heading ───
+  1021→     Apply to an absolutely-positioned div inside a relative parent. Uses a
+  1022→     single radial-gradient with a slow floating motion for ambient depth.
+  1023→     No z-index set so it stays below sibling positioned text (which has
+  1024→     position:relative + z-auto, painting in DOM order above this orb). */
+  1025→  .hm-hero-orb {
+  1026→    background:
+  1027→      radial-gradient(circle at 50% 45%,
+  1028→        color-mix(in oklch, var(--accent-blue) 32%, transparent) 0%,
+  1029→        color-mix(in oklch, var(--chart-5) 18%, transparent) 35%,
+  1030→        transparent 70%);
+  1031→    filter: blur(44px);
+  1032→    opacity: 0.85;
+  1033→    transform: translateX(-50%);
+  1034→    animation: hm-hero-float 12s ease-in-out infinite;
+  1035→    pointer-events: none;
+  1036→  }
+  1037→  .dark .hm-hero-orb {
+  1038→    opacity: 0.7;
+  1039→  }
+  1040→  @keyframes hm-hero-float {
+  1041→    0%, 100% { transform: translate(-50%, 0) scale(1); opacity: 0.75; }
+  1042→    50% { transform: translate(-50%, -18px) scale(1.06); opacity: 0.95; }
+  1043→  }
+  1044→}
+  1045→

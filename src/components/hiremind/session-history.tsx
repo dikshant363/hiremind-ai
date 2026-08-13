@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, User, ChevronRight, Sparkles, BarChart3 } from "lucide-react";
+import { Clock, User, ChevronRight, Sparkles, BarChart3, Trash2 } from "lucide-react";
 import { useHireMind } from "@/lib/store";
 
 interface SessionSummary {
@@ -34,19 +34,28 @@ export function SessionHistory() {
   const [sessions, setSessions] = React.useState<SessionSummary[]>([]);
   const [loading, setLoading] = React.useState(true);
 
-  React.useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/session?list=true");
-        if (!res.ok) return;
-        const data = await res.json();
-        if (!cancelled) setSessions(data.sessions || []);
-      } catch { /* ignore */ }
-      finally { if (!cancelled) setLoading(false); }
-    })();
-    return () => { cancelled = true; };
+  const fetchSessions = React.useCallback(async (signal?: AbortSignal) => {
+    try {
+      const res = await fetch("/api/session?list=true", { signal });
+      if (!res.ok) return;
+      const data = await res.json();
+      setSessions(data.sessions || []);
+    } catch { /* ignore */ }
+    finally { setLoading(false); }
   }, []);
+
+  React.useEffect(() => {
+    const ctrl = new AbortController();
+    fetchSessions(ctrl.signal);
+    return () => { ctrl.abort(); };
+  }, [fetchSessions]);
+
+  const clearAll = async () => {
+    try {
+      await fetch("/api/session/cleanup?maxAgeHours=0", { method: "POST" });
+      setSessions([]);
+    } catch { /* ignore */ }
+  };
 
   if (loading || sessions.length === 0) return null;
 
@@ -60,6 +69,14 @@ export function SessionHistory() {
       <div className="flex items-center gap-2 mb-3">
         <Clock className="h-3.5 w-3.5 text-muted-foreground" />
         <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-wider">Recent sessions</h3>
+        <button
+          type="button"
+          onClick={clearAll}
+          className="ml-auto inline-flex items-center gap-1 text-[11px] text-muted-foreground/60 hover:text-critical-foreground transition-colors"
+        >
+          <Trash2 className="h-3 w-3" />
+          Clear all
+        </button>
       </div>
       <div className="space-y-2">
         <AnimatePresence>

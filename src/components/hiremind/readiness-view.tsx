@@ -18,11 +18,14 @@ import {
   CheckCircle2,
   AlertTriangle,
   LayoutGrid,
+  RotateCcw,
+  Link2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useHireMind } from "@/lib/store";
+import { toast } from "sonner";
 import { ScoreRing, CompetencyBar, AnimatedCounter } from "./shell";
 import { SessionSummary } from "./session-summary";
 import { ExportResults } from "./export-results";
@@ -194,7 +197,27 @@ export function ReadinessView() {
     <div className="mx-auto max-w-5xl px-4 sm:px-8 py-8 sm:py-14">
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Job Readiness</div>
-        <h1 className="text-2xl sm:text-4xl font-semibold tracking-tight">Where do you stand?</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl sm:text-4xl font-semibold tracking-tight">Where do you stand?</h1>
+          <Tooltip delayDuration={200}>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 gap-1.5 text-muted-foreground hover:text-foreground"
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href).then(() => {
+                    toast("Session link copied to clipboard");
+                  });
+                }}
+              >
+                <Link2 className="h-3.5 w-3.5" />
+                <span className="text-[11px]">Share</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Copy link to share this session</TooltipContent>
+          </Tooltip>
+        </div>
         <p className="mt-2 text-sm text-muted-foreground max-w-xl">
           This is a Prototype Job Readiness Index — assessment support, not a hiring verdict. It aggregates your match, required coverage and interview evidence.
         </p>
@@ -336,9 +359,20 @@ export function ReadinessView() {
             <h3 className="text-[13px] font-semibold">Your next best action</h3>
           </div>
           <p className="text-[14px] text-foreground leading-relaxed">{readiness.nextBestAction}</p>
-          <Button className="mt-4 gap-2" onClick={() => setView("roadmap")}>
-            Open my roadmap <ArrowRight className="h-4 w-4" />
-          </Button>
+          <div className="flex flex-wrap gap-2 mt-4">
+            <Button className="gap-2" onClick={() => setView("roadmap")}>
+              Open my roadmap <ArrowRight className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => startInterview()}
+              disabled={loading}
+            >
+              {loading ? <Sparkles className="h-4 w-4 hm-thinking" /> : <RotateCcw className="h-4 w-4" />}
+              Retake interview
+            </Button>
+          </div>
           <div className="mt-3">
             <ExportResults />
           </div>

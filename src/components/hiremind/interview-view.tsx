@@ -2,13 +2,14 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Send, SkipForward, Wand2, CheckCircle2, MessageSquareQuote, Zap, Flame, Mountain, Gauge } from "lucide-react";
+import { Sparkles, Send, SkipForward, Wand2, CheckCircle2, MessageSquareQuote, Zap, Flame, Mountain, Gauge, RotateCcw, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useHireMind } from "@/lib/store";
 import type { InterviewDifficulty } from "@/lib/types";
 import { ScoreRing } from "./shell";
 import { AnswerCoach } from "./answer-coach";
+import { InterviewTimer } from "./interview-timer";
 import { cn } from "@/lib/utils";
 
 /** Maps a difficulty level to its tonal color tokens for pills and badges. */
@@ -60,6 +61,7 @@ export function InterviewView() {
   const { interview, startInterview, submitAnswer, loading, loadingStep, setView, isDemo } = useHireMind();
   const [answer, setAnswer] = React.useState("");
   const [difficulty, setDifficulty] = React.useState<InterviewDifficulty>("auto");
+  const [showDifficultySelect, setShowDifficultySelect] = React.useState(false);
 
   if (!interview) {
     return (
@@ -187,10 +189,75 @@ export function InterviewView() {
             <MessageSquareQuote className="h-3.5 w-3.5" />
             Weaknesses identified: {interview.identifiedWeaknesses.join(", ") || "none — strong performance"}
           </div>
-          <div className="mt-7">
+          <div className="mt-7 flex flex-col sm:flex-row gap-3 justify-center">
             <Button size="lg" className="h-12 px-7 gap-2" onClick={() => setView("readiness")}>
               See your readiness →
             </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-12 px-6 gap-2"
+              onClick={() => startInterview()}
+              disabled={loading}
+            >
+              {loading ? <Sparkles className="h-4 w-4 hm-thinking" /> : <RotateCcw className="h-4 w-4" />}
+              Retake the interview
+            </Button>
+          </div>
+
+          {/* Retake with different difficulty */}
+          <div className="mt-4">
+            <button
+              onClick={() => setShowDifficultySelect((v) => !v)}
+              className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${showDifficultySelect ? "rotate-180" : ""}`} />
+              Retake with different difficulty
+            </button>
+            <AnimatePresence>
+              {showDifficultySelect && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-4 grid sm:grid-cols-2 gap-2.5 text-left max-w-md mx-auto">
+                    {DIFFICULTY_OPTIONS.map((opt) => {
+                      const Icon = opt.icon;
+                      return (
+                        <button
+                          key={opt.value}
+                          onClick={() => {
+                            startInterview({ difficulty: opt.value });
+                            setShowDifficultySelect(false);
+                          }}
+                          disabled={loading}
+                          className="group rounded-xl border border-border/60 bg-card/40 p-3 text-left hover:border-border hover:bg-secondary/40 transition-all duration-200 disabled:opacity-50"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span
+                              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
+                              style={{
+                                background: `color-mix(in oklch, ${opt.tone} 12%, transparent)`,
+                                color: opt.tone,
+                              }}
+                            >
+                              <Icon className="h-3.5 w-3.5" />
+                            </span>
+                            <div>
+                              <div className="text-[12px] font-semibold">{opt.label}</div>
+                              <div className="text-[10px] text-muted-foreground leading-relaxed">{opt.description}</div>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </motion.div>
       </div>
@@ -241,9 +308,12 @@ export function InterviewView() {
                 </span>
               )}
             </div>
-            <span className="tabular-nums">
-              Question {interview.currentIndex + 1} of {interview.totalQuestions}
-            </span>
+            <div className="flex items-center gap-3">
+              <InterviewTimer />
+              <span className="tabular-nums">
+                Question {interview.currentIndex + 1} of {interview.totalQuestions}
+              </span>
+            </div>
           </div>
           <div className="mt-3 h-1 w-full rounded-full bg-muted overflow-hidden">
             <div

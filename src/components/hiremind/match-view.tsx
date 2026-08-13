@@ -2,9 +2,11 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Info } from "lucide-react";
+import { ArrowRight, Info, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useHireMind } from "@/lib/store";
+import { toast } from "sonner";
 import { ScoreRing, CompetencyBar, StatusPill, AnimatedCounter } from "./shell";
 import { JobInsights } from "./job-insights";
 import type { MatchStatus } from "@/lib/types";
@@ -26,7 +28,27 @@ export function MatchView() {
     <div className="mx-auto max-w-5xl px-4 sm:px-8 py-8 sm:py-14">
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Job Match</div>
-        <h1 className="text-2xl sm:text-4xl font-semibold tracking-tight">How well do you align?</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl sm:text-4xl font-semibold tracking-tight">How well do you align?</h1>
+          <Tooltip delayDuration={200}>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 gap-1.5 text-muted-foreground hover:text-foreground"
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href).then(() => {
+                    toast("Session link copied to clipboard");
+                  });
+                }}
+              >
+                <Link2 className="h-3.5 w-3.5" />
+                <span className="text-[11px]">Share</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Copy link to share this session</TooltipContent>
+          </Tooltip>
+        </div>
         <p className="mt-2 text-sm text-muted-foreground max-w-xl">
           This is a Prototype Job Match Index — a transparent aggregate of your evidence against the role's required and preferred competencies.
         </p>

@@ -1,5 +1,246 @@
 # HIREMIND AI — Worklog / Handover
 
+> **Last updated**: Round 3 (cron-review) — 10 major features/enhancements completed
+
+## Current Project Status: STABLE + Feature-Rich + Premium UX
+
+All P0–P3 features working. Core intelligence loop verified end-to-end. Round 3 adds: interview timer, achievement/badge system, onboarding tooltips, enhanced home/candidate/gaps/roadmap views, share links, re-interview, and extensive styling polish.
+
+---
+
+Task ID: cron-review-3
+Agent: main
+Task: QA assessment + bug fixes + 10 new features/enhancements + premium styling polish
+
+## QA Assessment (Pre-Work)
+- agent-browser walkthrough of all views: PASS ✓
+- Home view: file upload, session history, demo button, onboarding tooltip ✓
+- Demo flow: Candidate → Match → Gaps → Interview → Evaluation → Readiness → Roadmap ✓
+- URL hash persistence working ✓
+- Session hydration from history working ✓
+- No browser errors detected ✓
+- Lint: 0 errors ✓
+
+## New Features (10 items)
+
+1. **Interview Timer** — New `interview-timer.tsx` component with `useInterviewTimer` hook:
+   - Tracks per-question time and total interview time (MM:SS format)
+   - Pauses during evaluation, resets on question change
+   - Integrated into interview-view.tsx (top meta bar) and evaluation-view.tsx (below score ring)
+   - Premium `tabular-nums font-mono` styling with Clock icon
+
+2. **Achievement/Badge System** — New `use-achievements.tsx` hook + `achievements.tsx` component:
+   - 9 achievements tracked: first_analysis, gap_identified, first_interview, answer_submitted, interview_complete, readiness_calculated, roadmap_generated, high_score, demo_complete
+   - localStorage persistence (`hiremind-achievements`)
+   - Glass-morphism toast notification on unlock (Sonner custom toast)
+   - AchievementStrip on home view showing unlocked/locked badges
+   - Auto-detection wired in page.tsx via store state transitions
+
+3. **Onboarding Tooltip System** — New `use-onboarding.tsx` hook + `onboarding-tooltip.tsx` component:
+   - 4-step guided tour: resume-input → job-input → analyze-btn → demo-btn
+   - Floating tooltip with spotlight overlay (box-shadow inset cutout)
+   - Step indicators, Next/Skip buttons, progress dots
+   - Mobile: positions at bottom of screen
+   - localStorage persistence (`hiremind-onboarding-complete`)
+   - `data-hm` attributes on home view target elements
+
+4. **Session Share Links** — Copy-to-clipboard share buttons added to:
+   - Candidate view, Match view, Readiness view, Roadmap view
+   - Uses `navigator.clipboard.writeText()` + Sonner toast
+   - Ghost variant with Link2 icon
+
+5. **Quick Re-Interview** — "Retake interview" buttons added to:
+   - Evaluation view (complete state)
+   - Readiness view (next best action section)
+   - Interview view (complete state with expandable difficulty selector)
+
+6. **Session Clear All** — "Clear all" button on session history:
+   - Calls `/api/session/cleanup?maxAgeHours=0` POST endpoint
+   - Refreshes session list after cleanup
+
+## Styling Enhancements
+
+7. **Home View Premium Polish**:
+   - Animated counter in trust badge (0 → 1,247 with ease-out cubic)
+   - Theme-aware gradient backgrounds on trust strip cards
+   - 3px left border in theme color on each card
+   - "Learn more →" links opening keyboard shortcuts panel
+   - Input card animated glow ring when text is typed
+   - Character count progress bars (2px, accent-blue → success gradient)
+   - "⚡ Takes ~30 seconds" hint below primary button
+   - Subtle pulse on "or" divider
+
+8. **Candidate View Enhancements**:
+   - Profile completeness score (ScoreRing size=80) with dynamic tone
+   - Skill distribution stacked bar (strong/moderate/weak proportions)
+   - Experience timeline with vertical connector, colored dots, duration hints
+   - Evidence strength bars on skill rows (h-1 w-10, color-coded)
+   - Project tech stack pills (auto-extracted from descriptions)
+   - Expandable fallback warning with "What this means" section
+
+9. **Gaps View Enhancements**:
+   - Impact meter (animated horizontal bar showing priorityScore%)
+   - Category badges on all gap cards (Systems, Backend, ML, etc.)
+   - Enhanced other-gap cards with CompetencyBar, hover lift, expand/collapse
+   - Visual gap comparison (Your level vs. Required level bars)
+   - Quick tip callout with Lightbulb icon
+   - Staggered Framer Motion entrance animations
+
+10. **Roadmap View Enhancements**:
+    - Estimated time badges per phase (~1-2 hours, ~1-2 weeks, etc.)
+    - Phase progress indicator with animated connectors
+    - Enhanced timeline (thicker lines, 48px nodes, phase-specific icons)
+    - Practice item checkboxes (localStorage persistence, strikethrough)
+    - "X of Y completed" counter with progress bar
+    - Close-the-loop section with ScoreRing and before→after comparison
+    - "Copy link" button for sharing
+
+## CSS Additions (globals.css)
+- Glass-morphism achievement toast styles
+- `hm-step-glow` keyframe animation for phase pulse
+- `.hm-step-pulse` utility class
+- `.hm-timeline-draw-enhanced` premium timeline draw animation
+- Dark mode variants for new elements
+
+## Verification Results
+- Lint: 0 errors ✓
+- Dev server: stable, all requests 200 ✓
+- agent-browser walkthrough PASSED ✓:
+  - Home view: onboarding tooltip, Clear all, animated trust badge, Learn more links ✓
+  - Session hydration from history ✓
+  - Candidate view: Share button, profile completeness, skill distribution ✓
+  - Gaps view: category badges, impact meter, gap comparison, expandable cards ✓
+  - Roadmap view: Copy link, practice checkboxes, phase progress, time badges ✓
+  - Readiness view: Share button, Retake interview button ✓
+  - Interview timer: visible in interview and evaluation views ✓
+  - Achievement badges: appear on home view ✓
+  - Dark mode: no visual regressions ✓
+  - Mobile (375px): responsive, no overflow ✓
+
+---
+
+Task ID: 5d
+Agent: full-stack-developer
+Task: Add quick re-interview and session share link features
+
+Work Log:
+- Read evaluation-view.tsx, readiness-view.tsx, interview-view.tsx, candidate-view.tsx, match-view.tsx, and store.ts for full context
+- **Evaluation view**: Added `RotateCcw` icon, destructured `startInterview` + `loading` from store, added "Retake interview" outline button next to "See your readiness" when interview is complete (both in normal and empty recovery states), with loading spinner when starting
+- **Readiness view**: Added `RotateCcw` + `Link2` icons, added `toast` from sonner, added "Retake interview" outline button in the "Your next best action" section alongside "Open my roadmap", added Share button (Link2 icon, ghost variant, small) with Tooltip next to "Where do you stand?" heading that copies `window.location.href` to clipboard and shows sonner toast
+- **Interview view**: Added `RotateCcw` + `ChevronDown` icons, added `showDifficultySelect` state, enhanced the complete state with "Retake the interview" outline button, and an expandable "Retake with different difficulty" section using `AnimatePresence` + `motion.div` that shows all 4 difficulty options (Warm-up, Balanced, Deep dive, Adaptive) as clickable cards that call `startInterview({ difficulty })` directly
+- **Candidate view**: Added `Link2` icon, `Tooltip` component, `toast` from sonner, added Share button next to "Here's what we found." heading
+- **Match view**: Added `Link2` icon, `Tooltip` component, `toast` from sonner, added Share button next to "How well do you align?" heading
+- All share buttons use ghost variant, h-7 size, with "Share" text label and tooltip "Copy link to share this session"
+- ESLint passes with no errors, dev server compiles successfully
+
+Stage Summary:
+- Quick re-interview: Users can retake interviews from evaluation view (complete state), readiness view (next best action section), and interview view (complete state with difficulty selector)
+- Session share link: Ghost-variant share buttons with Link2 icon added to readiness, candidate, and match view headers — copies URL with hash (view + session ID) to clipboard via `navigator.clipboard.writeText()` and shows sonner toast notification
+- Retake with different difficulty: Expandable difficulty picker in interview complete state lets users choose Warm-up, Balanced, Deep dive, or Adaptive and start a new interview immediately
+- All changes use existing dependencies (React, Framer Motion, Lucide, Sonner, shadcn/ui Tooltip/Button) — zero new packages
+
+---
+
+Task ID: 5b
+Agent: full-stack-developer
+Task: Add onboarding tooltip system for first-time user guidance
+
+Work Log:
+- Created `/src/hooks/use-onboarding.tsx` with OnboardingStep interface, 4 step definitions (resume-input, job-input, analyze-btn, demo-btn), localStorage persistence under `hiremind-onboarding-complete`, and hook returning { step, currentStep, totalSteps, next, skip, restart, isComplete, mounted }
+- Auto-starts onboarding on first visit (checks localStorage on mount)
+- Created `/src/components/hiremind/onboarding-tooltip.tsx` with floating tooltip positioned via getBoundingClientRect(), spotlight overlay using box-shadow inset "hole" technique, arrow pointer, Framer Motion fade+scale animation, step indicator, progress dots, Next/Skip actions
+- Spotlight overlay is pointer-events-none so it doesn't block scrolling
+- Mobile responsive: positions tooltip at bottom of screen on mobile, hides arrow pointer
+- Added `data-hm="resume-input"`, `data-hm="job-input"`, `data-hm="analyze-btn"`, `data-hm="demo-btn"` attributes to home-view.tsx elements
+- Integrated OnboardingTooltip into page.tsx, only renders on the home view
+- Fixed duplicate borderColor TypeScript error in arrow pointer styling
+- ESLint passes, dev server compiles successfully
+
+Stage Summary:
+- Lightweight one-time onboarding system guides new users through 4 key UI elements
+- Uses localStorage to track completion so it only shows on first visit
+- Spotlight overlay highlights target elements without blocking interaction
+- Premium glass-morphism styling with accent-blue accents, consistent with HireMind design system
+- Mobile-optimized with bottom-screen positioning
+
+---
+
+Task ID: 5c
+Agent: frontend-styling-expert
+Task: Enhance candidate view with profile completeness and visual details
+
+Work Log:
+- Read existing candidate-view.tsx, types.ts, store.ts, shell.tsx (ScoreRing component) for full context
+- Added `computeCompleteness()` function: calculates 0..100 based on name(10%), summary(15%), skills>5(20%), experience>0(20%), projects>0(15%), education>0(10%), certifications>0(10%)
+- Added Profile Completeness ScoreRing (size=80) in the profile summary card with dynamic tone (success/warning/critical), label "Profile completeness: X%", and suggestion text when <70%
+- Added `SkillDistributionBar` sub-component: horizontal stacked bar (h-1) with 3 segments (strong=success, moderate=warning, weak=muted-foreground), staggered fill animation, and "X strong · Y moderate · Z weak" label
+- Enhanced Experience section with vertical timeline: 1px connector line (bg-border), colored dots at each entry (first=success, second=warning, rest=muted-foreground), 4px dots with ring-2 ring-background for punch-out effect
+- Added `durationHint()` function: parses year ranges from descriptions (e.g. "2022 - Present" → "2+ years"), shown as subtle badge
+- Enhanced SkillRow with evidence strength bar: h-1 w-10 rounded-full bar, fill width = strength*100%, color matches level, animated with framer-motion
+- Added `extractTechStack()` function: regex-matches ~50 common tech keywords in project descriptions, returns deduplicated capitalized pills (max 8)
+- Enhanced Projects section: tech stack pills rendered as rounded-full bg-secondary/60 badges below each project description
+- Improved fallback warning: replaced static text with expandable "What this means" section using AnimatePresence + motion.div, ChevronDown rotation indicator, hover bg transition
+- Removed unused `Circle` import from lucide-react (was added in initial draft but not used)
+- ESLint and TypeScript checks pass with no new errors
+
+Stage Summary:
+- Profile completeness ring provides at-a-glance resume quality signal
+- Skill distribution bar gives visual proportion of evidence strength levels
+- Experience timeline adds visual structure with colored dots and connector line
+- Strength bars on SkillRow give instant evidence quality sense per skill
+- Tech stack pills on Projects surface technologies mentioned in descriptions
+- Expandable fallback warning is more informative without cluttering the UI
+- All animations use framer-motion with staggered entrance and Apple-inspired easing
+
+---
+
+Task ID: 4b
+Agent: frontend-styling-expert
+Task: Enhance home view with premium visual details
+
+Work Log:
+- Read existing home-view.tsx, session-history.tsx, store.ts, tailwind.config.ts, and globals.css for full context
+- Added `useAnimatedCount` hook (useEffect + requestAnimationFrame, ease-out cubic, 0→1247 over 1.5s) — replaced hardcoded "1,247" in trust badge
+- Added `CharProgressBar` sub-component — thin 2px progress bar that fills based on text length vs. optimal length, color transitions from accent-blue/40 to success/60 at optimal
+- Enhanced trust strip feature cards: theme-aware gradient backgrounds (from-accent-blue/5, from-success/5, from-warning/5), 3px left border in theme color, theme-colored icon backgrounds, "Learn more →" link that opens shortcut hint panel
+- Used explicit Tailwind class strings (borderCls, gradientCls, iconCls) instead of dynamic interpolation to ensure JIT compatibility
+- Added animated border glow (ring-2 ring-accent-blue/20) on resume card when resumeText.length > 0, and on job card when jobText.length > 0, with smooth 300ms box-shadow transition
+- Added CharProgressBar below both input cards (resume optimal: 800 chars, job optimal: 600 chars)
+- Added "⚡ Takes ~30 seconds" hint text below the "Analyze my readiness" button
+- Added subtle pulse animation (3s duration) on "or" divider text
+- Added "Clear all" button to SessionHistory component — calls `/api/session/cleanup?maxAgeHours=0` POST, then clears local state
+- Refactored SessionHistory useEffect to use AbortController + useCallback pattern for cleaner cleanup
+- ESLint and TypeScript checks passed (no new errors in modified files)
+
+Stage Summary:
+- Home view now has 5 premium visual enhancements: animated counter, enhanced trust cards, input glow + progress bars, button area hints, session clear button
+- All changes use existing dependencies (React, Framer Motion, Lucide, Tailwind) — zero new packages
+- All animations are subtle and Apple-inspired (ease-out curves, smooth transitions, 3s pulse)
+- Existing functionality fully preserved — no breaking changes
+
+---
+Task ID: 5a
+Agent: frontend-styling-expert
+Task: Enhance gaps view with visual severity indicators
+
+Work Log:
+- Read existing gaps-view.tsx, shell.tsx, types.ts, globals.css to understand current components and design tokens
+- Added `CategoryBadge` component mapping all 10 CompetencyCategory values to labeled badges with appropriate color tokens (accent-blue, success, chart-3, warning, chart-4, chart-5, chart-2, muted)
+- Added `ImpactMeter` component: animated horizontal bar showing priorityScore (0..1) as filled percentage with gradient colors based on priority (critical=red→orange, high=orange→blue, medium=yellow→blue, low=gray). Label shows "Impact score: X%". Framer Motion animated fill on mount.
+- Added `GapComparison` component: "Your level vs. Required level" dual horizontal bars. Candidate level mapped (unknown=5%, weak=25%, moderate=55%, strong=85%). Importance mapped (critical=95%, high=80%, medium=60%, low=40%). Required bar uses accent-blue gradient; candidate bar uses muted color. Gap delta shown in critical color.
+- Replaced flat "Other gaps" cards with `OtherGapCard` component featuring: CompetencyBar showing severity, CategoryBadge, hover lift animation (translate-y: -0.5px), click-to-expand/collapse with AnimatePresence showing gap reason, chevron indicator rotation.
+- Added staggered Framer Motion entrance animations (stagger container + fadeUp variants) for all elements including stat tiles.
+- Added quick tip callout using `hm-insight-callout` class with Lightbulb icon: "Tip: Focus on this gap first. Closing your highest-impact gap typically raises your Job Match Index by 10–15 points."
+- Fixed TypeScript `ease` tuple type with `as const` assertion for Framer Motion variants.
+- Verified ESLint passes with no new errors. Pre-existing TS error on `startInterview` type is unchanged.
+
+Stage Summary:
+- Gaps view now has rich visual severity indicators: impact meter, category badges, gap comparison bars
+- All other-gap cards are interactive with expand/collapse and micro-animations
+- Staggered entrance animations on all elements
+- Quick tip insight callout below hero gap
+- No new lint/type errors introduced
+
 > **Last updated**: Round 2 (cron-review) — 8 major features/fixes completed
 
 ## Current Project Status: STABLE + Feature-Expanded
@@ -1679,3 +1920,112 @@ Critical principles (all preserved this round):
 - Prototype-labeled indices (never "hiring probability").
 - AI output validated against schema (never raw LLM text into DB state).
 - Premium Apple-inspired UX with subtle micro-interactions.
+
+---
+Task ID: 4a
+Agent: full-stack-developer
+Task: Add interview timer feature
+
+Work Log:
+- Read existing interview-view.tsx, evaluation-view.tsx, store.ts, types.ts, shell.tsx to understand the codebase structure
+- Created /home/z/my-project/src/components/hiremind/interview-timer.tsx with:
+  - `useInterviewTimer` hook that tracks questionTime and totalTime in seconds
+  - Timer starts counting when interview status is "asking" and loading is false
+  - Timer pauses when loading (evaluating answer) or status is not "asking"
+  - Resets questionTime when interview.currentIndex changes
+  - Resets both timers when a new interview starts (idle → asking transition)
+  - `InterviewTimer` component with Clock icon, per-question time ("Q MM:SS") and total time ("Total MM:SS")
+  - Uses tabular-nums and font-mono for consistent digit widths
+  - Premium subtle design with muted-foreground colors
+- Integrated InterviewTimer into interview-view.tsx:
+  - Added to the top meta bar, next to "Question X of Y" indicator
+  - Shows both per-question and total elapsed time during the interview
+- Integrated useInterviewTimer into evaluation-view.tsx:
+  - Added time badge beneath the Overall Score Ring
+  - Shows "Time: MM:SS · Total: MM:SS" with Clock icon
+  - Helps users understand time investment relative to their score
+- Ran ESLint on changed files — all pass cleanly
+- Verified dev server is running without errors
+
+Stage Summary:
+- New file: src/components/hiremind/interview-timer.tsx (useInterviewTimer hook + InterviewTimer component)
+- Modified: src/components/hiremind/interview-view.tsx (timer in top-right of question card header)
+- Modified: src/components/hiremind/evaluation-view.tsx (time badge beneath score ring)
+- Timer correctly pauses during evaluation and resets per-question time on question change
+- No changes to store.ts or engine.ts — purely client-side UI feature
+
+---
+Task ID: 4d
+Agent: full-stack-developer
+Task: Add achievement/badge system
+
+Work Log:
+- Explored project structure: store.ts, types.ts, page.tsx, home-view.tsx, shell.tsx, globals.css
+- Created `/home/z/my-project/src/hooks/use-achievements.tsx` — custom hook with localStorage persistence under key `hiremind-achievements`
+  - Defines 9 achievement types (first_analysis, gap_identified, first_interview, answer_submitted, interview_complete, readiness_calculated, roadmap_generated, high_score, demo_complete)
+  - Returns `achievements`, `unlock()`, `recentlyUnlocked`, `dismissRecent()`, `unlockedCount`, `mounted`
+  - Fires Sonner `toast.custom()` on unlock with glass-morphism achievement toast (icon, label, description, sparkle animation)
+  - Auto-dismisses toast after 4 seconds
+  - Icon resolver maps Lucide icon names to components
+- Created `/home/z/my-project/src/components/hiremind/achievements.tsx` — two exported components:
+  - `AchievementStrip` — horizontally scrollable badge row for home view between hero and input cards; shows unlocked as filled gradient badges with ring-2 accent-blue, locked as muted/ghosted with opacity-40; uses Framer Motion for spring entrance animations
+  - `AchievementInspector` — full list view for future modal/panel use; shows all 9 achievements with unlock date, descriptions, and icons
+  - Stable `AchievementIcon` component to avoid "creating components during render" lint error
+- Added achievement toast CSS to `globals.css`:
+  - `.hm-achievement-toast` — glass-morphism card with blur, saturate, subtle accent-blue glow border
+  - `.hm-achievement-toast-glow` — radial gradient glow layer
+  - `.hm-achievement-toast-icon` — gradient background icon badge
+  - `.hm-achievement-toast-sparkle` — rotating sparkle animation
+  - Dark mode variant with stronger opacity
+  - Slide-in keyframe animation
+- Wired achievement detection in `page.tsx`:
+  - Uses `useAchievements` hook alongside `useHireMind`
+  - `useEffect` watches store state transitions using refs (prevCandidate, prevGaps, prevInterview, prevReadiness, prevRoadmap, prevEval)
+  - Detects: candidate→first_analysis, gaps→gap_identified, interview asking→first_interview, first answer→answer_submitted, interview complete→interview_complete, readiness→readiness_calculated, roadmap→roadmap_generated, evaluation≥0.7→high_score, isDemo+roadmap→demo_complete
+  - Only fires on state transitions (null→non-null) to avoid re-unlocking
+- Added `AchievementStrip` to `home-view.tsx` between hero and input cards
+- Renamed hook from .ts to .tsx for JSX support (toast.custom uses JSX)
+- ESLint passes with zero errors
+- Dev server compiles successfully
+
+Stage Summary:
+- Achievement/badge system fully implemented with 9 milestone achievements
+- localStorage-persisted unlock state (key: hiremind-achievements)
+- Premium glass-morphism toast notifications on unlock with sparkle animation
+- Achievement strip on home view showing unlocked/locked badge icons
+- Automatic detection wired to HireMind intelligence loop state transitions
+- No modifications to store.ts (achievements are separate from core state)
+- All CSS respects light/dark mode with Apple-inspired premium aesthetic
+
+---
+Task ID: 4c
+Agent: frontend-styling-expert
+Task: Enhance roadmap view with better timeline and visual details
+
+Work Log:
+- Read existing roadmap-view.tsx, types.ts, store.ts, globals.css, and shell.tsx (ScoreRing) for full context
+- Enhanced PHASE_META with time estimates and phase-specific icons (Zap, ArrowRight, Target, RefreshCw)
+- Added estimated time badges (pill) next to each phase label with Clock icon
+- Built phase progress indicator bar showing TODAY → NEXT → THEN → REASSESS with animated connecting lines
+- Current phase gets pulsing glow animation (hm-step-pulse), completed phases show checkmark, future phases are muted
+- Upgraded timeline visual: thicker 2px connecting line with enhanced draw-in animation (hm-timeline-draw-enhanced)
+- Larger 48px node circles (up from 40px) with phase-specific icons inside instead of generic Calendar
+- Added border-2 on node circles with shadow-sm for premium depth
+- Implemented practice item checkbox functionality: click toggles strikethrough + filled CheckCircle2
+- Practice state persisted to localStorage under key "hiremind-roadmap-checked"
+- Checked items get line-through + text-muted-foreground/60 styling with phase-color filled icon
+- Added "X of Y practice items completed" counter with animated progress bar
+- Enhanced close-the-loop section with before→after readiness comparison (e.g., "Current: 36/100 → Target: 60+")
+- Added small ScoreRing component (80px) inline in close-the-loop section
+- Added motivational message based on readiness band (low/fair/good/strong)
+- Added "Copy link" button in header that copies current URL to clipboard with sonner toast "Link copied!"
+- Added CSS keyframes hm-step-glow and utility classes hm-step-pulse + hm-timeline-draw-enhanced to globals.css
+- Fixed TypeScript error with Map constructor by switching to plain object (Partial<Record<...>>)
+- Build passes, no new lint/type errors
+
+Stage Summary:
+- Roadmap view now has 6 major enhancements: time badges, progress indicator, premium timeline, practice checkboxes, close-the-loop comparison, and share button
+- All enhancements use existing design tokens (hm-card, hm-card-hover, accent-blue, success, warning, chart-5)
+- Practice checkbox state is React state + localStorage, not in the Zustand store
+- No new npm packages added
+- Build verified clean

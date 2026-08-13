@@ -2,15 +2,17 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, TrendingDown, Lightbulb, CheckCircle2, AlertTriangle, Sparkles, MessageSquareQuote } from "lucide-react";
+import { ArrowRight, TrendingDown, Lightbulb, CheckCircle2, AlertTriangle, Sparkles, MessageSquareQuote, Clock, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHireMind } from "@/lib/store";
 import { CompetencyBar, AnimatedCounter, ScoreRing } from "./shell";
 import { InterviewInsights } from "./interview-insights";
+import { useInterviewTimer } from "./interview-timer";
 import type { AnswerEvaluation } from "@/lib/types";
 
 export function EvaluationView() {
-  const { lastEvaluation, interview, setView, isDemo } = useHireMind();
+  const { lastEvaluation, interview, setView, isDemo, startInterview, loading } = useHireMind();
+  const { formattedQuestion, formattedTotal, questionTime, totalTime } = useInterviewTimer();
 
   // Empty state — happens when user refreshes on /evaluation view, since
   // lastEvaluation isn't persisted (only the interview state is). Show a
@@ -28,14 +30,20 @@ export function EvaluationView() {
           </h1>
           <p className="mt-3 text-sm text-muted-foreground max-w-md mx-auto">
             {isComplete
-              ? "Head to your readiness report to see the full picture, or open your roadmap for next steps."
+              ? "Head to your readiness report to see the full picture, or retake the interview to practice more."
               : "Continue your adaptive interview — each question adapts based on your previous answer."}
           </p>
           <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
             {isComplete ? (
-              <Button size="lg" className="h-12 px-7 gap-2" onClick={() => setView("readiness")}>
-                See your readiness <ArrowRight className="h-4 w-4" />
-              </Button>
+              <>
+                <Button size="lg" className="h-12 px-7 gap-2" onClick={() => setView("readiness")}>
+                  See your readiness <ArrowRight className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="lg" className="h-12 px-6 gap-2" onClick={() => startInterview()} disabled={loading}>
+                  {loading ? <Sparkles className="h-4 w-4 hm-thinking" /> : <RotateCcw className="h-4 w-4" />}
+                  Retake interview
+                </Button>
+              </>
             ) : (
               <Button size="lg" className="h-12 px-7 gap-2" onClick={() => setView("interview")}>
                 Continue interview <ArrowRight className="h-4 w-4" />
@@ -103,6 +111,13 @@ export function EvaluationView() {
               tone={tone}
               delay={300}
             />
+            {/* Time taken badge — subtle contextual metric beneath the ring */}
+            <div className="mt-3 flex items-center gap-1.5 text-[11px] text-muted-foreground tabular-nums">
+              <Clock className="h-3 w-3 text-muted-foreground/60" />
+              <span>Time: {formattedQuestion}</span>
+              <span className="text-muted-foreground/40">·</span>
+              <span>Total: {formattedTotal}</span>
+            </div>
           </div>
         </div>
       </motion.div>
@@ -216,7 +231,23 @@ export function EvaluationView() {
       </AnimatePresence>
 
       {/* Actions */}
-      <div className="mt-8 flex items-center justify-end gap-3">
+      <div className="mt-8 flex items-center justify-end gap-3 flex-wrap">
+        {isComplete && (
+          <Button
+            variant="outline"
+            size="lg"
+            className="h-12 px-6 gap-2"
+            onClick={() => startInterview()}
+            disabled={loading}
+          >
+            {loading ? (
+              <Sparkles className="h-4 w-4 hm-thinking" />
+            ) : (
+              <RotateCcw className="h-4 w-4" />
+            )}
+            Retake interview
+          </Button>
+        )}
         {isComplete ? (
           <Button size="lg" className="h-12 px-7 gap-2" onClick={() => setView("readiness")}>
             See your readiness <ArrowRight className="h-4 w-4" />

@@ -1,0 +1,751 @@
+     1→/**
+     2→ * HIREMIND AI — Deterministic Domain Engine
+     3→ *
+     4→ * "AI understands. Application logic decides."
+     5→ *
+     6→ * All final scoring, gap prioritization, competency state transitions and
+     7→ * readiness indices are computed here deterministically. The LLM may propose
+     8→ * interpretations, but this module owns the canonical numbers shown to users.
+     9→ */
+    10→
+    11→import type {
+    12→  CandidateProfile,
+    13→  JobProfile,
+    14→  JobRequirement,
+    15→  MatchResult,
+    16→  CompetencyMatchRow,
+    17→  SkillGap,
+    18→  GapPriority,
+    19→  SkillLevel,
+    20→  MatchStatus,
+    21→  InterviewState,
+    22→  InterviewQuestion,
+    23→  InterviewDifficulty,
+    24→  AnswerEvaluation,
+    25→  CompetencyState,
+    26→  ReadinessResult,
+    27→  Roadmap,
+    28→  RoadmapStep,
+    29→} from "./types";
+    30→import { bestSemanticMatch, evidenceStrength } from "./text";
+    31→import { normalizeSkill } from "./taxonomy";
+    32→
+    33→// ---------- helpers ----------
+    34→
+    35→const IMPORTANCE_WEIGHT: Record<JobRequirement["importance"], number> = {
+    36→  critical: 1.0,
+    37→  high: 0.75,
+    38→  medium: 0.5,
+    39→  low: 0.25,
+    40→};
+    41→
+    42→const LEVEL_VALUE: Record<SkillLevel, number> = {
+    43→  unknown: 0,
+    44→  weak: 0.3,
+    45→  moderate: 0.6,
+    46→  strong: 1.0,
+    47→};
+    48→
+    49→export function levelFromStrength(strength: number): SkillLevel {
+    50→  if (strength >= 0.75) return "strong";
+    51→  if (strength >= 0.4) return "moderate";
+    52→  if (strength > 0) return "weak";
+    53→  return "unknown";
+    54→}
+    55→
+    56→// ---------- candidate profile helpers ----------
+    57→
+    58→export function indexCandidateSkills(profile: CandidateProfile): {
+    59→  skills: string[];
+    60→  byCompetency: Map<string, { level: SkillLevel; evidence: string; strength: number }>;
+    61→} {
+    62→  const byCompetency = new Map<string, { level: SkillLevel; evidence: string; strength: number }>();
+    63→  for (const ev of profile.evidence) {
+    64→    const norm = normalizeSkill(ev.skill);
+    65→    const existing = byCompetency.get(norm.competency);
+    66→    const strength = Math.max(ev.strength, existing?.strength ?? 0);
+    67→    const level = levelFromStrength(strength);
+    68→    // Prefer evidence with the highest strength
+    69→    if (!existing || ev.strength >= existing.strength) {
+    70→      byCompetency.set(norm.competency, { level, evidence: ev.evidence, strength });
+    71→    } else {
+    72→      byCompetency.set(norm.competency, { level: existing.level, evidence: existing.evidence, strength: existing.strength });
+    73→    }
+    74→  }
+    75→  return { skills: profile.skills, byCompetency };
+    76→}
+    77→
+    78→// ---------- semantic match engine ----------
+    79→
+    80→export function computeMatch(candidate: CandidateProfile, job: JobProfile): MatchResult {
+    81→  const { byCompetency } = indexCandidateSkills(candidate);
+    82→
+    83→  const rows: CompetencyMatchRow[] = job.requirements.map((req) => {
+    84→    const norm = normalizeSkill(req.skill);
+    85→    const candidateEntry = byCompetency.get(norm.competency);
+    86→    const semantic = bestSemanticMatch(req.skill, candidate.skills);
+    87→    const candidateLevel: SkillLevel = candidateEntry?.level ?? "unknown";
+    88→    const evidence = candidateEntry?.evidence ?? null;
+    89→
+    90→    let status: MatchStatus;
+    91→    let contribution = 0;
+    92→    const importanceW = IMPORTANCE_WEIGHT[req.importance];
+    93→
+    94→    if (candidateLevel === "unknown" && semantic.score < 0.3) {
+    95→      status = req.required ? "gap" : "unknown";
+    96→      // Gap on required critical skill is a strong negative signal
+    97→      contribution = req.required ? 0.0 : 0.05;
+    98→    } else if (candidateLevel === "unknown" && semantic.score >= 0.5) {
+    99→      status = "weak";
+   100→      contribution = 0.35 * importanceW;
+   101→    } else if (candidateLevel === "weak") {
+   102→      status = "weak";
+   103→      contribution = 0.45 * importanceW;
+   104→    } else if (candidateLevel === "moderate") {
+   105→      status = "matched";
+   106→      contribution = 0.75 * importanceW;
+   107→    } else if (candidateLevel === "strong") {
+   108→      status = "matched";
+   109→      contribution = 1.0 * importanceW;
+   110→    } else {
+   111→      status = "weak";
+   112→      contribution = 0.4 * importanceW;
+   113→    }
+   114→
+   115→    // Boost contribution slightly by semantic similarity for unknown cases
+   116→    if (candidateLevel === "unknown" && semantic.score >= 0.5) {
+   117→      contribution = Math.max(contribution, semantic.score * importanceW * 0.7);
+   118→    }
+   119→
+   120→    return {
+   121→      competency: norm.competency,
+   122→      category: norm.category,
+   123→      required: req.required,
+   124→      importance: req.importance,
+   125→      candidateLevel,
+   126→      status,
+   127→      evidence,
+   128→      semanticScore: Math.round(semantic.score * 100) / 100,
+   129→      contribution: Math.round(contribution * 100) / 100,
+   130→    };
+   131→  });
+   132→
+   133→  // Aggregate: weighted sum of contributions over weighted max
+   134→  const totalWeight = rows.reduce((s, r) => s + IMPORTANCE_WEIGHT[r.importance] * (r.required ? 1.0 : 0.6), 0);
+   135→  const totalScore = rows.reduce((s, r) => s + r.contribution, 0);
+   136→  const index = totalWeight > 0 ? Math.round((totalScore / totalWeight) * 100) : 0;
+   137→
+   138→  // Components — explainable breakdown (only implemented factors shown)
+   139→  const requiredRows = rows.filter((r) => r.required);
+   140→  const matched = rows.filter((r) => r.status === "matched").length;
+   141→  const weak = rows.filter((r) => r.status === "weak").length;
+   142→  const gap = rows.filter((r) => r.status === "gap").length;
+   143→
+   144→  const requiredCoverage =
+   145→    requiredRows.length > 0
+   146→      ? requiredRows.filter((r) => r.status === "matched").length / requiredRows.length
+   147→      : 1;
+   148→  const evidenceStrengthAvg = rows
+   149→    .filter((r) => r.evidence)
+   150→    .reduce((s, r) => s + (r.contribution / Math.max(0.001, IMPORTANCE_WEIGHT[r.importance])), 0) /
+   151→    Math.max(1, rows.filter((r) => r.evidence).length);
+   152→
+   153→  const components = [
+   154→    {
+   155→      label: "Required-skill alignment",
+   156→      weight: 0.4,
+   157→      score: Math.round(requiredCoverage * 100) / 100,
+   158→      detail: `${requiredRows.filter((r) => r.status === "matched").length} of ${requiredRows.length} required skills demonstrated with evidence.`,
+   159→    },
+   160→    {
+   161→      label: "Evidence strength",
+   162→      weight: 0.3,
+   163→      score: Math.round(Math.min(1, evidenceStrengthAvg) * 100) / 100,
+   164→      detail: "Average contribution weight of evidenced skills across the role.",
+   165→    },
+   166→    {
+   167→      label: "Semantic relevance",
+   168→      weight: 0.2,
+   169→      score: Math.round((rows.reduce((s, r) => s + r.semanticScore, 0) / Math.max(1, rows.length)) * 100) / 100,
+   170→      detail: "How closely your stated skills relate to the job's required competencies.",
+   171→    },
+   172→    {
+   173→      label: "Coverage breadth",
+   174→      weight: 0.1,
+   175→      score: Math.round((matched / Math.max(1, rows.length)) * 100) / 100,
+   176→      detail: `${matched} matched, ${weak} weak, ${gap} gap across ${rows.length} competency rows.`,
+   177→    },
+   178→  ];
+   179→
+   180→  const band: MatchResult["band"] = index >= 80 ? "strong" : index >= 65 ? "good" : index >= 45 ? "fair" : "low";
+   181→  const headline =
+   182→    band === "strong"
+   183→      ? "Strong alignment with this role."
+   184→      : band === "good"
+   185→      ? "Good alignment — a few areas to strengthen."
+   186→      : band === "fair"
+   187→      ? "Fair alignment — meaningful gaps to close."
+   188→      : "Limited alignment — significant upskilling needed.";
+   189→
+   190→  return { index, band, headline, rows, components };
+   191→}
+   192→
+   193→// ---------- skill gap engine ----------
+   194→
+   195→export function computeGaps(match: MatchResult, candidate: CandidateProfile, job: JobProfile): SkillGap[] {
+   196→  const { byCompetency } = indexCandidateSkills(candidate);
+   197→
+   198→  const gaps: SkillGap[] = match.rows
+   199→    .filter((r) => r.status !== "matched")
+   200→    .map((r) => {
+   201→      const importanceW = IMPORTANCE_WEIGHT[r.importance];
+   202→      // Priority score: required critical gap > unknown > weak
+   203→      const unknownPenalty = r.candidateLevel === "unknown" ? 0.25 : 0;
+   204→      const requiredBoost = r.required ? 0.2 : 0;
+   205→      const levelPenalty = 1 - LEVEL_VALUE[r.candidateLevel];
+   206→      const priorityScore = Math.round(Math.min(1, importanceW * levelPenalty + requiredBoost + unknownPenalty) * 100) / 100;
+   207→
+   208→      let priority: GapPriority;
+   209→      if (priorityScore >= 0.85) priority = "critical";
+   210→      else if (priorityScore >= 0.6) priority = "high";
+   211→      else if (priorityScore >= 0.35) priority = "medium";
+   212→      else priority = "low";
+   213→
+   214→      const reason =
+   215→        r.candidateLevel === "unknown"
+   216→          ? `No resume evidence found for ${r.competency}, which is ${r.importance} for this role.`
+   217→          : r.candidateLevel === "weak"
+   218→          ? `Resume shows limited ${r.competency} depth; this role requires ${r.importance} proficiency.`
+   219→          : `Partial coverage of ${r.competency}; strengthening it will raise your match index.`;
+   220→
+   221→      return {
+   222→        competency: r.competency,
+   223→        category: r.category,
+   224→        importance: r.importance,
+   225→        status: r.status,
+   226→        candidateLevel: r.candidateLevel,
+   227→        reason,
+   228→        priority,
+   229→        priorityScore,
+   230→      };
+   231→    })
+   232→    .sort((a, b) => b.priorityScore - a.priorityScore);
+   233→
+   234→  return gaps;
+   235→}
+   236→
+   237→export function highestImpactGap(gaps: SkillGap[]): SkillGap | null {
+   238→  return gaps.length > 0 ? gaps[0] : null;
+   239→}
+   240→
+   241→// ---------- interview state machine ----------
+   242→
+   243→export const QUESTION_BANK: Record<string, Omit<InterviewQuestion, "id" | "reason">[]> = {
+   244→  "System Design": [
+   245→    { competency: "System Design", category: "system_design", text: "How would you design a scalable REST API that handles 100,000 concurrent users?", difficulty: "hard", mode: "technical" },
+   246→    { competency: "System Design", category: "system_design", text: "Walk me through the architecture you'd propose for a real-time notifications service.", difficulty: "hard", mode: "technical" },
+   247→    { competency: "System Design", category: "system_design", text: "How would you design a rate limiter for a public API? What data structures would you use?", difficulty: "medium", mode: "technical" },
+   248→    { competency: "System Design", category: "system_design", text: "Explain the tradeoffs between a microservices and monolithic architecture for a small team.", difficulty: "easy", mode: "technical" },
+   249→  ],
+   250→  "Scalability": [
+   251→    { competency: "Scalability", category: "system_design", text: "How would you introduce caching and load balancing to scale an existing web service?", difficulty: "hard", mode: "technical" },
+   252→    { competency: "Scalability", category: "system_design", text: "Compare horizontal vs vertical scaling. When would you choose each for a stateful service?", difficulty: "medium", mode: "technical" },
+   253→    { competency: "Scalability", category: "system_design", text: "What is the C.A.P. theorem and how does it influence your choice of database for a distributed system?", difficulty: "medium", mode: "technical" },
+   254→  ],
+   255→  "Fault Tolerance": [
+   256→    { competency: "Fault Tolerance", category: "system_design", text: "Design a system that stays available when a primary dependency goes down.", difficulty: "hard", mode: "technical" },
+   257→    { competency: "Fault Tolerance", category: "system_design", text: "Explain circuit breakers and bulkheads. How do they prevent cascading failures?", difficulty: "medium", mode: "technical" },
+   258→    { competency: "Fault Tolerance", category: "system_design", text: "What is graceful degradation? Give a real-world example from a service you'd build.", difficulty: "easy", mode: "technical" },
+   259→  ],
+   260→  "Caching": [
+   261→    { competency: "Caching", category: "system_design", text: "What cache invalidation strategies would you use and why?", difficulty: "medium", mode: "technical" },
+   262→    { competency: "Caching", category: "system_design", text: "Compare write-through, write-back, and write-around caches. When is each appropriate?", difficulty: "hard", mode: "technical" },
+   263→    { competency: "Caching", category: "system_design", text: "How would you design a distributed cache? What consistency guarantees can you offer?", difficulty: "hard", mode: "technical" },
+   264→  ],
+   265→  "Load Balancing": [
+   266→    { competency: "Load Balancing", category: "system_design", text: "Compare round-robin, least-connections and consistent hashing for load balancing.", difficulty: "medium", mode: "technical" },
+   267→    { competency: "Load Balancing", category: "system_design", text: "What is a health check in the context of load balancing? How does it affect traffic routing?", difficulty: "easy", mode: "technical" },
+   268→  ],
+   269→  "REST APIs": [
+   270→    { competency: "REST APIs", category: "backend", text: "Design a paginated, filterable REST API for a product catalog.", difficulty: "medium", mode: "technical" },
+   271→    { competency: "REST APIs", category: "backend", text: "What are idempotency and safety in HTTP methods? Why do they matter for APIs?", difficulty: "easy", mode: "technical" },
+   272→    { competency: "REST APIs", category: "backend", text: "How would you version a REST API? Compare URL versioning vs header versioning.", difficulty: "medium", mode: "technical" },
+   273→  ],
+   274→  "Microservices": [
+   275→    { competency: "Microservices", category: "backend", text: "What are the main challenges of inter-service communication in microservices? How do you address them?", difficulty: "medium", mode: "technical" },
+   276→    { competency: "Microservices", category: "backend", text: "Compare synchronous (REST/gRPC) vs asynchronous (message queue) communication between services.", difficulty: "hard", mode: "technical" },
+   277→    { competency: "Microservices", category: "backend", text: "How do you handle data consistency across microservices without distributed transactions?", difficulty: "hard", mode: "technical" },
+   278→  ],
+   279→  "Databases": [
+   280→    { competency: "Databases", category: "backend", text: "How do you choose between SQL and NoSQL for a new service? Give a concrete tradeoff.", difficulty: "medium", mode: "technical" },
+   281→    { competency: "Databases", category: "backend", text: "Explain database indexing. How do you decide which columns to index?", difficulty: "easy", mode: "technical" },
+   282→    { competency: "Databases", category: "backend", text: "What is database sharding? Compare it with partitioning and replication.", difficulty: "medium", mode: "technical" },
+   283→  ],
+   284→  "Docker": [
+   285→    { competency: "Docker", category: "devops", text: "How would you secure and optimize a Docker image for production?", difficulty: "medium", mode: "technical" },
+   286→    { competency: "Docker", category: "devops", text: "Explain the difference between COPY and ADD in a Dockerfile. When would you use each?", difficulty: "easy", mode: "technical" },
+   287→    { competency: "Docker", category: "devops", text: "How do you manage secrets in Docker containers? What are the security risks of environment variables?", difficulty: "medium", mode: "technical" },
+   288→  ],
+   289→  "Kubernetes": [
+   290→    { competency: "Kubernetes", category: "devops", text: "Explain how a Kubernetes Deployment, Service and Ingress work together.", difficulty: "medium", mode: "technical" },
+   291→    { competency: "Kubernetes", category: "devops", text: "What is a Kubernetes Pod? How does it differ from a container?", difficulty: "easy", mode: "technical" },
+   292→    { competency: "Kubernetes", category: "devops", text: "How would you configure auto-scaling in Kubernetes? What metrics would you use?", difficulty: "hard", mode: "technical" },
+   293→  ],
+   294→  "AWS": [
+   295→    { competency: "AWS", category: "cloud", text: "Design a highly available 3-tier web application on AWS.", difficulty: "hard", mode: "technical" },
+   296→    { competency: "AWS", category: "cloud", text: "Compare S3, EBS and EFS. When would you use each?", difficulty: "easy", mode: "technical" },
+   297→    { competency: "AWS", category: "cloud", text: "How would you implement Infrastructure as Code on AWS? Compare CloudFormation and Terraform.", difficulty: "medium", mode: "technical" },
+   298→  ],
+   299→  "MLOps": [
+   300→    { competency: "MLOps", category: "ml", text: "How would you set up a CI/CD pipeline for an ML model? What stages are needed?", difficulty: "medium", mode: "technical" },
+   301→    { competency: "MLOps", category: "ml", text: "What is model drift? How do you detect and respond to it in production?", difficulty: "hard", mode: "technical" },
+   302→    { competency: "MLOps", category: "ml", text: "Compare A/B testing and shadow deployment for releasing a new ML model.", difficulty: "medium", mode: "technical" },
+   303→  ],
+   304→  "Python": [
+   305→    { competency: "Python", category: "languages", text: "Explain the GIL and how it affects multi-threaded Python programs.", difficulty: "medium", mode: "technical" },
+   306→    { competency: "Python", category: "languages", text: "Compare list comprehensions, generators, and map/filter. When is each most appropriate?", difficulty: "easy", mode: "technical" },
+   307→    { competency: "Python", category: "languages", text: "How does Python's memory management work? Explain reference counting and the garbage collector.", difficulty: "medium", mode: "technical" },
+   308→  ],
+   309→  "Machine Learning": [
+   310→    { competency: "Machine Learning", category: "ml", text: "How would you decide between a simpler model and a deep learning model for a tabular dataset?", difficulty: "medium", mode: "technical" },
+   311→    { competency: "Machine Learning", category: "ml", text: "Explain the bias-variance tradeoff. How do you diagnose underfitting vs overfitting?", difficulty: "easy", mode: "technical" },
+   312→    { competency: "Machine Learning", category: "ml", text: "How would you handle imbalanced classes in a classification problem?", difficulty: "medium", mode: "technical" },
+   313→  ],
+   314→  "Deep Learning": [
+   315→    { competency: "Deep Learning", category: "ml", text: "Explain backpropagation and how vanishing gradients are mitigated.", difficulty: "hard", mode: "technical" },
+   316→    { competency: "Deep Learning", category: "ml", text: "Compare CNNs and Transformers for sequence modeling. When would you choose each?", difficulty: "medium", mode: "technical" },
+   317→    { competency: "Deep Learning", category: "ml", text: "What is transfer learning? How does fine-tuning differ from feature extraction?", difficulty: "easy", mode: "technical" },
+   318→  ],
+   319→  "NLP": [
+   320→    { competency: "NLP", category: "ml", text: "Explain the difference between bag-of-words, TF-IDF, and word embeddings for text representation.", difficulty: "easy", mode: "technical" },
+   321→    { competency: "NLP", category: "ml", text: "How do attention mechanisms work in Transformers? Explain self-attention.", difficulty: "hard", mode: "technical" },
+   322→    { competency: "NLP", category: "ml", text: "What are the challenges of evaluating NLP models? Compare BLEU, ROUGE, and human evaluation.", difficulty: "medium", mode: "technical" },
+   323→  ],
+   324→  "Feature Engineering": [
+   325→    { competency: "Feature Engineering", category: "ml", text: "What is feature importance and how do you measure it? Compare at least two methods.", difficulty: "medium", mode: "technical" },
+   326→    { competency: "Feature Engineering", category: "ml", text: "Explain feature scaling and normalization. When does the choice matter?", difficulty: "easy", mode: "technical" },
+   327→  ],
+   328→  "Communication": [
+   329→    { competency: "Communication", category: "communication", text: "Tell me about a time you had to explain a complex technical decision to a non-technical stakeholder.", difficulty: "easy", mode: "hr" },
+   330→    { competency: "Communication", category: "communication", text: "How do you handle disagreements on technical direction within a team?", difficulty: "medium", mode: "hr" },
+   331→    { competency: "Communication", category: "communication", text: "Describe how you document your architectural decisions for the team.", difficulty: "easy", mode: "hr" },
+   332→  ],
+   333→  "Cross-functional collaboration": [
+   334→    { competency: "Cross-functional collaboration", category: "communication", text: "How do you align engineering work with product and design priorities?", difficulty: "medium", mode: "hr" },
+   335→    { competency: "Cross-functional collaboration", category: "communication", text: "Describe a project where you worked closely with a non-engineering team. What did you learn?", difficulty: "easy", mode: "hr" },
+   336→  ],
+   337→  "Leadership": [
+   338→    { competency: "Leadership", category: "communication", text: "Describe a situation where you led a team through an ambiguous problem.", difficulty: "medium", mode: "hr" },
+   339→    { competency: "Leadership", category: "communication", text: "How do you mentor junior engineers? Give a specific example.", difficulty: "easy", mode: "hr" },
+   340→  ],
+   341→};
+   342→
+   343→/**
+   344→ * Initialize the interview state machine from gaps. We pre-select target
+   345→ * competencies: the highest-impact gap first, then a few neighboring gaps.
+   346→ *
+   347→ * `difficultyPreference` (optional) biases question selection toward easy /
+   348→ * medium / hard variants when the question bank has multiple options.
+   349→ */
+   350→export function initInterview(
+   351→  gaps: SkillGap[],
+   352→  candidate: CandidateProfile,
+   353→  match: MatchResult,
+   354→  difficultyPreference: InterviewDifficulty = "auto"
+   355→): InterviewState {
+   356→  const targetCompetencies: string[] = [];
+   357→  const topGap = highestImpactGap(gaps);
+   358→  if (topGap) targetCompetencies.push(topGap.competency);
+   359→
+   360→  // Add up to 3 more gaps, preferring different categories for breadth.
+   361→  const seenCategories = new Set(topGap ? [topGap.category] : []);
+   362→  for (const g of gaps) {
+   363→    if (g.competency === topGap?.competency) continue;
+   364→    if (targetCompetencies.length >= 4) break;
+   365→    if (seenCategories.has(g.category)) continue;
+   366→    targetCompetencies.push(g.competency);
+   367→    seenCategories.add(g.category);
+   368→  }
+   369→  // Fallback: if no gaps found, pick a couple of weak/matched competencies to probe.
+   370→  if (targetCompetencies.length === 0) {
+   371→    const weakRows = match.rows.filter((r) => r.status === "weak").slice(0, 3);
+   372→    for (const r of weakRows) targetCompetencies.push(r.competency);
+   373→  }
+   374→
+   375→  const totalQuestions = Math.min(7, Math.max(3, targetCompetencies.length + 2));
+   376→
+   377→  // Initialize competency states from candidate evidence
+   378→  const { byCompetency } = indexCandidateSkills(candidate);
+   379→  const competencyStates: CompetencyState[] = match.rows.map((r) => {
+   380→    const entry = byCompetency.get(r.competency);
+   381→    const resumeLevel = entry?.level ?? "unknown";
+   382→    return {
+   383→      competency: r.competency,
+   384→      category: r.category,
+   385→      resumeLevel,
+   386→      interviewLevel: "unknown",
+   387→      current: resumeLevel,
+   388→      status: r.status,
+   389→      notes: entry?.evidence ? "Resume evidence available." : "No resume evidence.",
+   390→    };
+   391→  });
+   392→
+   393→  // Generate the first question deterministically (highest-impact gap)
+   394→  const questions: InterviewQuestion[] = [];
+   395→  const firstQ = pickQuestionForCompetency(topGap?.competency ?? targetCompetencies[0], targetCompetencies, topGap, difficultyPreference);
+   396→  if (firstQ) questions.push(firstQ);
+   397→
+   398→  return {
+   399→    status: "asking",
+   400→    mode: "technical",
+   401→    difficultyPreference,
+   402→    currentIndex: 0,
+   403→    totalQuestions,
+   404→    targetCompetencies,
+   405→    questions,
+   406→    answers: [],
+   407→    evaluations: [],
+   408→    competencyStates,
+   409→    identifiedWeaknesses: [],
+   410→    history: [
+   411→      {
+   412→        step: "interview_start",
+   413→        detail: `Interview started (difficulty: ${difficultyPreference}). Initial target: ${topGap?.competency ?? "first weak competency"} (${topGap?.priority ?? "medium"} priority gap).`,
+   414→        at: new Date().toISOString(),
+   415→      },
+   416→    ],
+   417→  };
+   418→}
+   419→
+   420→/**
+   421→ * Pick a question for a given competency, preferring ones that match the
+   422→ * user's selected difficulty. Falls back gracefully if no exact match exists.
+   423→ */
+   424→function pickQuestionForCompetency(
+   425→  competency: string,
+   426→  asked: string[],
+   427→  gap: SkillGap | null,
+   428→  difficultyPreference: InterviewDifficulty = "auto"
+   429→): InterviewQuestion | null {
+   430→  const bank = QUESTION_BANK[competency] ?? [];
+   431→  if (bank.length === 0) {
+   432→    return {
+   433→      id: cryptoId(),
+   434→      competency,
+   435→      category: gap?.category ?? "domain",
+   436→      text: `Tell me about your experience with ${competency} and how you've applied it to a real problem.`,
+   437→      difficulty: difficultyPreference === "auto" ? "medium" : difficultyPreference,
+   438→      mode: "technical",
+   439→      reason: gap
+   440→        ? `${competency} was identified as your ${gap.priority}-priority gap for this role.`
+   441→        : `Exploring your ${competency} knowledge.`,
+   442→    };
+   443→  }
+   444→
+   445→  // Filter out already-asked questions
+   446→  const usedTexts = new Set(asked);
+   447→  const available = bank.filter((q) => !usedTexts.has(q.text));
+   448→  const pool = available.length > 0 ? available : bank;
+   449→
+   450→  // Difficulty preference ordering — pick the closest available variant
+   451→  let chosen: (typeof pool)[number] | undefined;
+   452→  if (difficultyPreference === "auto") {
+   453→    chosen = pool[0];
+   454→  } else {
+   455→    // Exact match first
+   456→    chosen = pool.find((q) => q.difficulty === difficultyPreference);
+   457→    if (!chosen) {
+   458→      // Fall back: easy→medium→hard, hard→medium→easy, medium→easy→hard
+   459→      const fallbackOrder: Record<Exclude<InterviewDifficulty, "auto">, ("easy" | "medium" | "hard")[]> = {
+   460→        easy: ["medium", "hard"],
+   461→        medium: ["easy", "hard"],
+   462→        hard: ["medium", "easy"],
+   463→      };
+   464→      for (const alt of fallbackOrder[difficultyPreference]) {
+   465→        chosen = pool.find((q) => q.difficulty === alt);
+   466→        if (chosen) break;
+   467→      }
+   468→    }
+   469→    if (!chosen) chosen = pool[0];
+   470→  }
+   471→
+   472→  return {
+   473→    id: cryptoId(),
+   474→    ...chosen,
+   475→    reason: gap
+   476→      ? `${competency} was identified as your ${gap.priority}-priority gap for this role.`
+   477→      : `Probing your ${competency} understanding.`,
+   478→  };
+   479→}
+   480→
+   481→function cryptoId(): string {
+   482→  return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+   483→}
+   484→
+   485→/**
+   486→ * Apply an evaluation: update competency states, identify weakness,
+   487→ * and deterministically pick the next competency + question.
+   488→ *
+   489→ * This is the WOW moment: the next question changes because of the answer.
+   490→ */
+   491→export function applyEvaluation(
+   492→  state: InterviewState,
+   493→  evaluation: AnswerEvaluation
+   494→): InterviewState {
+   495→  const next: InterviewState = JSON.parse(JSON.stringify(state));
+   496→
+   497→  // 1. Update competency evidence
+   498→  const idx = next.competencyStates.findIndex((c) => c.competency === evaluation.competency);
+   499→  if (idx >= 0) {
+   500→    const cs = next.competencyStates[idx];
+   501→    const interviewLevel: SkillLevel =
+   502→      evaluation.overall >= 0.75 ? "strong" : evaluation.overall >= 0.5 ? "moderate" : evaluation.overall >= 0.25 ? "weak" : "unknown";
+   503→    cs.interviewLevel = interviewLevel;
+   504→    cs.current = combineLevels(cs.resumeLevel, interviewLevel);
+   505→    cs.status = cs.current === "unknown" ? "unknown" : cs.current === "weak" ? "weak" : "matched";
+   506→    cs.notes = `Interview evidence: ${evaluation.strengths.join("; ") || "n/a"}. ${evaluation.weaknesses.join("; ") || "No major weaknesses."}`;
+   507→  }
+   508→
+   509→  // 2. Identify weakness
+   510→  if (evaluation.detectedGap) {
+   511→    if (!next.identifiedWeaknesses.includes(evaluation.detectedGap)) {
+   512→      next.identifiedWeaknesses.push(evaluation.detectedGap);
+   513→    }
+   514→  } else if (evaluation.overall < 0.5) {
+   515→    if (!next.identifiedWeaknesses.includes(evaluation.competency)) {
+   516→      next.identifiedWeaknesses.push(evaluation.competency);
+   517→    }
+   518→  }
+   519→
+   520→  next.evaluations.push(evaluation);
+   521→  next.history.push({
+   522→    step: "evaluation_applied",
+   523→    detail: `Evaluated ${evaluation.competency}. Overall: ${Math.round(evaluation.overall * 100)}%. Detected gap: ${evaluation.detectedGap ?? "none"}.`,
+   524→    at: new Date().toISOString(),
+   525→  });
+   526→
+   527→  // 3. Decide next competency & question
+   528→  next.currentIndex += 1;
+   529→  if (next.currentIndex >= next.totalQuestions) {
+   530→    next.status = "complete";
+   531→    next.history.push({
+   532→      step: "interview_complete",
+   533→      detail: `Interview complete. ${next.evaluations.length} questions answered. Weaknesses identified: ${next.identifiedWeaknesses.join(", ") || "none"}.`,
+   534→      at: new Date().toISOString(),
+   535→    });
+   536→    return next;
+   537→  }
+   538→
+   539→  // Adaptive decision logic:
+   540→  //   If the evaluator detected a deeper gap (drill-down), prioritize that.
+   541→  //   Otherwise pick the next highest-priority gap that hasn't been interviewed yet.
+   542→  let nextCompetency: string | null = evaluation.detectedGap;
+   543→  let nextGapReason: string | null = null;
+   544→
+   545→  if (!nextCompetency) {
+   546→    // Find a competency state that is still unknown/weak and was a gap
+   547→    const candidates = next.competencyStates
+   548→      .filter((c) => (c.status === "gap" || c.status === "unknown" || c.status === "weak") && c.competency !== evaluation.competency)
+   549→      .sort((a, b) => LEVEL_VALUE[a.current] - LEVEL_VALUE[b.current]);
+   550→    nextCompetency = candidates[0]?.competency ?? null;
+   551→    if (nextCompetency) {
+   552→      nextGapReason = `${nextCompetency} is still an open gap based on your current evidence.`;
+   553→    }
+   554→  } else {
+   555→    nextGapReason = evaluation.nextFocus ?? `Your previous answer suggested limited depth in ${nextCompetency}.`;
+   556→  }
+   557→
+   558→  if (!nextCompetency) {
+   559→    // All addressed — pick a strong area to verify depth
+   560→    const strong = next.competencyStates.find((c) => c.current === "moderate" || c.current === "strong");
+   561→    nextCompetency = strong?.competency ?? evaluation.competency;
+   562→    nextGapReason = `Verifying depth in ${nextCompetency}, a stronger area of your profile.`;
+   563→  }
+   564→
+   565→  const nextQuestion = pickQuestionForCompetency(nextCompetency, next.questions.map((q) => q.text), null, next.difficultyPreference);
+   566→  if (nextQuestion) {
+   567→    nextQuestion.reason = nextGapReason ?? nextQuestion.reason;
+   568→    next.questions.push(nextQuestion);
+   569→  }
+   570→
+   571→  next.history.push({
+   572→    step: "next_question_selected",
+   573→    detail: `Next competency: ${nextCompetency}. Reason: ${nextGapReason}`,
+   574→    at: new Date().toISOString(),
+   575→  });
+   576→
+   577→  next.status = "asking";
+   578→  return next;
+   579→}
+   580→
+   581→function combineLevels(a: SkillLevel, b: SkillLevel): SkillLevel {
+   582→  const av = LEVEL_VALUE[a];
+   583→  const bv = LEVEL_VALUE[b];
+   584→  // Take the average; if interview evidence is much weaker than resume, downgrade
+   585→  const avg = (av + bv) / 2;
+   586→  // If interview reveals the candidate is significantly weaker than resume suggested, trust interview
+   587→  if (bv > 0 && bv < av - 0.3) return levelFromStrength(bv + 0.1);
+   588→  return levelFromStrength(avg);
+   589→}
+   590→
+   591→// ---------- readiness engine ----------
+   592→
+   593→export function computeReadiness(
+   594→  match: MatchResult,
+   595→  gaps: SkillGap[],
+   596→  interview: InterviewState | null
+   597→): ReadinessResult {
+   598→  // Dimensions:
+   599→  //   - job alignment (from match index)
+   600→  //   - required competency coverage
+   601→  //   - interview evidence (if available)
+   602→  //   - technical readiness (proxy from match + interview deltas)
+   603→  //   - communication (proxy from interview communication scores)
+   604→
+   605→  const jobAlignment = match.index / 100;
+   606→
+   607→  const requiredRows = match.rows.filter((r) => r.required);
+   608→  const requiredCoverage = requiredRows.length > 0
+   609→    ? requiredRows.filter((r) => r.status === "matched").length / requiredRows.length
+   610→    : 1;
+   611→
+   612→  let interviewEvidence = 0.5;
+   613→  let technicalReadiness = jobAlignment;
+   614→  let communication = 0.6;
+   615→
+   616→  if (interview && interview.evaluations.length > 0) {
+   617→    const evals = interview.evaluations;
+   618→    interviewEvidence = evals.reduce((s, e) => s + e.overall, 0) / evals.length;
+   619→    technicalReadiness = (jobAlignment + evals.reduce((s, e) => s + (e.technicalAccuracy + e.depth) / 2, 0) / evals.length) / 2;
+   620→    communication = evals.reduce((s, e) => s + e.communication, 0) / evals.length;
+   621→  }
+   622→
+   623→  const dimensions = [
+   624→    { label: "Job alignment", score: round2(jobAlignment), detail: "Prototype Job Match Index contribution." },
+   625→    { label: "Required competency coverage", score: round2(requiredCoverage), detail: `${Math.round(requiredCoverage * 100)}% of required skills demonstrated.` },
+   626→    { label: "Interview evidence", score: round2(interviewEvidence), detail: interview ? `Across ${interview.evaluations.length} answered questions.` : "No interview evidence yet." },
+   627→    { label: "Technical readiness", score: round2(technicalReadiness), detail: "Aggregate of match + demonstrated depth." },
+   628→    { label: "Communication", score: round2(communication), detail: "How clearly answers were structured." },
+   629→  ];
+   630→
+   631→  // Weighted aggregate
+   632→  const weights = [0.3, 0.25, 0.2, 0.15, 0.1];
+   633→  const index = Math.round(
+   634→    dimensions.reduce((s, d, i) => s + d.score * weights[i], 0) * 100
+   635→  );
+   636→
+   637→  const criticalBlockers = gaps
+   638→    .filter((g) => g.priority === "critical")
+   639→    .map((g) => g.competency);
+   640→
+   641→  const band: ReadinessResult["band"] = index >= 80 ? "strong" : index >= 65 ? "good" : index >= 45 ? "fair" : "low";
+   642→  const headline =
+   643→    band === "strong"
+   644→      ? "You're in strong shape for this role."
+   645→      : band === "good"
+   646→      ? `You're close — ${criticalBlockers.length} critical area${criticalBlockers.length === 1 ? "" : "s"} need${criticalBlockers.length === 1 ? "s" : ""} attention.`
+   647→      : band === "fair"
+   648→      ? "Several areas need focused work before you're interview-ready."
+   649→      : "Significant upskilling needed before targeting this role.";
+   650→
+   651→  const nextBestAction =
+   652→    criticalBlockers.length > 0
+   653→      ? `Strengthen ${criticalBlockers[0]} reasoning before your next interview.`
+   654→      : gaps.length > 0
+   655→      ? `Focus on ${gaps[0].competency} — your highest-impact opportunity.`
+   656→      : "Keep practicing and refining your storytelling around past projects.";
+   657→
+   658→  return { index, band, headline, dimensions, criticalBlockers, nextBestAction };
+   659→}
+   660→
+   661→// ---------- roadmap engine ----------
+   662→
+   663→export function computeRoadmap(
+   664→  gaps: SkillGap[],
+   665→  interview: InterviewState | null,
+   666→  readiness: ReadinessResult
+   667→): Roadmap {
+   668→  const identified = interview?.identifiedWeaknesses ?? [];
+   669→  // Today: highest-impact gap (or the top interview-identified weakness)
+   670→  const currentGap = identified[0] ?? gaps[0]?.competency ?? "Targeted practice";
+   671→
+   672→  // Build steps from gaps + interview weaknesses
+   673→  const orderedGaps = [...gaps].sort((a, b) => b.priorityScore - a.priorityScore);
+   674→  const used = new Set<string>();
+   675→
+   676→  const steps: RoadmapStep[] = [];
+   677→
+   678→  // TODAY step
+   679→  const todayGap = orderedGaps.find((g) => g.competency === currentGap) ?? orderedGaps[0];
+   680→  if (todayGap) {
+   681→    used.add(todayGap.competency);
+   682→    steps.push({
+   683→      phase: "TODAY",
+   684→      competency: todayGap.competency,
+   685→      focus: `Build foundational reasoning in ${todayGap.competency}.`,
+   686→      practice: practiceFor(todayGap.competency),
+   687→      reason: `${todayGap.competency} is your highest-impact gap (${todayGap.priority} priority).`,
+   688→    });
+   689→  }
+   690→
+   691→  // NEXT step — drill deeper
+   692→  const nextGap = orderedGaps.find((g) => !used.has(g.competency));
+   693→  if (nextGap) {
+   694→    used.add(nextGap.competency);
+   695→    steps.push({
+   696→      phase: "NEXT",
+   697→      competency: nextGap.competency,
+   698→      focus: `Deepen applied ${nextGap.competency} through real-world scenarios.`,
+   699→      practice: practiceFor(nextGap.competency),
+   700→      reason: `${nextGap.competency} is your next open gap (${nextGap.priority} priority).`,
+   701→    });
+   702→  }
+   703→
+   704→  // THEN step
+   705→  const thenGap = orderedGaps.find((g) => !used.has(g.competency));
+   706→  if (thenGap) {
+   707→    used.add(thenGap.competency);
+   708→    steps.push({
+   709→      phase: "THEN",
+   710→      competency: thenGap.competency,
+   711→      focus: `Combine ${thenGap.competency} with prior skills in a project.`,
+   712→      practice: practiceFor(thenGap.competency),
+   713→      reason: `Reinforces learning and fills the ${thenGap.priority}-priority gap.`,
+   714→    });
+   715→  }
+   716→
+   717→  // REASSESS
+   718→  steps.push({
+   719→    phase: "REASSESS",
+   720→    competency: "Adaptive Interview",
+   721→    focus: "Re-run the adaptive interview to validate new evidence.",
+   722→    practice: ["Retake the mock interview", "Compare readiness index before/after"],
+   723→    reason: "Closes the loop — your roadmap should be re-driven by new interview evidence.",
+   724→  });
+   725→
+   726→  return { currentGap, steps };
+   727→}
+   728→
+   729→function practiceFor(competency: string): string[] {
+   730→  const map: Record<string, string[]> = {
+   731→    "System Design": ["Design a URL shortener end-to-end", "Sketch a notification fan-out system", "Read the DDIA scaling chapters"],
+   732→    Scalability: ["Add caching to an existing service", "Benchmark horizontal vs vertical scaling", "Practice backpressure patterns"],
+   733→    "Fault Tolerance": ["Add circuit breakers to a service", "Design failover for a stateful system", "Practice graceful degradation drills"],
+   734→    Caching: ["Compare cache-aside vs write-through", "Design invalidation for a feed", "Practice CDN edge caching"],
+   735→    "Load Balancing": ["Compare LB algorithms in practice", "Set up consistent hashing", "Practice session affinity tradeoffs"],
+   736→    "REST APIs": ["Design a versioned, paginated API", "Practice idempotency", "Add rate limiting"],
+   737→    Docker: ["Optimize image layers", "Practice multi-stage builds", "Add healthchecks"],
+   738→    Kubernetes: ["Roll out a Deployment with HPA", "Practice canary via Ingress", "Tune resource requests/limits"],
+   739→    AWS: ["Design a 3-tier HA app", "Practice IAM least privilege", "Compare RDS vs DynamoDB for a workload"],
+   740→    Python: ["Profile a slow function", "Practice asyncio vs threading", "Refactor with type hints"],
+   741→    "Machine Learning": ["Build a baseline first", "Practice model selection on tabular data", "Add evaluation metrics"],
+   742→    "Deep Learning": ["Implement backprop from scratch", "Practice regularization", "Tune learning rate schedules"],
+   743→    Databases: ["Design normalized schema for a domain", "Practice indexing strategy", "Compare SQL vs NoSQL for 3 services"],
+   744→  };
+   745→  return map[competency] ?? [`Practice 2 real problems involving ${competency}`, `Read a focused primer on ${competency}`, `Write a short design doc using ${competency}`];
+   746→}
+   747→
+   748→function round2(n: number): number {
+   749→  return Math.round(n * 100) / 100;
+   750→}
+   751→

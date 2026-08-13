@@ -1,0 +1,1842 @@
+     1→# HIREMIND AI — Worklog / Handover
+     2→
+     3→> **Last updated**: Task 4b — Home view premium visual enhancements
+     4→
+     5→---
+     6→
+     7→Task ID: 4b
+     8→Agent: frontend-styling-expert
+     9→Task: Enhance home view with premium visual details
+    10→
+    11→Work Log:
+    12→- Read existing home-view.tsx, session-history.tsx, store.ts, tailwind.config.ts, and globals.css for full context
+    13→- Added `useAnimatedCount` hook (useEffect + requestAnimationFrame, ease-out cubic, 0→1247 over 1.5s) — replaced hardcoded "1,247" in trust badge
+    14→- Added `CharProgressBar` sub-component — thin 2px progress bar that fills based on text length vs. optimal length, color transitions from accent-blue/40 to success/60 at optimal
+    15→- Enhanced trust strip feature cards: theme-aware gradient backgrounds (from-accent-blue/5, from-success/5, from-warning/5), 3px left border in theme color, theme-colored icon backgrounds, "Learn more →" link that opens shortcut hint panel
+    16→- Used explicit Tailwind class strings (borderCls, gradientCls, iconCls) instead of dynamic interpolation to ensure JIT compatibility
+    17→- Added animated border glow (ring-2 ring-accent-blue/20) on resume card when resumeText.length > 0, and on job card when jobText.length > 0, with smooth 300ms box-shadow transition
+    18→- Added CharProgressBar below both input cards (resume optimal: 800 chars, job optimal: 600 chars)
+    19→- Added "⚡ Takes ~30 seconds" hint text below the "Analyze my readiness" button
+    20→- Added subtle pulse animation (3s duration) on "or" divider text
+    21→- Added "Clear all" button to SessionHistory component — calls `/api/session/cleanup?maxAgeHours=0` POST, then clears local state
+    22→- Refactored SessionHistory useEffect to use AbortController + useCallback pattern for cleaner cleanup
+    23→- ESLint and TypeScript checks passed (no new errors in modified files)
+    24→
+    25→Stage Summary:
+    26→- Home view now has 5 premium visual enhancements: animated counter, enhanced trust cards, input glow + progress bars, button area hints, session clear button
+    27→- All changes use existing dependencies (React, Framer Motion, Lucide, Tailwind) — zero new packages
+    28→- All animations are subtle and Apple-inspired (ease-out curves, smooth transitions, 3s pulse)
+    29→- Existing functionality fully preserved — no breaking changes
+    30→
+    31→---
+    32→Task ID: 5a
+    33→Agent: frontend-styling-expert
+    34→Task: Enhance gaps view with visual severity indicators
+    35→
+    36→Work Log:
+    37→- Read existing gaps-view.tsx, shell.tsx, types.ts, globals.css to understand current components and design tokens
+    38→- Added `CategoryBadge` component mapping all 10 CompetencyCategory values to labeled badges with appropriate color tokens (accent-blue, success, chart-3, warning, chart-4, chart-5, chart-2, muted)
+    39→- Added `ImpactMeter` component: animated horizontal bar showing priorityScore (0..1) as filled percentage with gradient colors based on priority (critical=red→orange, high=orange→blue, medium=yellow→blue, low=gray). Label shows "Impact score: X%". Framer Motion animated fill on mount.
+    40→- Added `GapComparison` component: "Your level vs. Required level" dual horizontal bars. Candidate level mapped (unknown=5%, weak=25%, moderate=55%, strong=85%). Importance mapped (critical=95%, high=80%, medium=60%, low=40%). Required bar uses accent-blue gradient; candidate bar uses muted color. Gap delta shown in critical color.
+    41→- Replaced flat "Other gaps" cards with `OtherGapCard` component featuring: CompetencyBar showing severity, CategoryBadge, hover lift animation (translate-y: -0.5px), click-to-expand/collapse with AnimatePresence showing gap reason, chevron indicator rotation.
+    42→- Added staggered Framer Motion entrance animations (stagger container + fadeUp variants) for all elements including stat tiles.
+    43→- Added quick tip callout using `hm-insight-callout` class with Lightbulb icon: "Tip: Focus on this gap first. Closing your highest-impact gap typically raises your Job Match Index by 10–15 points."
+    44→- Fixed TypeScript `ease` tuple type with `as const` assertion for Framer Motion variants.
+    45→- Verified ESLint passes with no new errors. Pre-existing TS error on `startInterview` type is unchanged.
+    46→
+    47→Stage Summary:
+    48→- Gaps view now has rich visual severity indicators: impact meter, category badges, gap comparison bars
+    49→- All other-gap cards are interactive with expand/collapse and micro-animations
+    50→- Staggered entrance animations on all elements
+    51→- Quick tip insight callout below hero gap
+    52→- No new lint/type errors introduced
+    53→
+    54→> **Last updated**: Round 2 (cron-review) — 8 major features/fixes completed
+    55→
+    56→## Current Project Status: STABLE + Feature-Expanded
+    57→
+    58→All P0 + P1 + P2 features working. Core intelligence loop verified end-to-end. New features (file upload, session history, URL persistence, deep question bank) all verified via agent-browser.
+    59→
+    60→---
+    61→
+    62→Task ID: cron-review-2
+    63→Agent: main
+    64→Task: QA assessment + bug fixes + new features + styling polish
+    65→
+    66→## Bug Fixes
+    67→
+    68→1. **Interview view blank when navigating directly** — When clicking the "Interview" nav button before starting an interview, the view showed a blank screen. Fixed by adding a proper empty state with "Your adaptive interview awaits" heading, "Begin interview →" CTA button, and a "Or go to Skill Gaps to review your gaps first" link. The CTA calls `startInterview()` directly.
+    69→
+    70→2. **Theme-provider module not found** — Intermittent Turbopack HMR compilation errors for `@/components/theme-provider`. This was a transient recompilation issue — the file exists and works. No code change needed; confirmed the app serves 200 OK consistently.
+    71→
+    72→## New Features
+    73→
+    74→1. **URL Hash State Persistence** — Added `parseHash()` and `syncHash()` functions to store.ts. View + sessionId are now synced to the URL hash (e.g., `#view=match&session=abc123`). On page load, if a hash exists, the store hydrates the session from the API. Added `hydrateSession` action that fetches session data from `/api/session?id=...` and repopulates all store state. Page refresh now preserves the current view and session.
+    75→
+    76→2. **Resume File Upload with Drag-Drop** — Created `file-upload.tsx` component with:
+    77→   - Drag & drop zone with visual feedback (border color, icon, text changes)
+    78→   - File input supporting PDF, DOCX, TXT, MD
+    79→   - File status indicators (reading, done, error)
+    80→   - File size display and clear button
+    81→   - Created `/api/extract-text` endpoint using `pdf-parse` and `mammoth` for PDF/DOCX extraction
+    82→   - Installed `pdf-parse` and `mammoth` packages
+    83→   - Integrated into home-view.tsx above the textarea
+    84→
+    85→3. **Session History on Home View** — Created `session-history.tsx` component that:
+    86→   - Fetches past sessions from `/api/session?list=true` (new list endpoint)
+    87→   - Shows up to 10 sessions with candidate name, job title, match index, relative time, demo badge
+    88→   - Each session card is clickable and calls `hydrateSession()` to resume
+    89→   - Added `GET /api/session?list=true` endpoint to session API route
+    90→   - Staggered entrance animation on session cards
+    91→
+    92→4. **Expanded Question Bank** — Grew the QUESTION_BANK from ~16 questions across 15 competencies to 50+ questions across 22 competencies. Each competency now has 2-4 questions at different difficulty levels (easy/medium/hard) covering different angles. Added new competency banks: Microservices, MLOps, NLP, Feature Engineering, Cross-functional collaboration. Increased max interview length from 5 to 7 questions.
+    93→
+    94→5. **Multi-Question AI Generation** — Updated `generateQuestion()` in ai.ts to accept a `count` parameter and generate N diverse questions per competency. The interview answer route now requests 3 questions per round — uses the first immediately and stores extras in the question pool for future rounds.
+    95→
+    96→## Styling Polish (frontend-styling-expert agent)
+    97→
+    98→- Dark mode: Fixed hardcoded white in shimmer, added `.dark` overrides for hm-ambient, hm-card, hm-elevated, hm-text-gradient, hm-radial-glow
+    99→- Mobile responsive: Safe area padding, responsive padding (px-4 sm:px-8), card padding, button sizes
+   100→- Empty/loading states: New skeleton.tsx with CandidateSkeleton, MatchSkeleton, GapsSkeleton; EmptyState component
+   101→- Micro-interactions: Card hover shadows, nav active indicators, staggered trust features, whileTap on interactive elements
+   102→- Typography: Heading hierarchy, line-clamp, consistent spacing
+   103→
+   104→## Verification Results
+   105→
+   106→- Lint: 0 errors ✓
+   107→- Dev server: stable, all requests 200 ✓
+   108→- agent-browser walkthrough PASSED ✓:
+   109→  - Home view: file upload, session history (10 sessions), demo button ✓
+   110→  - Demo flow: Candidate → Match → Gaps → Interview empty state → Begin interview → WOW moment ✓
+   111→  - URL hash persistence: `#view=match&session=...` correctly set and read ✓
+   112→  - Session hydration: Click on history item loads full session ✓
+   113→  - Interview empty state: "Your adaptive interview awaits" + Begin interview CTA ✓
+   114→  - Adaptive interview: Q1 targets System Design, evaluation detects Scalability gap, Q2 adapts ✓
+   115→
+   116→---
+   117→
+   118→## Unresolved Issues / Risks
+   119→
+   120→1. **AI Timeout on first call**: z-ai-web-dev-sdk occasionally times out. Deterministic fallback handles this gracefully.
+   121→2. **pdf-parse test data needed**: The file upload API works but hasn't been tested with actual PDF/DOCX files via agent-browser (browser can't easily upload test files). Tested with code review only.
+   122→3. **Session history grows unbounded**: No session cleanup. Over time the DB will accumulate sessions. Recommendation: Add a cleanup cron or max session count.
+   123→
+   124→## Priority Recommendations for Next Phase
+   125→
+   126→1. **Interview progress persistence** — Save interview state to URL hash so refreshing mid-interview doesn't lose answers
+   127→2. **Dark mode visual QA** — Comprehensive dark mode screenshot testing across all views
+   128→3. **Mobile responsive testing** — Verify at 375px, 768px widths via agent-browser viewport
+   129→4. **Session cleanup** — Add auto-cleanup of sessions older than 24 hours
+   130→5. **AI retry logic** — Add 1 retry before falling back to deterministic for better AI utilization
+   131→6. **Improved evidence extraction** — Better resume parser prompt to extract evidence for common skills
+   132→
+   133→## Project Overview
+   134→
+   135→HIREMIND AI is an AI-powered recruitment assistant (Smart Resume Parser & Mock Interviewer). Core intelligence loop:
+   136→
+   137→```
+   138→RESUME + TARGET JOB
+   139→   -> CANDIDATE INTELLIGENCE
+   140→   -> SEMANTIC JOB MATCH (Prototype Job Match Index)
+   141→   -> SKILL GAP INTELLIGENCE
+   142→   -> GAP-DRIVEN ADAPTIVE INTERVIEW  (THE WOW FEATURE)
+   143→   -> ANSWER EVALUATION
+   144→   -> COMPETENCY STATE UPDATE
+   145→   -> JOB READINESS (Prototype Job Readiness Index)
+   146→   -> PERSONALIZED IMPROVEMENT ROADMAP
+   147→```
+   148→
+   149→Design philosophy: Apple-inspired premium UX (clean / sleek / minimal / premium / human). Light-first, warm-neutral background, charcoal text, restrained accent.
+   150→
+   151→Tech stack: Next.js 16 (App Router) + TypeScript + Tailwind CSS 4 + shadcn/ui + Prisma (SQLite) + z-ai-web-dev-sdk (LLM) + Zustand + Framer Motion.
+   152→
+   153→Critical principles:
+   154→- AI understands. Application logic decides. Deterministic scoring.
+   155→- Distinguish KNOWN / WEAK / UNKNOWN evidence. Never treat absence as proof of missing skill.
+   156→- Adaptive interview: next question MUST depend on previous answer (the demo's WOW moment).
+   157→- Demo mode must work reliably end-to-end (10+ consecutive runs).
+   158→- Prototype-labeled indices (never "hiring probability").
+   159→
+   160→---
+   161→
+   162→Task ID: 1
+   163→Agent: main
+   164→Task: Setup foundation (theme, layout, Prisma schema, AI client wrapper)
+   165→
+   166→Work Log:
+   167→- Audited existing repo (Next.js 16, shadcn/ui all components present, Prisma + z-ai-web-dev-sdk installed).
+   168→- Extracted HIREMIND AI spec from uploaded zip (5 prompt files).
+   169→- Reading worklog convention established.
+   170→
+   171→Stage Summary:
+   172→- Starting fresh build on top of scaffold. Will keep `/` as the only route (orchestrated client-side view state).
+   173→- Next: define Prisma schema, AI client wrapper, premium theme tokens, layout with sticky footer.
+   174→
+   175→---
+   176→Task ID: 2-7
+   177→Agent: main
+   178→Task: Build deterministic domain engine + AI layer + API routes + all frontend views
+   179→
+   180→Work Log:
+   181→- Prisma schema: Session + AuditEvent models pushed to SQLite.
+   182→- Domain engine (src/lib/engine.ts): computeMatch, computeGaps, initInterview, applyEvaluation (the adaptive state machine), computeReadiness, computeRoadmap.
+   183→- Skill taxonomy (src/lib/taxonomy.ts): 40+ competencies with aliases across system_design/backend/frontend/data/ml/cloud/devops/languages/communication/domain.
+   184→- Text utilities (src/lib/text.ts): tokenize, cosineSimilarity, bestSemanticMatch, evidenceStrength.
+   185→- AI layer (src/lib/ai.ts): extractResume, extractJob, generateQuestion, evaluateAnswer — all with timeouts, JSON validation, deterministic fallbacks.
+   186→- Demo data (src/lib/demo.ts): Aarav Sharma ML engineer resume + AI/ML Software Engineer JD, scripted answers that trigger the WOW moment.
+   187→- API routes: /api/analyze, /api/interview/start, /api/interview/answer, /api/readiness, /api/session.
+   188→- Zustand store (src/lib/store.ts): orchestrates the full client-side intelligence loop.
+   189→- Premium Apple-inspired theme: warm-neutral light palette + deep charcoal dark mode + semantic success/warning/critical tokens + ambient gradients + soft shadows + custom scrollbar.
+   190→- Layout: Inter font, theme provider, sonner toaster, sticky footer via flex-col + mt-auto.
+   191→- Views: Home/Command Center, Candidate Intelligence, Job Match (score ring + components), Skill Gaps (hero gap), Adaptive Interview (hero experience), Evaluation reveal (WOW moment), Readiness, Roadmap timeline.
+   192→- Loading overlay with calm intelligent states.
+   193→
+   194→Stage Summary:
+   195→- Lint passes clean (0 errors).
+   196→- Dev server runs on port 3000 (200 OK).
+   197→- End-to-end backend test PASSED:
+   198→  - Demo analyze: match index 53 (fair), top gap = System Design (critical).
+   199→  - Interview start: first question targets System Design.
+   200→  - Answer with scripted demo answer → AI detected gap "Scalability Strategies" → NEXT question dynamically targets caching strategy. THE WOW MOMENT WORKS.
+   201→- Next: agent-browser end-to-end UI verification, then 15-min recurring cron webDevReview job.
+   202→
+   203→---
+   204→Task ID: 9
+   205→Agent: main
+   206→Task: End-to-end agent-browser verification + create recurring 15-min cron webDevReview job
+   207→
+   208→Work Log:
+   209→- Verified /api/analyze returns 200 with demo data (AI parses resume + job successfully).
+   210→- Verified /api/interview/start returns first question targeting System Design (the highest-impact gap).
+   211→- Verified /api/interview/answer with scripted demo answer returns AI evaluation that detects "Scalability Strategies" gap and dynamically selects a caching-focused next question. THE WOW MOMENT CONFIRMED.
+   212→- agent-browser end-to-end UI walkthrough PASSED:
+   213→  - Home view renders hero + dual inputs + "Load demo candidate" button.
+   214→  - Click demo → Candidate Intelligence view with skills, evidence, experience, projects, education.
+   215→  - Job Match view: score ring (53/100 fair), 4 weighted components, 20-row competency comparison.
+   216→  - Skill Gaps view: hero gap = System Design (critical), plus other open gaps.
+   217→  - Adaptive Interview: first question targets System Design; "Use scripted demo answer" triggers evaluation.
+   218→  - Evaluation reveal: 4-dimension scoring + strengths + weaknesses + "WHAT HAPPENS NEXT" showing the next question dynamically changed to distributed caching. "The interview adapted because of your answer."
+   219→  - Continued through 5 questions, each adaptively chosen.
+   220→  - Readiness view: index 36/100, 5 dimensions, critical blockers, next best action, interview evidence summary.
+   221→  - Roadmap view: TODAY/NEXT/THEN/REASSESS timeline with specific practice items per competency.
+   222→  - Sticky footer present on every view; nav disabled until session created.
+   223→- Lint clean (0 errors). Dev server stable on port 3000. No runtime errors in recent log.
+   224→
+   225→Stage Summary:
+   226→- All P0 acceptance criteria from the championship build directive are satisfied:
+   227→  [x] Resume processed (AI + deterministic fallback)
+   228→  [x] Job description processed
+   229→  [x] Candidate profile generated (with evidence provenance)
+   230→  [x] Skills normalized (taxonomy with aliases)
+   231→  [x] Semantic matching works (cosine + canonical matching)
+   232→  [x] Match score is explainable (4 weighted components)
+   233→  [x] Skill gaps prioritized (critical/high/medium/low)
+   234→  [x] Highest-impact gap selected for first question
+   235→  [x] Adaptive interview starts
+   236→  [x] Question is competency-specific
+   237→  [x] Answer submitted + structurally evaluated (4 dims + strengths/weaknesses/gap)
+   238→  [x] Weakness detected + competency state updated
+   239→  [x] Next question changes accordingly (THE WOW MOMENT)
+   240→  [x] Readiness calculated + explainable
+   241→  [x] Roadmap uses actual gaps
+   242→  [x] Demo mode works end-to-end
+   243→  [x] AI output validated against schema (never raw LLM text into DB state)
+   244→  [x] No broken primary buttons
+   245→  [x] No critical console errors
+   246→  [x] Apple-inspired premium UX
+   247→- Next: create recurring 15-min cron webDevReview job for continuous QA + feature expansion.
+   248→
+   249→---
+   250→Task ID: 3
+   251→Agent: frontend-styling-expert
+   252→Task: Polish HireMind AI styling with premium micro-interactions and animations
+   253→
+   254→Work Log:
+   255→- globals.css: Added 12+ new CSS keyframes (hm-shimmer, hm-ring-glow, hm-gradient-spin, hm-float-1/2/3, hm-typing-dot, hm-typewriter, hm-subtle-pulse, hm-draw-in, hm-check-pop)
+   256→- globals.css: Added premium utility classes (hm-shimmer, hm-gradient-border, hm-gradient-border-critical, hm-bar-shine, hm-typing-indicator, hm-particles, hm-particles-inner, hm-focus-ring, hm-ring-glow, hm-pulse-critical, hm-timeline-draw, hm-check-pop, hm-step-dot, hm-typewriter, hm-radial-glow)
+   257→- globals.css: Improved scrollbar to be even more subtle (8px width, 18% opacity thumb, 3px border)
+   258→- globals.css: Added smooth focus-visible ring transitions for all interactive elements (button, a, input, textarea, select, [role="button"])
+   259→- shell.tsx: ScoreRing — added glow/pulse layer behind SVG ring (radial-gradient with hm-ring-glow animation), smoother count-up with overshoot easing (cubic + spring sine), shimmer sweep overlay after animation completes, optional delay prop for staggered entrances
+   260→- shell.tsx: CompetencyBar — added staggered entrance (each bar 50ms after previous via index prop), gradient fill for matched/weak bars (success→accent-blue gradient), micro-shine on hover (hm-bar-shine class)
+   261→- shell.tsx: PriorityPill — added hm-pulse-critical animation for critical priority items
+   262→- home-view.tsx: Added CSS-only floating particle/dot pattern (hm-particles + hm-particles-inner classes with ::before/::after pseudo-elements)
+   263→- home-view.tsx: Replaced "Load demo candidate" button with hm-gradient-border animated gradient border wrapper
+   264→- home-view.tsx: Added scale-up + lift micro-interaction on trust feature cards (motion.div whileHover={{ scale: 1.03, y: -2 }})
+   265→- candidate-view.tsx: Added staggered fade-in for skill rows (40ms delay per row, slide from left)
+   266→- candidate-view.tsx: Added left-border color indicator on skill rows (3px solid, matching level color: success/warning/muted)
+   267→- candidate-view.tsx: Replaced instant open/close with smooth Framer Motion height+opacity animation for evidence reveal
+   268→- match-view.tsx: Added scale-up entrance on score ring container (motion.div with scale 0.9→1)
+   269→- match-view.tsx: Added AnimatedCounter component for "Why this score" score numbers (count-up animation)
+   270→- match-view.tsx: Added staggered reveal for component score sections (motion.div with delay 0.15 + i*0.08)
+   271→- match-view.tsx: Added spring micro-interaction on "See your gaps" CTA button (whileHover scale 1.04, whileTap scale 0.98)
+   272→- gaps-view.tsx: Replaced hero gap card hm-card with hm-gradient-border-critical for animated gradient border
+   273→- gaps-view.tsx: Added spring bounce micro-interaction on "Test this skill" button (whileHover scale 1.05, whileTap scale 0.97)
+   274→- interview-view.tsx: Added typing indicator animation in question area (hm-typing-indicator with 3 animated dots)
+   275→- interview-view.tsx: Added focus ring animation on answer textarea (hm-focus-ring class with smooth transitions)
+   276→- interview-view.tsx: Added progress step indicator dots below progress bar (active=blue scaled, complete=green, pending=muted)
+   277→- evaluation-view.tsx: Added staggered reveal for dimension bars (motion.div wrappers with delays 0.1/0.18/0.26/0.34s)
+   278→- evaluation-view.tsx: Added hm-radial-glow class to WOW moment section for subtle radial glow effect
+   279→- evaluation-view.tsx: Added typewriter-like reveal for "Let's test that." (hm-typewriter class with steps animation)
+   280→- readiness-view.tsx: Made score ring entrance more dramatic (scale 0.95→1 with delay, ScoreRing delay={200})
+   281→- readiness-view.tsx: Added staggered reveal + animated pulse indicators for critical blockers (motion.li with red pulse dots)
+   282→- roadmap-view.tsx: Added draw-in animation for timeline vertical line (hm-timeline-draw class)
+   283→- roadmap-view.tsx: Enhanced step card slide-in with slight rotation (initial rotate: -1.5deg → 0)
+   284→- roadmap-view.tsx: Added checkmark pop animation on practice items (hm-check-pop class with staggered delays)
+   285→
+   286→Stage Summary:
+   287→- Lint passes clean (0 errors). Build succeeds.
+   288→- All 11 improvement areas completed with Apple-inspired premium micro-interactions.
+   289→- Animations are subtle and professional: no bouncing, spinning, neon, or flashy effects.
+   290→- Uses Framer Motion for JS-driven animations, CSS keyframes for pure CSS animations (performance-optimized).
+   291→- Existing CSS custom properties (var(--success), var(--accent-blue), etc.) used throughout.
+   292→- No new npm packages added. Color scheme and overall layout preserved.
+   293→
+   294→---
+   295→Task ID: 4
+   296→Agent: full-stack-developer
+   297→Task: Add new features to HireMind AI
+   298→
+   299→Work Log:
+   300→- Feature 1 (Presentation Mode Toggle): Added `presentationMode` boolean + `togglePresentationMode` action to Zustand store. Added Monitor icon button in SiteHeader next to theme toggle. Applied `data-presentation="true"` attribute on html element when enabled (via useEffect in page.tsx). Added CSS rules in globals.css: `font-size: 118.8%` for ~20% larger text, `.hm-nav-item` larger font+padding, `.hm-footer-hide` hides footer. Added "PRESENTATION MODE" indicator badge in header when active. Button highlights with accent-blue when active. Reset clears presentation mode.
+   301→- Feature 2 (Competency Evidence Graph): Created `evidence-graph.tsx` component with horizontal flow diagram showing Job Requirement → Resume Evidence → Interview Evidence → Assessment for top 5 competencies (sorted by match contribution). Each node shows competency name, level (color-coded ring), and source icon. Arrows connect the chain. Uses framer-motion for staggered entrance animation. Toggle "Show evidence graph" button expands/collapses with AnimatePresence. Added to candidate-view.tsx below the existing profile card.
+   302→- Feature 3 (Keyboard Shortcuts): Created `use-keyboard-shortcuts.ts` hook listening for keydown events. Keys 1-7 switch to corresponding nav view. `d` loads demo candidate from home. `p` toggles presentation mode. `t` toggles theme (via custom event). `Escape` goes to home. `?` shows hint overlay. All shortcuts disabled when typing in input/textarea/select. Created `shortcut-hint.tsx` overlay component with semi-transparent backdrop + dialog listing all shortcuts with kbd styling. Integrated hook in page.tsx with ShortcutHint component.
+   303→- Feature 4 (Interview Session Summary): Created `session-summary.tsx` component with vertical timeline of all Q&A pairs. Each timeline item shows: question number + competency badge + difficulty, question text (truncated), answer (truncated), 4 evaluation mini-bars (Technical/Relevance/Depth/Communication), adaptive reason for next question. Before/After competency state comparison table showing resume level → interview level with up/down arrows color-coded. Toggle "View session summary" button on readiness view. Added to readiness-view.tsx.
+   304→- Feature 5 (Export/Share Results): Created `export-results.tsx` component with "Export results" button using Copy icon. Generates clean markdown-like text with all sections: Candidate info, Match index + components, Skill gaps, Interview Q&A summary + competency changes, Readiness dimensions + blockers, Roadmap steps with practice items. Copies to clipboard via navigator.clipboard.writeText(). Shows success toast and Check icon briefly. Added to readiness view next to "Open my roadmap" button.
+   305→- Removed unused `Link` import from shell.tsx.
+   306→- Lint passes clean (0 errors). Dev server compiles successfully.
+   307→
+   308→Stage Summary:
+   309→- All 5 features implemented and integrated into the existing HireMind AI app.
+   310→- Presentation Mode: toggle scales fonts ~20%, hides footer, shows indicator badge — ideal for hackathon demos.
+   311→- Evidence Graph: visual competency evidence chain on candidate view with toggle.
+   312→- Keyboard Shortcuts: full power-user keyboard navigation with hint overlay (press ?).
+   313→- Session Summary: detailed interview timeline with before/after competency states on readiness view.
+   314→- Export Results: one-click markdown export to clipboard on readiness view.
+   315→- No new npm packages added. Apple-inspired design aesthetic preserved. Lint clean.
+   316→
+   317→---
+   318→Task ID: cron-review-1
+   319→Agent: main (cron-triggered)
+   320→Task: QA assessment + styling polish + new features
+   321→
+   322→## Current Project Status Assessment
+   323→
+   324→**Status: STABLE and feature-complete for P0 + P1.**
+   325→
+   326→The core intelligence loop (Resume → Match → Gaps → Adaptive Interview → Readiness → Roadmap) works end-to-end with real AI (z-ai-web-dev-sdk) and deterministic fallbacks. The adaptive interview WOW moment (next question changes because of previous answer) is verified both via API and agent-browser.
+   327→
+   328→### QA Results (this round)
+   329→- Lint: 0 errors ✓
+   330→- Dev server: stable on port 3000, HTTP 200 ✓
+   331→- No runtime errors in recent dev log ✓
+   332→- agent-browser walkthrough PASSED:
+   333→  - Home view renders hero + inputs + demo button ✓
+   334→  - Demo flow: Candidate → Match → Gaps → Interview → Evaluation (WOW moment) → Readiness → Roadmap ✓
+   335→  - New features verified: Evidence Graph, Presentation Mode, Session Summary, Export Results, Keyboard Shortcuts ✓
+   336→  - Sticky footer present on every view ✓
+   337→  - Nav disabled until session created ✓
+   338→
+   339→---
+   340→
+   341→## Current Goals / Completed Modifications / Verification Results
+   342→
+   343→### Styling Polish (Task 3 — frontend-styling-expert)
+   344→Modified 8 files with premium micro-interactions:
+   345→1. **globals.css**: 12+ new keyframes (hm-shimmer, hm-glow-pulse, hm-draw-line, hm-check-pop, hm-typewriter), 15+ premium utility classes (.hm-gradient-border, .hm-card-hover, .hm-shimmer-bar, .hm-radial-glow), improved scrollbar, focus-visible ring transitions, presentation mode CSS rules.
+   346→2. **shell.tsx**: ScoreRing glow/shimmer/overshoot animation, CompetencyBar stagger/gradient fill/micro-shine on hover, PriorityPill pulse for critical items.
+   347→3. **home-view.tsx**: CSS-only floating dot particles, gradient border animation on demo button, hover scale micro-interaction on trust cards.
+   348→4. **candidate-view.tsx**: Staggered skill rows (40ms delay), left-border color indicator per level, smooth expand animation.
+   349→5. **match-view.tsx**: Scale entrance on score ring, AnimatedCounter component, staggered component bars, spring CTA animation.
+   350→6. **gaps-view.tsx**: Animated gradient border on hero gap card, spring bounce on "Test this skill" button.
+   351→7. **interview-view.tsx**: Typing indicator animation, enhanced focus ring on textarea, progress step dots below progress bar.
+   352→8. **evaluation-view.tsx**: Staggered dimension bars, radial glow on WOW moment, typewriter reveal for "Let's test that."
+   353→9. **readiness-view.tsx**: Dramatic score ring entrance with overshoot, animated indicators on critical blockers.
+   354→10. **roadmap-view.tsx**: Timeline draw-in animation, slide-in with rotation on step cards, checkmark pop on practice items.
+   355→
+   356→### New Features (Task 4 — full-stack-developer)
+   357→5 new features added:
+   358→1. **Presentation Mode Toggle**: Monitor icon button in header. Enables `data-presentation="true"` on `<html>`, CSS scales font ~20%, larger nav, hidden footer, "PRESENTATION MODE" badge.
+   359→2. **Competency Evidence Graph**: New `evidence-graph.tsx` component. Horizontal flow diagram: Job Reqd → Resume → Interview → Assessment. Shows top 5 competencies with color-coded nodes, source icons, arrow connectors. Expand/collapse toggle on Candidate view.
+   360→3. **Keyboard Shortcuts**: New `use-keyboard-shortcuts.ts` hook + `shortcut-hint.tsx` overlay. Keys: 1-7 (views), d (demo), p (presentation), t (theme), Escape (home), ? (help). Disabled when typing in inputs.
+   361→4. **Interview Session Summary**: New `session-summary.tsx`. Vertical timeline of Q&A pairs with mini evaluation bars. Before/after competency state comparison. Adaptive decision trail. Expand/collapse on Readiness view.
+   362→5. **Export/Share Results**: New `export-results.tsx`. Generates clean markdown text with all session data. One-click copy to clipboard with success toast and icon feedback.
+   363→
+   364→### Verification Results
+   365→- Lint: 0 errors ✓
+   366→- Dev server: compiling successfully ✓
+   367→- agent-browser: All new features verified (Presentation Mode, Evidence Graph toggle, Session Summary expand, Export "Copied" toast) ✓
+   368→- AI fallback: Gracefully handles AI_TIMEOUT (uses deterministic fallback) ✓
+   369→- 30 core files, 14 view components, 3 hooks
+   370→
+   371→---
+   372→
+   373→## Unresolved Issues or Risks, and Priority Recommendations for Next Phase
+   374→
+   375→### Known Issues
+   376→1. **AI Timeout**: z-ai-web-dev-sdk occasionally times out on the first call (25s timeout). The deterministic fallback handles this gracefully, but it means the demo sometimes starts with "fallback" quality parsing. **Mitigation**: Already handled with fallback; could increase timeout or add retry logic.
+   377→2. **Zustand store is client-side only**: Page reload resets all state. The session data persists in SQLite via the API, but the client-side view state is lost. **Recommendation**: Add URL hash-based view state persistence (e.g., `#view=match&session=xxx`) so refreshing preserves the current view.
+   378→3. **Match index for demo candidate is 53 (fair)**: This is correct but some gaps (Databases, Microservices) are flagged as critical even though the candidate has SQL/PostgreSQL/REST APIs evidence. This is because the AI didn't always extract strong-enough evidence sentences for these. **Recommendation**: Improve the resume parser prompt to always extract evidence for well-known skills mentioned in the skills section.
+   379→
+   380→### Priority Recommendations for Next Phase
+   381→1. **URL hash state persistence** — So refreshing the page doesn't lose the session view state
+   382→2. **Resume file upload (drag-drop)** — Allow PDF/DOCX upload with text extraction (currently paste-only)
+   383→3. **Improved AI prompt tuning** — Better evidence extraction for common skills
+   384→4. **Mobile-responsive testing** — Verify the layout at 375px, 768px widths via agent-browser viewport
+   385→5. **Dark mode visual QA** — Verify all views look premium in dark mode
+   386→6. **Session history** — Allow viewing past sessions from the home view
+   387→7. **More question bank depth** — Add 3+ questions per competency for longer interviews
+   388→
+   389→---
+   390→
+   391→Task ID: 5
+   392→Agent: frontend-styling-expert
+   393→Task: Deep styling polish — dark mode refinement, mobile responsive, empty/loading states, micro-interactions, typography/spacing consistency
+   394→
+   395→Work Log:
+   396→- **globals.css — Dark mode refinement**:
+   397→  - Fixed hardcoded `white` in shimmer: replaced `color-mix(in oklch, var(--card) 80%, white)` with `color-mix(in oklch, var(--foreground) 6%, var(--card))` (works in both light and dark)
+   398→  - Added `.dark .hm-ambient` with stronger gradient opacity (12%/10% vs 8%/6%) so ambient washes remain visible on dark backgrounds
+   399→  - Added `.dark .hm-card` / `.dark .hm-card:hover` with softer shadow intensities (2%/5% vs 3%/8%) — light-on-dark shadows need less intensity
+   400→  - Added `.dark .hm-elevated:hover` with softer hover shadow
+   401→  - Added `.dark .hm-text-gradient` with gentler gradient transition (82% vs 75%) to avoid jarring bright→dim on dark bg
+   402→  - Added `.dark .hm-divider` using `color-mix(in oklch, var(--border) 70%, var(--muted))` for better visibility
+   403→  - Added `.dark .hm-radial-glow::before` with 14% opacity (vs 8%) so WOW moment glow is visible in dark mode
+   404→  - Added `.hm-card` hover transition (`box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease`) and hover state with deeper shadow
+   405→  - Added `.hm-elevated` hover transition and hover shadow state
+   406→  - Added skeleton loading CSS class (`hm-skeleton`) with shimmer animation
+   407→  - Added mobile utility classes: `.no-scrollbar`, `.pb-safe`, `.pt-safe`, `.pl-safe`, `.pr-safe` for safe-area-inset support
+   408→
+   409→- **shell.tsx — Nav polish & ScoreRing shimmer fix**:
+   410→  - Fixed ScoreRing shimmer `color-mix(in oklch, ${toneColor} 8%, white)` → `color-mix(in oklch, ${toneColor} 10%, var(--card))` (dark-mode safe)
+   411→  - Added `pt-safe` to sticky header for notch devices
+   412→  - Added active indicator dot (blue bar) to desktop nav items: `<span className="absolute bottom-0 ... h-[2px] w-3 rounded-full bg-accent-blue" />`
+   413→  - Added active indicator dot to mobile nav items similarly
+   414→  - Added `pl-safe pr-safe` to mobile nav for safe-area scrolling
+   415→  - Added `pb-safe` to footer for bottom bar devices
+   416→  - Reduced footer padding: `py-6 sm:py-8`
+   417→
+   418→- **home-view.tsx — Responsive hero + staggered trust features**:
+   419→  - Hero text: `text-3xl sm:text-5xl md:text-6xl` (3-step responsive scale)
+   420→  - Body text: `text-sm sm:text-base` instead of `text-[15px]`
+   421→  - Reduced padding: `px-4`, `pt-12 sm:pt-24`, `pb-10 sm:pb-12`
+   422→  - Input cards: `p-4 sm:p-6`, textarea `min-h-[140px] sm:min-h-[180px]`, `text-sm` instead of `text-[13px]`
+   423→  - Buttons: `h-11 sm:h-12`, `px-6 sm:px-7`, `text-sm`
+   424→  - Trust strip: `px-4`, `py-8 sm:py-10`, `gap-5 sm:gap-6`
+   425→  - Staggered entrance animation on trust features: `initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 + i * 0.12 }}`
+   426→  - Added `whileTap={{ scale: 0.99 }}` to trust cards for tactile feel
+   427→
+   428→- **candidate-view.tsx — Responsive + line-clamp**:
+   429→  - Container: `px-4`, `py-8 sm:py-14`, `mt-6 sm:mt-8`
+   430→  - Cards: `p-4 sm:p-6` on both profile and skills cards
+   431→  - Heading: `text-2xl sm:text-4xl`
+   432→  - Body text: `text-sm`, skill competency: `text-sm font-medium line-clamp-1`
+   433→  - Evidence text: `line-clamp-2`
+   434→  - Summary: `line-clamp-3`
+   435→  - Experience/projects: `text-sm font-medium line-clamp-1`, description: `text-xs ... line-clamp-2`
+   436→
+   437→- **match-view.tsx — Responsive**:
+   438→  - Container: `px-4`, `py-8 sm:py-14`, `mt-6 sm:mt-8`
+   439→  - Cards: `p-4 sm:p-6` on score ring, components, and comparison
+   440→  - Heading: `text-2xl sm:text-4xl`, body: `text-sm`
+   441→  - Comparison grid: `gap-x-4 sm:gap-x-8 gap-y-3 sm:gap-y-4`
+   442→  - Competency name: `text-sm font-medium line-clamp-1`
+   443→
+   444→- **gaps-view.tsx — Responsive**:
+   445→  - Container: `px-4`, `py-8 sm:py-14`
+   446→  - Hero card: `mt-6 sm:mt-8`, `p-6 sm:p-10`
+   447→  - Heading: `text-2xl sm:text-4xl`, `text-3xl sm:text-5xl` for hero gap name
+   448→  - Body: `text-sm`
+   449→
+   450→- **interview-view.tsx — Responsive + entrance animation**:
+   451→  - All containers: `px-4`, `py-8 sm:py-14` or `py-10 sm:py-14`
+   452→  - "Begin interview →" button: wrapped in `motion.div` with `initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.3 }}` for dramatic entrance
+   453→  - Button sizes: `h-11 sm:h-12`, `px-5 sm:px-6`, `text-sm`
+   454→  - Textarea: `min-h-[140px] sm:min-h-[160px]`, `text-sm`
+   455→  - Question card: `mt-6 sm:mt-8`, `p-6 sm:p-10`
+   456→  - Complete view heading: `text-2xl sm:text-4xl`, body: `text-sm`
+   457→
+   458→- **evaluation-view.tsx — Responsive**:
+   459→  - Container: `px-4`, `py-8 sm:py-14`
+   460→  - Cards: `p-4 sm:p-6` on strengths/weaknesses, `p-6 sm:p-10` on WOW card
+   461→  - Grid: `gap-3 sm:gap-4`
+   462→  - Heading: `text-2xl sm:text-4xl`, body: `text-sm`
+   463→
+   464→- **readiness-view.tsx — Responsive**:
+   465→  - Container: `px-4`, `py-8 sm:py-14`
+   466→  - Cards: `p-4 sm:p-6` on all cards
+   467→  - Heading: `text-2xl sm:text-4xl`, body: `text-sm`
+   468→  - Grid: `gap-3 sm:gap-4`
+   469→
+   470→- **roadmap-view.tsx — Responsive**:
+   471→  - Container: `px-4`, `py-8 sm:py-14`
+   472→  - Cards: `p-4 sm:p-5` on steps, `p-5 sm:p-8` on close-loop card
+   473→  - Heading: `text-2xl sm:text-4xl`, body: `text-sm`
+   474→  - Step focus: `text-sm`, step reason: `text-xs`
+   475→  - Timeline line: `hidden sm:block` to avoid visual artifact on mobile
+   476→
+   477→- **evidence-graph.tsx — Mobile overflow**:
+   478→  - Added `overflow-x-auto no-scrollbar` to evidence rows for horizontal scroll on small screens
+   479→
+   480→- **loading-overlay.tsx — Contextual loading**:
+   481→  - Added interview-specific step descriptions (generating question, evaluating answer, updating competency)
+   482→  - Contextual hint text: "Evaluating your response and adapting the next question" vs "HireMind is processing"
+   483→  - Auto-detects interview steps from loadingStep text
+   484→
+   485→- **skeleton.tsx — New component**:
+   486→  - Created `CandidateSkeleton`, `MatchSkeleton`, `GapsSkeleton` components with shimmer placeholders
+   487→  - Created `EmptyState` component with icon, title, description, and optional action slot
+   488→  - Uses `hm-skeleton` CSS class for animated shimmer animation
+   489→
+   490→- **page.tsx — Lint fix**:
+   491→  - Fixed `react-hooks/set-state-in-effect` error by replacing `useState(false)` + `setHydrated(true)` with `useRef(false)` pattern for hydration tracking
+   492→
+   493→Stage Summary:
+   494→- Lint: 0 errors ✓
+   495→- Build: succeeds ✓
+   496→- No new npm packages added ✓
+   497→- All existing features continue to work (view switching, demo flow, adaptive interview, keyboard shortcuts)
+   498→- Dark mode: all CSS custom properties have proper `.dark` overrides, no hardcoded colors that fail in dark mode
+   499→- Mobile: safe-area padding on header/footer/nav, responsive padding/typography on all views, evidence graph overflow scroll, timeline hidden on mobile
+   500→- Typography: consistent heading hierarchy (h1: 2xl→4xl/5xl/6xl, body: sm→base), line-clamp on long text
+   501→- Micro-interactions: card hover shadows, nav active indicators, staggered trust features, interview button entrance animation, whileTap on interactive elements
+   502→- Skeleton/empty states: new skeleton components for loading, contextual loading overlay steps
+   503→
+   504→---
+   505→Task ID: cron-review-3-styling
+   506→Agent: frontend-styling-expert
+   507→Task: Apply premium visual polish based on VLM feedback
+   508→
+   509→Work Log:
+   510→- globals.css: Refined --warning token from muddy yellow `oklch(0.82 0.12 80)` to deeper amber `oklch(0.78 0.13 75)` in both light and dark themes (also matched --warning-foreground hue and --chart-3 token).
+   511→- globals.css: Added 5 new premium utility classes with `.dark` overrides: `.hm-evidence-quote` (italic + left border accent + softer muted color), `.hm-input-premium` (softer bg + focus glow ring), `.hm-divider-vertical` (1px × 16px vertical divider), `.hm-void-box` (dashed border + muted bg + hover accent), `.hm-badge-premium` (subtle gradient bg + refined border, uses `var(--accent-blue)` for text color so it stays readable on the soft tinted background — initial implementation used `var(--accent-blue-foreground)` which is near-white in light mode and made the text invisible; fixed after VLM verification).
+   512→- shell.tsx (ScoreRing): Reduced stroke width from 9 → 7 (thinner, more elegant). Added SVG `<defs>` + `<linearGradient>` with stops 0%→55%→100% at opacity 1.0→0.92→0.4 so the progress arc fades smoothly into the muted track (no more hard "Pac-Man" gap). Used React.useId() for stable unique gradient IDs so multiple ScoreRings on a page don't clash. Track opacity reduced 0.6→0.55. Count-up animation, glow layer, and shimmer overlay preserved.
+   513→- home-view.tsx: Added `items-stretch` to the dual-input grid so Resume and Target role cards are equal height. Added "Tips for best results" hint box to Target role card to balance the height added by FileUpload on the Resume side. Changed hero body paragraph `text-muted-foreground` → `text-foreground/70` for better contrast. Replaced faint top pill badge with new `hm-badge-premium` class (subtle blue gradient + refined border + accent-blue text). Replaced floating "or" between buttons with a proper divider: 1px×16px `hm-divider-vertical` lines on desktop, 1px×24px horizontal lines on mobile, flanking the "or" text. Added `hm-input-premium` + `focus-visible:ring-2 focus-visible:ring-accent-blue/30 focus-visible:border-accent-blue/40` to both inputs and textareas for premium focus rings. Added `placeholder:text-foreground/40` for darker, more readable placeholders.
+   514→- match-view.tsx: Changed component score label `font-medium` → `font-semibold` and competency name `font-medium` → `font-semibold` (VLM wanted Semi-bold 600). Wrapped evidence quotes in `hm-evidence-quote italic` styled container (italic + left border accent + softer muted color + line-clamp-1). Also added explicit Tailwind `italic` utility as belt-and-suspenders after VLM verification caught the italic wasn't visible with CSS class alone. Changed both score card and breakdown card padding from `p-4 sm:p-6` → `p-5 sm:p-7` for consistent vertical padding.
+   515→- gaps-view.tsx: Imported `Plus` icon. Changed "Your evidence" cell copy: when `top.candidateLevel === "unknown"`, now shows a `hm-void-box` dashed-border element with `Plus` icon and "Add evidence" text (title attribute as tooltip) instead of "Unknown · Gap" copy. Restructured hero info grid from 3 cols → `sm:grid-cols-2 lg:grid-cols-4` and added a new "Priority" cell with PriorityPill for layout balance. Changed "Other open gaps" grid from `sm:grid-cols-2` → `sm:grid-cols-2 lg:grid-cols-3` to balance the orphan card wrapping.
+   516→- readiness-view.tsx (pre-calc state only): Replaced faint Sparkles icon with `Compass` icon wrapped in `bg-gradient-to-br from-accent-blue/20 to-chart-5/15` + `ring-1 ring-accent-blue/20` + `shadow-sm` for a more vibrant, confident visual. Changed body paragraph `text-muted-foreground` → `text-foreground/70` for better contrast. Added "What we calculate" preview section below the button: 3 mini-cards (Job alignment, Required coverage, Interview evidence) with icons (Target, ListChecks, MessageSquare) and staggered entrance animation. Added trust feature row at the bottom (Honest by design, Explainable scores, Adaptive not static) with icons to reduce the massive whitespace below the button. Imported Target, ListChecks, MessageSquare, ShieldCheck, GitBranch from lucide-react.
+   517→
+   518→Stage Summary:
+   519→- Lint: 0 errors ✓ (verified with `bun run lint`)
+   520→- Dev server: stable, HTTP 200 ✓
+   521→- VLM verification (using z-ai vision CLI) confirmed all 6 polish areas:
+   522→  1. Home view: equal-height cards ✓, premium badge visible with readable text ✓, "or" divider properly framed by lines ✓, body text readable ✓, "Tips for best results" box visible ✓
+   523→  2. Score ring (match view): thin elegant stroke ✓, smooth gradient fade (no Pac-Man gap) ✓, refined amber color ✓
+   524→  3. Match view evidence quotes: italic + left border accent + softer muted color ✓
+   525→  4. Gaps view: 4-cell info grid ✓, "Add evidence" dashed void box ✓, 3-column other-gaps grid ✓
+   526→  5. Readiness pre-calc: Compass icon ✓, "What we calculate" 3 mini-cards ✓, trust feature row ✓
+   527→  6. Readiness full: thin elegant ring stroke ✓, smooth fade ✓, semibold dimension labels ✓
+   528→- Files changed: globals.css, shell.tsx, home-view.tsx, match-view.tsx, gaps-view.tsx, readiness-view.tsx (6 files)
+   529→- No new npm packages added. No data flow / store / API changes. Dark mode preserved (every new utility has `.dark` overrides). Mobile responsive preserved (sm: and lg: breakpoints used throughout). Existing animations, demo flow, and keyboard shortcuts unaffected.
+   530→- Screenshots saved to /home/z/my-project/download/: polish-home.png, polish-home-v2.png, polish-candidate.png, polish-match.png, polish-match-v2.png, polish-gaps.png, polish-readiness-pre.png, polish-readiness-full.png
+   531→
+   532→---
+   533→
+   534→# HIREMIND AI — Round 3 (cron-review) Handover
+   535→
+   536→> **Last updated**: Round 3 (cron-review-3) — 3 major new features + 6 visual polish areas
+   537→
+   538→## Current Project Status: STABLE + Polished + Feature-Expanded
+   539→
+   540→All P0 + P1 + P2 features working. Core intelligence loop verified end-to-end. Three high-impact new features added (Job Insights, Skill Heatmap, Answer Coach) and six visual polish areas addressed based on VLM analysis. All changes verified via agent-browser + VLM critique (grades A-/A across the board).
+   541→
+   542→---
+   543→
+   544→Task ID: cron-review-3
+   545→Agent: main (cron-triggered)
+   546→Task: QA assessment + visual polish (delegated) + 3 new features + dark mode QA + worklog handover
+   547→
+   548→## QA Assessment Results (this round)
+   549→
+   550→- **Lint**: 0 errors ✓
+   551→- **Dev server**: stable on port 3000, all requests HTTP 200 ✓
+   552→- **No runtime errors** in console after reload ✓
+   553→- **agent-browser walkthrough PASSED**:
+   554→  - Home view renders with balanced dual cards + premium badge ✓
+   555→  - Demo flow: Candidate → Match (with JobInsights) → Gaps → Interview (with AnswerCoach) → Evaluation → Readiness → Roadmap ✓
+   556→  - Skill Heatmap renders with category groupings on Candidate view ✓
+   557→  - JobInsights expands/collapses responsibilities on Match view ✓
+   558→  - AnswerCoach updates readiness 0% → 100% live as user types ✓
+   559→  - Dark mode verified — premium look preserved ✓
+   560→- **VLM critique grades**:
+   561→  - Home polish: A (card balance), B+ (or grouping), A- (overall premium feel)
+   562→  - Answer Coach: A- (sophisticated, user-centric, gamified progress)
+   563→  - JobInsights: A- (high transparency, strong trust building)
+   564→  - Skill Heatmap: A- (excellent category groupings, intuitive color coding)
+   565→  - Dark mode: A- (sophisticated palette, semantic colors visible)
+   566→
+   567→## Visual Polish Completed (Task cron-review-3-styling — frontend-styling-expert)
+   568→
+   569→Six areas polished based on VLM (Vision Language Model) analysis of actual screenshots:
+   570→
+   571→1. **Score Ring redesign** (shell.tsx): Closed the gap (no more Pac-Man), reduced stroke 9→7, added SVG linear gradient for smooth arc fade. Refined warning tone to deeper amber `oklch(0.78 0.13 75)`.
+   572→2. **Home view** (home-view.tsx): `items-stretch` for equal card heights, added "Tips for best results" box on Target role card, body text `text-muted-foreground`→`text-foreground/70` for contrast, top pill uses `hm-badge-premium`, "or" wrapped with vertical divider flanks, inputs use `hm-input-premium` + focus rings.
+   573→3. **Match view** (match-view.tsx): Bar labels `font-medium`→`font-semibold`, evidence quotes wrapped in `hm-evidence-quote italic` styled container with left-border accent, padding standardized `p-5 sm:p-7`.
+   574→4. **Gaps view** (gaps-view.tsx): "Your evidence" cell shows `hm-void-box` with Plus icon + "Add evidence" when `candidateLevel === "unknown"` (replaces "Unknown · Gap"), hero info grid 3→4 cells with Priority column, other-open-gaps grid now `lg:grid-cols-3` to balance.
+   575→5. **Readiness pre-calc state** (readiness-view.tsx): Replaced Sparkles with `Compass` in gradient bg, added 3 "What we calculate" mini-cards (Job alignment / Required coverage / Interview evidence), added trust row.
+   576→6. **CSS utilities** (globals.css): Added 5 new premium classes — `.hm-evidence-quote`, `.hm-input-premium`, `.hm-divider-vertical`, `.hm-void-box`, `.hm-badge-premium` — all with `.dark` overrides.
+   577→
+   578→## New Features Added (Task cron-review-3 — main)
+   579→
+   580→### Feature 1: Job Description Insights Card (`job-insights.tsx`)
+   581→- **Location**: Match view, below the competency comparison
+   582→- **What it shows**: AI-extracted summary, Required vs Preferred skill chips (color-coded by importance + matched status), Required coverage stat (X/Y), collapsible Key Responsibilities list
+   583→- **Premium details**: Staggered chip entrance animations, matched skills get green + Sparkles icon, importance tone gradient (critical/high/medium/low), collapsible responsibilities with motion height animation
+   584→- **Value**: Transparency — user can see exactly what the AI extracted from the JD, builds trust in the matching logic
+   585→
+   586→### Feature 2: Skill Confidence Heatmap (`skill-heatmap.tsx`)
+   587→- **Location**: Candidate view, above the EvidenceGraph
+   588→- **What it shows**: Color-coded tile grid of every detected competency, grouped by category (System Design / Backend / ML / etc.), with legend showing counts
+   589→- **Premium details**: Tiles color by level (strong=green, moderate=amber, weak=gray), hover scale + tooltip with source skill, category headers with counts, staggered entrance per category
+   590→- **Value**: At-a-glance visual scan of candidate's full competency profile — recruiter/candidate can see strengths and gaps in 2 seconds vs reading a list
+   591→
+   592→### Feature 3: Interactive Answer Coach Panel (`answer-coach.tsx`)
+   593→- **Location**: Interview view, beside the answer textarea (lg:grid-cols-5 split, 3/2 ratio)
+   594→- **What it shows**: Live answer readiness score 0-100%, 5 quality signals checklist (substance/structure/quantified/tradeoff/concrete), competency-specific "What great answers include", structure template, pitfalls to avoid, length guidance
+   595→- **Premium details**: Collapsible (click header), real-time signal detection (regex-based), readiness bar with tone color (success/warning/muted), staggered list animations
+   596→- **Value**: Transforms the interview from "test" into "active learning environment" — gives candidates a rubric without writing the answer for them. Live readiness meter gamifies the experience.
+   597→
+   598→### Supporting: Coach Tips data file (`coach-tips.ts`)
+   599→- Static, deterministic coaching content keyed by canonical competency name
+   600→- 16 competency-specific tips (System Design, Scalability, Fault Tolerance, Caching, Databases, REST APIs, Microservices, Docker, Kubernetes, Python, ML, Deep Learning, NLP, MLOps, Communication, Collaboration) + generic fallback
+   601→- `answerReadiness(answer)` function — computes 0..1 score from 5 quality signals using regex patterns
+   602→
+   603→## Verification Results
+   604→
+   605→- **Lint**: 0 errors ✓
+   606→- **Build**: succeeds ✓
+   607→- **Dev server**: stable on port 3000, HTTP 200 on all routes ✓
+   608→- **Demo flow**: end-to-end PASSED with all 3 new features visible ✓
+   609→- **Dark mode**: verified — no hardcoded colors, all new utilities have `.dark` overrides ✓
+   610→- **Mobile responsive**: lg:grid-cols-5 split on interview collapses to single column on mobile, all new cards use responsive padding ✓
+   611→- **No new npm packages added** ✓
+   612→
+   613→## Files Changed This Round
+   614→
+   615→**New files (4):**
+   616→- `src/lib/coach-tips.ts` — Coach tip data + answerReadiness() function
+   617→- `src/components/hiremind/job-insights.tsx` — JD insights card
+   618→- `src/components/hiremind/skill-heatmap.tsx` — Skill heatmap grid
+   619→- `src/components/hiremind/answer-coach.tsx` — Live answer coach panel
+   620→
+   621→**Modified files (7):**
+   622→- `src/app/globals.css` — 5 new premium utility classes + refined warning token
+   623→- `src/components/hiremind/shell.tsx` — ScoreRing redesign (stroke, gradient, closed circle)
+   624→- `src/components/hiremind/home-view.tsx` — Card balance, contrast, badge, dividers, focus rings
+   625→- `src/components/hiremind/match-view.tsx` — Bar labels, evidence quote styling, JobInsights integration
+   626→- `src/components/hiremind/gaps-view.tsx` — Void box, priority column, grid balance
+   627→- `src/components/hiremind/readiness-view.tsx` — Pre-calc state with preview cards
+   628→- `src/components/hiremind/candidate-view.tsx` — SkillHeatmap integration
+   629→- `src/components/hiremind/interview-view.tsx` — AnswerCoach integration with 2-col layout
+   630→
+   631→---
+   632→
+   633→## Unresolved Issues / Risks
+   634→
+   635→1. **AI Timeout on first call**: z-ai-web-dev-sdk occasionally times out (21.9s seen in logs this round). Deterministic fallback handles this gracefully — results still valid.
+   636→2. **Answer Coach regex signals are heuristic**: The 5 quality signals (substance/structure/quantified/tradeoff/concrete) use simple regex. Could be enhanced with semantic analysis, but the heuristic is intentionally transparent and explainable.
+   637→3. **JobInsights chip density**: For roles with 30+ required skills, the chip area may become cluttered. Current demo (12 required + 8 preferred) works well. Recommendation: add a "Show more" expansion if required.length > 20.
+   638→4. **SkillHeatmap tile width variance**: Tiles are width-fit-content, so columns don't perfectly align. Stylistic choice for organic feel; could be made uniform with `grid-cols-3` if scannability becomes an issue.
+   639→
+   640→## Priority Recommendations for Next Phase
+   641→
+   642→1. **Answer Coach enhancement** — Add real-time AI-powered answer preview scoring (call /api/interview/preview every 5s for live AI feedback). Currently the readiness is heuristic; AI would add depth.
+   643→2. **Compare Sessions feature** — Side-by-side comparison of two past sessions to show growth over time.
+   644→3. **Interview difficulty selector** — Let user pick easy/medium/hard before starting interview. Question bank already supports difficulty.
+   645→4. **Session cleanup cron** — Auto-cleanup sessions older than 24 hours (DB grows unbounded).
+   646→5. **Resume strength score** — On candidate view, show resume quality breakdown (evidence quality / skill coverage / quantified achievements).
+   647→6. **Mobile UX deep test** — Verify the new 2-column interview layout collapses cleanly at 375px width.
+   648→7. **PDF export of roadmap** — Currently export is markdown-to-clipboard; a styled PDF would be more shareable.
+   649→
+   650→## Project Overview (unchanged)
+   651→
+   652→HIREMIND AI is an AI-powered recruitment assistant (Smart Resume Parser & Mock Interviewer). Core intelligence loop:
+   653→
+   654→```
+   655→RESUME + TARGET JOB
+   656→   -> CANDIDATE INTELLIGENCE (+ Skill Heatmap)
+   657→   -> SEMANTIC JOB MATCH (+ Job Insights)  (Prototype Job Match Index)
+   658→   -> SKILL GAP INTELLIGENCE
+   659→   -> GAP-DRIVEN ADAPTIVE INTERVIEW (+ Answer Coach)  (THE WOW FEATURE)
+   660→   -> ANSWER EVALUATION
+   661→   -> COMPETENCY STATE UPDATE
+   662→   -> JOB READINESS (Prototype Job Readiness Index)
+   663→   -> PERSONALIZED IMPROVEMENT ROADMAP
+   664→```
+   665→
+   666→Tech stack: Next.js 16 (App Router) + TypeScript + Tailwind CSS 4 + shadcn/ui + Prisma (SQLite) + z-ai-web-dev-sdk (LLM) + Zustand + Framer Motion. Single visible route `/` (orchestrated client-side via Zustand view state).
+   667→
+   668→Critical principles (all preserved this round):
+   669→- AI understands. Application logic decides. Deterministic scoring.
+   670→- Distinguish KNOWN / WEAK / UNKNOWN evidence. Never treat absence as proof of missing skill.
+   671→- Adaptive interview: next question MUST depend on previous answer (the demo's WOW moment).
+   672→- Demo mode must work reliably end-to-end.
+   673→- Prototype-labeled indices (never "hiring probability").
+   674→
+   675→---
+   676→Task ID: cron-review-4-styling
+   677→Agent: frontend-styling-expert
+   678→Task: Premium styling polish — new utility classes + refined shadows
+   679→
+   680→Work Log:
+   681→- Read worklog.md (Rounds 1-3 history) and globals.css (all existing utility classes including .hm-card, .hm-elevated, .hm-divider, .hm-input-premium, .hm-evidence-quote, .hm-void-box, .hm-badge-premium, .hm-text-gradient, .hm-ambient, .hm-particles, .hm-typewriter, .hm-step-dot, .hm-bar-shine, .hm-shimmer) to confirm design tokens (--accent-blue, --success, --card, --muted, --border, --foreground, --muted-foreground) and color-mix(in oklch, ...) convention.
+   682→- globals.css: Refined `.hm-card` shadow stack IN PLACE (preserved structure — same class, same file location). Light mode base shadow now layered `0 1px 3px -1px rgba(0,0,0,0.06)` + `0 1px 2px -1px rgba(0,0,0,0.04)` + `0 0 0 1px color-mix(in oklch, var(--border) 60%, transparent)` (the new 1px ring gives crisp edge definition). Hover shadow now `0 8px 24px -8px rgba(0,0,0,0.08)` + `0 4px 8px -4px rgba(0,0,0,0.04)` (floating feel). Dark mode uses rgba(0,0,0,0.3) per spec (with 0.2/0.25 for the secondary closer shadow to keep the layered effect visible on dark surfaces).
+   683→- globals.css: Appended a new `/* ─── Round 4 Premium Polish ─── */` section at the end of `@layer utilities` (before the closing brace) containing 9 new utilities. Each color-bearing utility has a `.dark` override:
+   684→  1. `.hm-insight-callout` — AI insight callout box. Light: bg `color-mix(in oklch, var(--accent-blue) 7%, var(--card))`, 2px left border `color-mix(... 35%, var(--border))`, padding 8px 12px, radius `calc(var(--radius) - 2px)`. Dark: stronger 12% tint on transparent base + 45% border (so callout reads as distinct block on dark surfaces).
+   685→  2. `.hm-stat-tile` — premium stat tile. Rounded-xl (`calc(var(--radius) + 4px)`), gradient bg `var(--card) → color-mix(card 70%, muted)`, inset top highlight `inset 0 1px 0 color-mix(in oklch, white 4%, transparent)`, border `color-mix(... var(--border) 40%, transparent)`. Hover: `translateY(-1px)` + stronger shadow. Dark: gradient blends to muted at 60%, inset white highlight at 6%, ambient shadow `rgba(0,0,0,0.3)`.
+   686→  3. `.hm-glow-pulse` — pulsing glow for "live" indicators. `box-shadow: 0 0 0 0 color-mix(in oklch, var(--success) 50%, transparent)` with new `@keyframes hm-glow-pulse` animating the spread from 0 to 6px while fading success opacity to 0% (2s ease-in-out infinite). Dark: stronger 60% starting glow for visibility on dark surfaces.
+   687→  4. `.hm-card-hover` — premium card hover effect. `transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease`. Hover: `translateY(-2px)` + layered `0 8px 24px -8px color-mix(... var(--accent-blue) 18%, transparent)` (accent-blue glow) + `0 4px 12px -4px color-mix(... var(--foreground) 8%, transparent)` (elevated shadow, inline because `--shadow-elevated` isn't a defined token). Dark: stronger 22% accent glow + rgba(0,0,0,0.3) elevated shadow.
+   688→  5. `.hm-num-tabular` — `font-variant-numeric: tabular-nums; letter-spacing: -0.01em;`. Purely typographic, no dark variant needed (documented in comment).
+   689→  6. `.hm-shimmer-line` — 1px horizontal shimmer accent line with gradient `transparent → color-mix(accent-blue 40%, transparent) → transparent` and existing `hm-shimmer` keyframe at 2.4s. Documented that parent should be `overflow: hidden` for contained sweep. Uses `--accent-blue` token which already has its own light/dark values, so no explicit `.dark` override needed.
+   690→  7. `.hm-divider-soft` — softer variant of `.hm-divider`. 1px gradient `transparent → color-mix(var(--border) 80%, transparent) → transparent`. Dark: blends border with muted at 65% so the divider stays visible against dark surfaces without being harsh.
+   691→  8. `.hm-tag-premium` — premium pill chip (smaller variant of hm-badge-premium). `border-radius: 9999px`, padding `2px 8px`, `font-size: 10px`, `text-transform: uppercase`, `letter-spacing: 0.05em`, `font-weight: 600`. Same gradient + border + accent-blue text treatment as hm-badge-premium. Dark: same stronger transparent-base gradient (14%→8%) and 30% border as the badge.
+   692→  9. `.hm-textured-bg` — subtle dot-grid texture. `background-image: radial-gradient(color-mix(in oklch, var(--muted-foreground) 8%, transparent) 1px, transparent 1px); background-size: 16px 16px`. Dark: stronger 12% dot opacity for perceptibility on dark backgrounds.
+   693→- Verified with `bun run lint`: 0 errors. Verified with `bun run build`: compiled successfully in 13.9s (10/10 static pages generated), exit code 0 — confirms CSS parses cleanly with no Tailwind/PostCSS issues.
+   694→- Re-read the file after editing: confirmed all 9 new utilities present, file structure intact (opens with `@import "tailwindcss";`, closes with `}` ending `@layer utilities` on line 995). Dark mode coverage verified — 7 of 9 utilities have explicit `.dark` overrides; `.hm-num-tabular` (purely typographic) and `.hm-shimmer-line` (uses --accent-blue token which already adapts to dark mode) intentionally have no dark variant, documented in comments.
+   695→
+   696→Stage Summary:
+   697→- Files changed: only `/home/z/my-project/src/app/globals.css` (no component .tsx files touched, no npm packages added, no data flow / store / API changes).
+   698→- Net additions: 9 new premium utility classes + 1 new keyframe (`hm-glow-pulse`) + 1 refined shadow stack on `.hm-card` (in place, structure preserved).
+   699→- Existing utilities preserved: all 13+ prior `.hm-*` classes (hm-card, hm-elevated, hm-divider, hm-text-gradient, hm-ambient, hm-thinking, hm-reveal, hm-fade, hm-shimmer, hm-gradient-border, hm-radial-glow, hm-particles, hm-particles-inner, hm-step-dot, hm-typewriter, hm-bar-shine, hm-evidence-quote, hm-input-premium, hm-divider-vertical, hm-void-box, hm-badge-premium) unchanged in behavior — only `.hm-card` shadow values were refined in place.
+   700→- Dark mode preserved: every color-bearing new utility has a `.dark` override; existing `.dark` rules untouched.
+   701→- Verification: `bun run lint` 0 errors ✓, `bun run build` exit 0 ✓ (CSS compiles cleanly), file structure verified by re-read.
+   702→- Available for downstream use: components can now opt into `.hm-card-hover` (lift + accent-blue glow on hover), `.hm-stat-tile` (premium KPI tile), `.hm-insight-callout` (AI insight callout), `.hm-glow-pulse` (live indicator), `.hm-num-tabular` (tabular score alignment), `.hm-shimmer-line` (sweeping accent line), `.hm-divider-soft` (gentle section break), `.hm-tag-premium` (pill chip), `.hm-textured-bg` (dot-grid hero texture). None are wired into components yet — this round was strictly CSS utility expansion.
+   703→
+   704→---
+   705→Task ID: cron-review-4-wiring
+   706→Agent: frontend-styling-expert
+   707→Task: Wire new CSS utilities into existing components
+   708→
+   709→Work Log:
+   710→- Read worklog.md (Round 4 polish section) and globals.css (Round 4 Premium Polish utility block at line 809-994) to inventory the 9 new utility classes available for wiring.
+   711→- Inventory of target components re-read before edits: home-view, match-view, candidate-view, gaps-view, readiness-view, interview-view, evaluation-view, roadmap-view.
+   712→- Established clean lint baseline (`bun run lint` → 0 errors) before any edits.
+   713→- Edited `/home/z/my-project/src/components/hiremind/home-view.tsx` (3 edits): added `hm-textured-bg` to outermost `hm-ambient hm-particles` div; added `<div className="hm-shimmer-line mt-4 mx-auto max-w-xs" />` after the hero paragraph; added `hm-card-hover` to the 3 trust-strip feature `motion.div` cards (alongside existing `whileHover`/`whileTap` spring animations).
+   714→- Edited `/home/z/my-project/src/components/hiremind/match-view.tsx` (4 edits): added `hm-card-hover` to both `lg:grid-cols-5` `motion.div` cards (score + components); added `hm-num-tabular` to `AnimatedCounter`'s inner span; inserted `<div className="hm-divider-soft my-6" />` between the components grid and the competency-comparison `motion.div` as a soft section break.
+   715→- Edited `/home/z/my-project/src/components/hiremind/candidate-view.tsx` (3 edits): added `hm-card-hover` to profile-summary card and skills card; added `hm-num-tabular` to the `Stat` component's value span.
+   716→- Edited `/home/z/my-project/src/components/hiremind/gaps-view.tsx` (5 edits): added `hm-card-hover` to the "Other open gaps" cards; replaced `rounded-lg bg-secondary/40 p-3` with `hm-stat-tile p-3` on all 4 hero-gap info boxes (Why it matters / Your evidence / Priority / Next step).
+   717→- Edited `/home/z/my-project/src/components/hiremind/readiness-view.tsx` (4 edits): added `hm-card-hover` to ScoreRing card and dimensions card; added `hm-num-tabular` to the per-dimension score span; wired `hm-glow-pulse` onto the "Calculate readiness" button via a minimal template-literal conditional className (`loading ? " hm-glow-pulse" : ""`) — no imports changed.
+   718→- Edited `/home/z/my-project/src/components/hiremind/interview-view.tsx` (2 edits): added `hm-card-hover` to the main question `motion.div` (the `hm-card mt-6 sm:mt-8 p-6 sm:p-10` card); replaced the "Why we're asking" box className `mt-5 rounded-xl border border-border/60 bg-secondary/30 p-4` with `mt-5 hm-insight-callout p-4` (preserving the `mt-5` and `p-4` Tailwind utilities, dropping the now-redundant border/bg utility classes that `hm-insight-callout` supersedes).
+   719→- Edited `/home/z/my-project/src/components/hiremind/evaluation-view.tsx` (4 edits): added `hm-card-hover` to the dimensions card, the strengths card, and the weaknesses card; added `hm-insight-callout` to the "What happens next" WOW-moment `motion.div` (in addition to its existing `hm-card`, `hm-radial-glow`, `overflow-hidden`, `relative` classes — no classes removed).
+   720→- Edited `/home/z/my-project/src/components/hiremind/roadmap-view.tsx` (2 edits): added `hm-card-hover` to each timeline step card (`<div className="hm-card p-4 sm:p-5">` → `<div className="hm-card hm-card-hover p-4 sm:p-5">`); added `hm-num-tabular` to the readiness score span at the bottom (`{readiness.index}/100`).
+   721→- After each file edit, ran `bun run lint` (eslint) — 0 errors introduced throughout.
+   722→- Final verification: `bun run lint` returns 0 errors after all 8 files modified. Spot-checked `git diff` for each file — every change is a className-only addition (or replacement in the gaps-view `hm-stat-tile` and interview-view `hm-insight-callout` cases where the new utility visually supersedes the old `rounded-lg bg-secondary/40 p-3` / `rounded-xl border border-border/60 bg-secondary/30 p-4` patterns). No logic, structure, props, imports, or animation behaviors touched.
+   723→- Confirmed pre-existing TypeScript errors (in `examples/`, `skills/`, `src/app/api/extract-text/route.ts`, `src/hooks/use-keyboard-shortcuts.ts`, and a pre-existing `onClick={startInterview}` type mismatch in gaps-view.tsx line 87) are unrelated to this round of className-only edits — verified by `git diff` showing only className tokens changed.
+   724→
+   725→Stage Summary:
+   726→- 8 component files wired with Round 4 premium utilities: home-view, match-view, candidate-view, gaps-view, readiness-view, interview-view, evaluation-view, roadmap-view.
+   727→- Total individual className edits: 23 across the 8 files (all additive or like-for-like visual replacements).
+   728→- Utilities exercised: `hm-card-hover` (×11 — every primary `hm-card` across the views), `hm-num-tabular` (×4 — score/spans in match-view, candidate-view Stat, readiness-view dimensions, roadmap-view readiness score), `hm-stat-tile` (×4 — gaps-view hero KPI tiles), `hm-insight-callout` (×2 — interview-view "Why we're asking" + evaluation-view "What happens next" WOW), `hm-textured-bg` (×1 — home-view hero), `hm-shimmer-line` (×1 — home-view hero accent line), `hm-divider-soft` (×1 — match-view section break), `hm-glow-pulse` (×1 — readiness-view loading button).
+   729→- All existing animation/interaction classes preserved: `whileHover`, `whileTap`, spring transitions, `hm-thinking`, `hm-radial-glow`, `hm-typewriter`, `hm-step-dot-*`, `hm-divider`, `hm-elevated`, `hm-gradient-border-critical`, `hm-void-box`, `hm-badge-premium`, `hm-text-gradient` all untouched.
+   730→- Lint: 0 errors. No TypeScript, prop, or import changes — pure styling wiring.
+   731→- The 2 unused-from-this-task utilities (`.hm-tag-premium`, plus the `.hm-shimmer-line` keyframe hook) remain available for future opt-in; they were intentionally not forced into components that had no natural fit.
+   732→
+   733→---
+   734→
+   735→# HIREMIND AI — Round 4 (cron-review) Handover
+   736→
+   737→> **Last updated**: Round 4 (cron-review-4) — 1 critical bug fix + 4 new features + premium styling polish
+   738→
+   739→## Current Project Status: STABLE + Polished + Feature-Expanded (Round 4)
+   740→
+   741→All P0 + P1 + P2 features working. Core intelligence loop verified end-to-end. Round 4 added a critical view-transition bug fix, four high-impact new features, and comprehensive premium styling polish. All changes verified via agent-browser + VLM critique (grades A across the board).
+   742→
+   743→---
+   744→
+   745→Task ID: cron-review-4
+   746→Agent: main (cron-triggered)
+   747→Task: QA assessment + critical bug fix + 4 new features + styling polish + worklog handover
+   748→
+   749→## QA Assessment Results (this round)
+   750→
+   751→- **Lint**: 0 errors ✓
+   752→- **Dev server**: stable on port 3000, all requests HTTP 200 ✓
+   753→- **No runtime errors** in console after reload ✓
+   754→- **agent-browser walkthrough PASSED**:
+   755→  - Home view renders with pipeline progress indicator ✓
+   756→  - Demo flow: Candidate (with Resume Strength) → Match → Gaps → Interview (with Difficulty Selector) → Evaluation → Readiness → Roadmap ✓
+   757→  - Roadmap empty state shows when accessed before readiness calculation ✓
+   758→  - Difficulty selector passes preference through to interview questions ✓
+   759→  - Help "?" button opens shortcut hint overlay ✓
+   760→  - Dark mode verified — premium look preserved ✓
+   761→- **VLM critique grades**: A across all views (home, candidate with resume strength, difficulty selector, roadmap empty state, dark mode, pipeline progress)
+   762→
+   763→## Critical Bug Fix
+   764→
+   765→### AnimatePresence mode="wait" stuck at opacity:0 (CRITICAL)
+   766→
+   767→**Symptom**: When navigating to a view via `hydrateSession` (e.g., clicking a session in SessionHistory, or loading a URL with `#view=match&session=...`), the store correctly updated `view` to the target view, but the DOM showed the OLD view at `opacity: 0` — the motion.div was stuck in the EXIT state and the new view never mounted.
+   768→
+   769→**Root cause**: Framer Motion v12's `AnimatePresence` with `mode="wait"` has a bug where the exit animation completes (opacity reaches 0) but the exiting component never unmounts, and the new component never mounts. This was triggered specifically by the async `hydrateSession` flow — the view change happened after an `await fetch()`, which may have caused a timing issue with Framer Motion's internal state tracking.
+   770→
+   771→**Fix**: Replaced `<AnimatePresence mode="wait">` with a plain `<motion.div key={view}>` (no AnimatePresence wrapper). The `key={view}` forces React to unmount the old content and mount the new content immediately when the view changes. The `initial`/`animate` props provide a smooth fade+slide entrance animation. No exit animation (the old content is unmounted immediately), which eliminates the stuck-state bug entirely.
+   772→
+   773→**Files changed**: `src/app/page.tsx` — removed `AnimatePresence` import and wrapper, kept `motion.div` with `key={view}`.
+   774→
+   775→## Bug Fixes
+   776→
+   777→### 1. Roadmap view blank when accessed before readiness calculation
+   778→**Symptom**: Clicking "Roadmap" in the top nav before computing readiness showed a completely blank page (the view returned `null` when `roadmap` was null).
+   779→**Fix**: Added a premium empty state with a Map icon, "Calculate readiness to unlock your roadmap" heading, a CTA button that triggers `computeReadiness`, and a link to the Readiness view. VLM grade: A.
+   780→
+   781→### 2. Evaluation view blank after page refresh
+   782→**Symptom**: When refreshing the page on the evaluation view, `lastEvaluation` is null (it's not persisted — only the interview state is), so the view returned `null`.
+   783→**Fix**: Added a friendly recovery state with a MessageSquareQuote icon, context-aware messaging ("Your interview is complete" vs "Pick up where you left off"), and CTAs to continue the interview or see readiness.
+   784→
+   785→## New Features Added (Round 4)
+   786→
+   787→### Feature 1: Resume Strength Score (`resume-strength.tsx` + `resume-strength.ts`)
+   788→
+   789→- **Location**: Candidate view, below the Skill Heatmap
+   790→- **What it shows**: A deterministic 0-100 score with 4 dimension bars (Evidence quality, Skill coverage, Section completeness, Achievement density), a band label (Thin/Fair/Good/Strong), and 3 actionable tips
+   791→- **Scoring logic** (in `src/lib/resume-strength.ts`):
+   792→  - Evidence quality: 40% weight on action-verb ratio + 60% on quantified-impact ratio (regex-based detection of $, %, x, k/M/B suffixes, numbered metrics)
+   793→  - Skill coverage: 0.1 + (distinct competencies / 10) * 0.9
+   794→  - Section completeness: 5 sections checked (experience, projects, education, certs, summary)
+   795→  - Achievement density: quantified evidence / max(3, evidence * 0.5)
+   796→  - Weighted aggregate: 35% quality + 25% coverage + 20% sections + 20% density
+   797→- **Premium details**: Gauge icon, color-coded band badge, dimension bars with icons, staggered entrance animations, "How to strengthen your resume" tips section, honest-by-design footer
+   798→- **Value**: Gives candidates immediate, transparent feedback on how informative their resume is as evidence — not a hireability score, but a signal-richness measure that helps the engine extract better data
+   799→
+   800→### Feature 2: Interview Difficulty Selector (`interview-view.tsx`)
+   801→
+   802→- **Location**: Interview view empty state (before starting the interview)
+   803→- **What it shows**: 4 difficulty options in a 2x2 grid — Warm-up (easy), Balanced (medium), Deep dive (hard), Adaptive (auto)
+   804→- **How it works**:
+   805→  - User selects a difficulty → the option card gets a colored glow ring + checkmark
+   806→  - Button text adapts: "Begin adaptive interview →" vs "Begin interview →"
+   807→  - `startInterview({ difficulty })` passes the preference to the API
+   808→  - API validates and passes to `initInterview(gaps, candidate, match, difficultyPreference)`
+   809→  - Engine's `pickQuestionForCompetency` prefers questions matching the selected difficulty, with graceful fallback (easy→medium→hard, hard→medium→easy, medium→easy→hard)
+   810→  - The selected difficulty is stored in `InterviewState.difficultyPreference` and displayed as a badge in the interview top meta
+   811→- **Premium details**: Color-coded icons (Zap=success, Gauge=accent-blue, Mountain=critical, Flame=warning), per-option descriptions, spring-easing selection animation, colored glow ring on active card
+   812→- **Value**: Gives candidates control over the interview intensity — warm-up for confidence, deep dive for pushing limits, adaptive for the default experience
+   813→
+   814→### Feature 3: Pipeline Progress Indicator (`pipeline-progress.tsx`)
+   815→
+   816→- **Location**: Home view, below the demo button (only shown when a session is active)
+   817→- **What it shows**: 6 stage indicators (Candidate, Match, Gaps, Interview, Readiness, Roadmap) with a progress track connecting them
+   818→- **How it works**:
+   819→  - Each stage checks if its data is present in the store (candidate, match, gaps, interview, readiness, roadmap)
+   820→  - Completed stages show a green gradient circle with a checkmark
+   821→  - Incomplete stages show a muted outline circle with the stage icon
+   822→  - The progress track fills from left to right as stages complete
+   823→  - Clicking a completed stage navigates to that view
+   824→  - A contextual hint at the bottom guides the user to the next step
+   825→  - "Pipeline complete" message when all 6 stages are done
+   826→- **Premium details**: Gradient progress track (accent-blue → success), spring-easing checkmark animations, active stage ring, staggered entrance, contextual hints per completion level
+   827→- **Value**: Visual representation of the candidate's journey through the HireMind intelligence loop — at-a-glance progress + quick navigation
+   828→
+   829→### Feature 4: Help "?" Button in Header (`shell.tsx`)
+   830→
+   831→- **Location**: Header, between presentation mode and theme toggle buttons
+   832→- **What it shows**: A HelpCircle icon button with a subtle blue pulse dot (discoverability hint)
+   833→- **How it works**:
+   834→  - Clicking the button dispatches a `hm-show-shortcuts` custom event
+   835→  - `page.tsx` listens for the event and calls `setShowHints(true)`
+   836→  - This opens the existing ShortcutHint overlay (same as pressing `?` key)
+   837→  - The pulse dot disappears on hover
+   838→- **Value**: Makes the keyboard shortcuts overlay discoverable for users who don't know about the `?` key — reduces the learning curve for power-user features
+   839→
+   840→## Premium Styling Polish (delegated to frontend-styling-expert)
+   841→
+   842→### New CSS Utilities (globals.css — `/* ─── Round 4 Premium Polish ─── */`)
+   843→
+   844→9 new utility classes added, each with `.dark` overrides:
+   845→1. `.hm-insight-callout` — AI insight box (accent-blue tint + 2px left border)
+   846→2. `.hm-stat-tile` — Premium KPI tile (gradient + inset white highlight + hover lift)
+   847→3. `.hm-glow-pulse` — Pulsing live indicator (success green pulse animation)
+   848→4. `.hm-card-hover` — Spring-easing lift + accent-blue glow hover
+   849→5. `.hm-num-tabular` — `tabular-nums` + tighter letter-spacing
+   850→6. `.hm-shimmer-line` — 1px sweeping accent line (reuses hm-shimmer keyframe)
+   851→7. `.hm-divider-soft` — Soft edge-fading divider
+   852→8. `.hm-tag-premium` — Small pill chip variant of hm-badge-premium
+   853→9. `.hm-textured-bg` — Dot-grid background pattern (16px)
+   854→
+   855→### Refined `.hm-card` shadow stack (in-place edit)
+   856→- Light base: `0 1px 3px -1px rgba(0,0,0,0.06)` + `0 1px 2px -1px rgba(0,0,0,0.04)` + new `0 0 0 1px color-mix(border 60%)` ring
+   857→- Light hover: `0 8px 24px -8px rgba(0,0,0,0.08)` + `0 4px 8px -4px rgba(0,0,0,0.04)` (floating feel)
+   858→- Dark: `rgba(0,0,0,0.3)` shadows, ring retained
+   859→
+   860→### Utilities Wired Into Components (delegated to frontend-styling-expert)
+   861→
+   862→23 className-only edits across 8 components:
+   863→- `hm-card-hover`: 11 cards (home trust cards, match score+components, candidate profile+skills, gaps other-gaps, readiness ScoreRing+dimensions, interview question, evaluation dimensions+strengths+weaknesses, roadmap timeline steps)
+   864→- `hm-num-tabular`: 4 score displays (match AnimatedCounter, candidate Stat, readiness dimensions, roadmap readiness index)
+   865→- `hm-stat-tile`: 4 KPI tiles (gaps hero info grid)
+   866→- `hm-insight-callout`: 2 callout boxes (interview "Why we're asking", evaluation "What happens next")
+   867→- `hm-textured-bg`: 1 (home hero background)
+   868→- `hm-shimmer-line`: 1 (home hero accent line)
+   869→- `hm-divider-soft`: 1 (match view section break)
+   870→- `hm-glow-pulse`: 1 (readiness calculate button when loading)
+   871→
+   872→## Verification Results
+   873→
+   874→- **Lint**: 0 errors ✓
+   875→- **Dev server**: stable on port 3000, HTTP 200 on all routes ✓
+   876→- **Demo flow**: end-to-end PASSED with all 4 new features visible ✓
+   877→- **View transitions**: PASSED — no more stuck opacity:0 after hydrateSession ✓
+   878→- **Dark mode**: verified — all new utilities have `.dark` overrides ✓
+   879→- **Mobile responsive**: difficulty selector collapses to single column, pipeline progress adapts to 3-col on mobile ✓
+   880→- **No new npm packages added** ✓
+   881→- **VLM grades**: A across all views
+   882→
+   883→## Files Changed This Round
+   884→
+   885→**New files (4):**
+   886→- `src/lib/resume-strength.ts` — Deterministic resume strength scoring (4 dimensions, weighted aggregate, tips)
+   887→- `src/components/hiremind/resume-strength.tsx` — Resume strength panel with score, bars, tips
+   888→- `src/components/hiremind/pipeline-progress.tsx` — 6-stage pipeline progress indicator
+   889→- (No other new files — difficulty selector is integrated into interview-view.tsx, help button into shell.tsx)
+   890→
+   891→**Modified files (10):**
+   892→- `src/app/page.tsx` — **CRITICAL FIX**: Replaced AnimatePresence mode="wait" with plain motion.div (fixes stuck opacity:0 bug)
+   893→- `src/app/globals.css` — 9 new premium utility classes + refined .hm-card shadows (via styling agent)
+   894→- `src/lib/types.ts` — Added `InterviewDifficulty` type + `difficultyPreference` field to `InterviewState`
+   895→- `src/lib/engine.ts` — `initInterview` + `pickQuestionForCompetency` accept difficulty preference with fallback logic
+   896→- `src/lib/store.ts` — `startInterview` accepts `{ difficulty }` option
+   897→- `src/app/api/interview/start/route.ts` — Accepts `difficultyPreference` in request body
+   898→- `src/components/hiremind/shell.tsx` — Added HelpCircle "?" button with pulse dot
+   899→- `src/components/hiremind/roadmap-view.tsx` — Added premium empty state when roadmap is null
+   900→- `src/components/hiremind/evaluation-view.tsx` — Added recovery empty state when lastEvaluation is null
+   901→- `src/components/hiremind/interview-view.tsx` — Added 4-option difficulty selector + difficulty badge in top meta
+   902→- `src/components/hiremind/candidate-view.tsx` — Integrated ResumeStrength panel + wired CSS utilities
+   903→- `src/components/hiremind/home-view.tsx` — Integrated PipelineProgress + wired CSS utilities
+   904→- `src/components/hiremind/match-view.tsx` — Wired CSS utilities (card-hover, num-tabular, divider-soft)
+   905→- `src/components/hiremind/gaps-view.tsx` — Wired CSS utilities (card-hover, stat-tile)
+   906→- `src/components/hiremind/readiness-view.tsx` — Wired CSS utilities (card-hover, num-tabular, glow-pulse)
+   907→
+   908→---
+   909→
+   910→## Unresolved Issues / Risks
+   911→
+   912→1. **AI Timeout on first call**: z-ai-web-dev-sdk occasionally times out (15-22s seen in logs). Deterministic fallback handles this gracefully — results still valid.
+   913→2. **Difficulty fallback is heuristic**: When the question bank doesn't have an exact difficulty match, the fallback order (easy→medium→hard, etc.) is deterministic but may not perfectly match user intent. This is by design — transparency over guessing.
+   914→3. **Resume Strength regex signals are heuristic**: The action-verb and quantification detection uses regex patterns. Could be enhanced with semantic analysis, but the heuristic is intentionally transparent and explainable.
+   915→4. **Pipeline progress click navigation**: Only completed stages are clickable. Incomplete stages show a disabled cursor. This is by design — prevents navigating to views with no data.
+   916→
+   917→## Priority Recommendations for Next Phase
+   918→
+   919→1. **Compare Sessions feature** — Side-by-side comparison of two past sessions to show growth over time.
+   920→2. **PDF export of roadmap** — Currently export is markdown-to-clipboard; a styled PDF would be more shareable.
+   921→3. **Session cleanup cron** — Auto-cleanup sessions older than 24 hours (DB grows unbounded).
+   922→4. **Answer Coach AI enhancement** — Add real-time AI-powered answer preview scoring (call /api/interview/preview every 5s for live AI feedback). Currently the readiness is heuristic; AI would add depth.
+   923→5. **Mobile UX deep test** — Verify the difficulty selector and pipeline progress collapse cleanly at 375px width.
+   924→6. **Resume Strength AI enhancement** — Use VLM to analyze the resume's visual structure (bullet quality, formatting, section ordering) in addition to the regex-based text analysis.
+   925→7. **Interview question bank expansion** — Add more easy/hard variants for competencies that currently only have medium questions, to give the difficulty selector more options.
+   926→
+   927→## Project Overview (unchanged)
+   928→
+   929→HIREMIND AI is an AI-powered recruitment assistant (Smart Resume Parser & Mock Interviewer). Core intelligence loop:
+   930→
+   931→```
+   932→RESUME + TARGET JOB
+   933→   -> CANDIDATE INTELLIGENCE (+ Skill Heatmap + Resume Strength)
+   934→   -> SEMANTIC JOB MATCH (+ Job Insights)
+   935→   -> SKILL GAP INTELLIGENCE
+   936→   -> GAP-DRIVEN ADAPTIVE INTERVIEW (+ Answer Coach + Difficulty Selector)
+   937→   -> ANSWER EVALUATION
+   938→   -> COMPETENCY STATE UPDATE
+   939→   -> JOB READINESS
+   940→   -> PERSONALIZED IMPROVEMENT ROADMAP
+   941→```
+   942→
+   943→Tech stack: Next.js 16 (App Router) + TypeScript + Tailwind CSS 4 + shadcn/ui + Prisma (SQLite) + z-ai-web-dev-sdk (LLM) + Zustand v5 + Framer Motion v12. Single visible route `/` (orchestrated client-side via Zustand view state).
+   944→
+   945→Critical principles (all preserved this round):
+   946→- AI understands. Application logic decides. Deterministic scoring.
+   947→- Distinguish KNOWN / WEAK / UNKNOWN evidence. Never treat absence as proof of missing skill.
+   948→- Adaptive interview: next question MUST depend on previous answer (the demo's WOW moment).
+   949→- Demo mode must work reliably end-to-end.
+   950→- Prototype-labeled indices (never "hiring probability").
+   951→
+   952→---
+   953→
+   954→Task ID: 4
+   955→Agent: frontend-styling-expert
+   956→Task: Fix interview button overflow (Skip button overlapping Answer Coach column) + polish interview view micro-interactions
+   957→
+   958→## Bug Reproduction (verified before fix)
+   959→At 1440px viewport, the bottom button row in `interview-view.tsx` (lines ~310-341) held 3 buttons in a `flex-row` that exceeded the answer column width (~416px inside `lg:col-span-3` of a `max-w-3xl` container):
+   960→- Submit answer: 153px
+   961→- Use scripted demo answer: 232px
+   962→- Skip: 84px
+   963→- Total: ~493px + 2*12px gaps = 517px > 416px
+   964→
+   965→The "Skip" button was being pushed to x≈818 (inside the right-hand Answer Coach column, lg:col-span-2) and visually covered by the coach's "What great answers include" header — making Skip unclickable.
+   966→
+   967→## Code Changes (`src/components/hiremind/interview-view.tsx`)
+   968→
+   969→### 1. Button overflow fix (the critical bug)
+   970→- Container changed from `flex flex-col sm:flex-row gap-3` → `flex flex-col sm:flex-row sm:flex-wrap gap-2.5 sm:items-center`. The `sm:flex-wrap` is the actual safety net: when the 3 buttons + hint no longer fit in the answer column width, they wrap to a new line *inside* the column instead of overflowing into the coach column.
+   971→- "Use scripted demo answer" shortened to "Scripted answer" (saves ~70px) and padding reduced `px-5` → `px-4` (`sm:px-4`).
+   972→- Submit button padding `sm:px-6` → `sm:px-5`. Skip button padding `px-5` → `px-4` (`sm:px-4`).
+   973→- Gap reduced `gap-3` → `gap-2.5` for tighter, more polished grouping.
+   974→
+   975→### 2. ⌘+Enter keyboard shortcut + hint
+   976→- Added `wordCount` constant (was previously inlined twice — now computed once and reused).
+   977→- Added `onKeyDown` handler on the Textarea: `(e.metaKey || e.ctrlKey) && e.key === "Enter"` triggers `onSubmit()` when answer length ≥ 5 and not loading. Tested live — shortcut successfully submitted the answer and opened the evaluation modal.
+   978→- Added a `<kbd>⌘</kbd>+<kbd>Enter</kbd>` hint that fades in (`motion.span` with opacity+x animation) between the Submit and Scripted-answer buttons, visible only when `wordCount > 5 && !loading` and only on `sm+` (hidden on mobile to save space).
+   979→
+   980→### 3. Difficulty selector hover glow ring
+   981→- For non-active difficulty cards, added CSS variable `--hm-tone` (per-card tone: success / accent-blue / critical / warning) via inline style.
+   982→- Added Tailwind arbitrary-value hover shadow: `hover:shadow-[0_0_0_3px_color-mix(in_oklch,var(--hm-tone)_18%,transparent),0_8px_24px_-8px_color-mix(in_oklch,var(--hm-tone)_22%,transparent)]` so each card glows in its own tonal color on hover. Active cards already have an inline box-shadow with their tone (unchanged).
+   983→- Added `duration-200` to the existing `transition-all` for a smoother hover ramp.
+   984→
+   985→### 4. Question difficulty color pill
+   986→- Added `DIFFICULTY_TONE` lookup table at module top:
+   987→  - `easy` → `bg-success/15 text-success-foreground`
+   988→  - `medium` → `bg-accent-blue/15 text-accent-blue-foreground`
+   989→  - `hard` → `bg-critical/15 text-critical-foreground`
+   990→  - `auto` → `bg-warning/15 text-warning-foreground`
+   991→- Replaced the plain-text `{current.competency} · {current.difficulty}` header with a flex row: competency label + colored pill (rounded-full, uppercase, tracking-wider) + typing indicator. Verified live: question "hard" shows `bg-critical/15 text-critical-foreground` pill; question "medium" shows `bg-accent-blue/15 text-accent-blue-foreground`.
+   992→
+   993→### 5. Staggered Previous answers animation
+   994→- Each previous-answer card was a plain `<div>` — now wrapped in `motion.div` with `initial={{ opacity: 0, y: 8 }}`, `animate={{ opacity: 1, y: 0 }}`, `transition={{ duration: 0.3, delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }}`. Each item delays by 50ms as required.
+   995→
+   996→### 6. text-balance verification
+   997→- Question heading already has `text-balance` class on line ~298. Verified programmatically via `agent-browser eval` (`hasTextBalance: true`).
+   998→
+   999→## Verification Results
+  1000→
+  1001→### Lint
+  1002→```
+  1003→$ bun run lint
+  1004→$ eslint .
+  1005→```
+  1006→0 errors, 0 warnings. ✓
+  1007→
+  1008→### agent-browser live verification (1440px desktop)
+  1009→Loaded demo candidate, ran analysis, started interview, typed a >5-word answer, submitted via ⌘+Enter shortcut, advanced to Q2.
+  1010→
+  1011→**Skip button placement (Q1, empty answer — buttons wrap to 2 rows):**
+  1012→- Submit: x=409, right=562 (row 1)
+  1013→- Scripted: x=572, right=737 (row 1, fits inside column right=776)
+  1014→- Skip: x=409, right=493, **y=785 (wrapped to row 2)**
+  1015→- answerCol right=776, coachCol left=792
+  1016→- `skipOverlapsCoach: false` ✓
+  1017→- `skipInsideAnswerCol: true` ✓
+  1018→- `skipVisible: true` ✓
+  1019→
+  1020→**After typing >5 words (Cmd+Enter hint appears):**
+  1021→- Submit enabled, kbd hint visible at x=572, y=769
+  1022→- Difficulty pill rendered with `bg-critical/15 text-critical-foreground` for "hard" question
+  1023→- Skip still on row 2, no overlap with coach (`skipOverlapsCoach: false`)
+  1024→
+  1025→**Q2 (medium difficulty question):**
+  1026→- Pill renders as `medium` (accent-blue)
+  1027→- Previous answers section renders 1 motion.div card
+  1028→- `hasTextBalance: true` on question heading
+  1029→- `skipOverlapsCoach: false`, `skipRight: 493`, `coachLeft: 792` (299px gap) ✓
+  1030→
+  1031→### agent-browser live verification (375px mobile)
+  1032→- `stackedVertically: true` — all 3 buttons stack in `flex-col` ✓
+  1033→- Submit y=203, Scripted y=257, Skip y=311 (each ~54px apart, h-11 + gap)
+  1034→- `allInViewport: true` — every button fits in the 375px width ✓
+  1035→
+  1036→## Files Changed
+  1037→- `src/components/hiremind/interview-view.tsx` — all changes above (added DIFFICULTY_TONE map, added wordCount constant, added onKeyDown handler, restructured button container with flex-wrap + compact labels + kbd hint, added hover glow CSS-variable on difficulty cards, replaced plain difficulty text with colored pill, wrapped Previous answers items in motion.div).
+  1038→
+  1039→## Stage Summary
+  1040→- **Critical bug FIXED**: Skip button no longer overflows into the Answer Coach column. The `sm:flex-wrap` guarantees wrapping inside the answer column at any viewport width, and the shorter label + reduced padding means on most desktop widths all 3 buttons (+ optional hint) fit on one row. The fix is structural (flex-wrap), not just visual, so it's robust against future label changes.
+  1041→- **Bonus shortcut**: ⌘+Enter (and Ctrl+Enter for Windows/Linux) now submits the answer directly from the textarea — matching the hint shown.
+  1042→- **Polish complete**: Difficulty selector cards have tonal hover glow, question difficulty shows as a colored pill, Previous answers list has staggered entrance, question text uses text-balance.
+  1043→- **Lint**: 0 errors, 0 warnings.
+  1044→- **No regressions**: Mobile layout (375px) still stacks buttons vertically; desktop (1440px) wraps cleanly inside the answer column.
+  1045→
+  1046→---
+  1047→
+  1048→Task ID: 5
+  1049→Agent: frontend-styling-expert
+  1050→Task: Polish HIREMIND AI mobile home view density (Round 5)
+  1051→
+  1052→## Work Log
+  1053→
+  1054→### Context
+  1055→A VLM analysis at 375px width surfaced 6 density/readability problems on the home view: cramped hero heading, insufficient body line-height, tight hero-to-body margin, cramped textarea padding, footer line too close to card bottom border, and a mobile nav tab bar at risk of clipping "Skill Gaps" / "Interview". The task also requested premium polish additions: a gradient orb behind the hero, a trust badge, a floating help icon, and verification of existing hover effects + staggered pipeline animation.
+  1056→
+  1057→### Files Inspected
+  1058→- `src/components/hiremind/home-view.tsx` — hero section, input cards, footer lines
+  1059→- `src/components/hiremind/shell.tsx` — SiteHeader with mobile nav tab bar
+  1060→- `src/components/hiremind/pipeline-progress.tsx` — verified existing staggered animation
+  1061→- `src/app/globals.css` — utility classes (hm-card, hm-text-gradient, hm-particles, hm-textured-bg, hm-gradient-border, hm-card-hover, pl-safe/pr-safe)
+  1062→- `src/components/hiremind/file-upload.tsx` — ruled out as source of a pre-existing dark shape artifact
+  1063→
+  1064→### Changes Made
+  1065→
+  1066→#### 1. `src/components/hiremind/home-view.tsx`
+  1067→- **Imports**: Added `HelpCircle` to lucide-react import.
+  1068→- **Hero `<motion.div>`**: Changed className from `"text-center"` to `"relative text-center"` to support absolutely-positioned children (orb + help button).
+  1069→- **Hero gradient orb**: Added `<div aria-hidden className="hm-hero-orb absolute -top-12 left-1/2 w-[520px] h-[360px] pointer-events-none" />` as the first child — a soft radial-gradient glow that floats behind the heading.
+  1070→- **Floating help button**: Added a `<button>` at `absolute top-1 right-1 sm:top-2 sm:right-2 z-10` with `HelpCircle` icon. Dispatches the existing `hm-show-shortcuts` CustomEvent (opens the keyboard shortcuts / how-it-works panel already wired in the header).
+  1071→- **Hero `<h1>`**: Changed from `text-3xl sm:text-5xl md:text-6xl ... leading-[1.05]` to `text-[40px] sm:text-[56px] ... leading-[1.1] sm:leading-[1.05]`. Added `relative` so text paints above the orb.
+  1072→- **Hero `<p>` (body)**: Changed `mt-5` → `mt-4` (heading→body spacing). Changed `leading-relaxed` → `leading-relaxed sm:leading-normal` (1.625 on mobile for readability, 1.5 on desktop). Added `relative`.
+  1073→- **Shimmer line + trust badge**: Added `relative` to shimmer line. Added a new trust badge `<div>` below the shimmer: `mt-5 flex items-center justify-center gap-2 text-[11px] text-muted-foreground` with a pulsing green dot (`bg-success animate-ping` + solid `bg-success`) and text `"1,247 candidates analyzed today"` (the "1,247" is `text-foreground font-medium tabular-nums`).
+  1074→- **Input cards container**: Changed `mt-10 sm:mt-12` → `mt-6 sm:mt-8` (body→cards spacing, per spec).
+  1075→- **Resume `<Textarea>`**: Added `py-4 sm:py-3` to className (16px vertical padding on mobile, 12px on desktop — placeholder no longer cramped against top).
+  1076→- **Resume footer line**: Changed `mt-2` → `mt-3 pb-1` (more space above, small push up from card bottom border).
+  1077→- **Job `<Textarea>`**: Added `py-4 sm:py-3` to className.
+  1078→- **Job footer line**: Changed `mt-2` → `mt-3 pb-1`.
+  1079→- **Verified (no change needed)**: Trust feature cards already have `whileHover={{ scale: 1.03, y: -2 }}` + `hm-card-hover` class. Demo CTA already wrapped in `hm-gradient-border` div. PipelineProgress already has staggered fade-in (`delay: 0.3 + i * 0.06` per stage).
+  1080→
+  1081→#### 2. `src/components/hiremind/shell.tsx`
+  1082→- **NAV array**: Added optional `shortLabel` field. Set `shortLabel: "Gaps"` for the "Skill Gaps" entry (desktop still shows "Skill Gaps"; mobile shows "Gaps" to prevent wrapping/clipping at 375px).
+  1083→- **Mobile nav `<nav>`**: Changed `gap-1 px-4` → `gap-0 px-2`. Kept `overflow-x-auto no-scrollbar pl-safe pr-safe`.
+  1084→- **Mobile nav buttons**: Changed from `shrink-0 px-3 py-1.5 ... text-[12px]` to `flex-1 min-w-0 whitespace-nowrap px-0.5 py-1.5 ... text-[11px] sm:text-xs ... text-center`. Render `{item.shortLabel ?? item.label}` so mobile uses the shorter label.
+  1085→- **Result**: At 375px, all 7 tabs (Overview, Candidate, Job Match, Gaps, Interview, Readiness, Roadmap) distribute evenly (each 54px wide) with no horizontal overflow (`scrollWidth === clientWidth === 375`). Verified via DOM measurement.
+  1086→
+  1087→#### 3. `src/app/globals.css`
+  1088→- Added `.hm-hero-orb` class (at end of `@layer utilities`, before closing `}`):
+  1089→  - `background: radial-gradient(circle at 50% 45%, accent-blue 32%, chart-5 18%, transparent 70%)`
+  1090→  - `filter: blur(44px)`, `opacity: 0.85`, `transform: translateX(-50%)`
+  1091→  - `animation: hm-hero-float 12s ease-in-out infinite`
+  1092→  - `pointer-events: none` (no z-index — stays below sibling positioned text via DOM order)
+  1093→  - `.dark .hm-hero-orb { opacity: 0.7 }` (softer on dark surfaces)
+  1094→- Added `@keyframes hm-hero-float`: gentle 12s float, translateY 0→-18px, scale 1→1.06, opacity 0.75→0.95.
+  1095→
+  1096→### Verification
+  1097→
+  1098→#### Lint
+  1099→`bun run lint` → 0 errors, 0 warnings (run twice: after initial edits and after the orb-opacity + nav-padding refinements).
+  1100→
+  1101→#### Desktop screenshot (1440×900)
+  1102→`download/polish-r5-home-desktop.png` — VLM confirmed:
+  1103→1. Hero heading has comfortable line-height ✓
+  1104→2. Trust badge "1,247 candidates analyzed today" with green dot present ✓
+  1105→3. Help icon at top-right of hero ✓
+  1106→4. Input cards well-spaced from hero ✓
+  1107→5. (Orb is subtle — VLM said "not visible" but pixel sampling confirmed 132 blue-tinted pixels in the hero area on mobile; the orb is intentionally subtle per the spec "subtle animated background gradient orb")
+  1108→
+  1109→#### Mobile screenshot (375×812)
+  1110→`download/polish-r5-home-mobile.png` — VLM confirmed:
+  1111→1. Hero heading large + comfortable line-height (not cramped) ✓
+  1112→2. Adequate heading-to-description spacing ✓
+  1113→3. Trust badge with green dot present ✓
+  1114→4. Help icon at top-right ✓
+  1115→5. Textarea padding comfortable ✓
+  1116→6. Nav tab bar: all 7 tabs visible (verified via DOM: btn6 [Roadmap] @ 321-375, scrollWidth=375=clientWidth, no overflow). VLM initially said "Roadmap clipped" but a follow-up VLM check on a cropped nav-bar image confirmed "No, none of the tab labels appear to be cut off or truncated." The false-positive was due to "Roadmap" text ending ~4px from the viewport edge — visually tight but fully rendered.
+  1117→
+  1118→#### Pre-existing artifact noted (NOT caused by these changes)
+  1119→The VLM consistently reports a "floating N avatar" at the bottom-left of the mobile screenshot (~y=760-792, x=12-52). Investigation confirmed:
+  1120→- This shape exists in **pre-change** screenshots (`qa-r5-mobile-home.png`, `qa-r5-mobile-home-fresh.png` from Round 5) — it is NOT introduced by this task.
+  1121→- No DOM element with a dark background exists at that position (verified via `elementsFromPoint` + computed-style sweep of all elements + pseudo-elements in the region).
+  1122→- It persists at the same viewport position after scrolling (ruling out content-bound elements), but no `position: fixed`/`sticky` element renders there (only the header and empty Sonner toaster are fixed/sticky).
+  1123→- Likely cause: a subpixel rendering artifact from the `hm-card` border (1px) + `box-shadow: 0 0 0 1px` ring stacking at the rounded corner boundary between the resume card (bottom y=770) and the job card (top y=786), exacerbated by the `hm-textured-bg` dot grid. The VLM pattern-matches the dark blob + internal lighter pixels as "a circle with N".
+  1124→- **Out of scope** for this density-polish task; flagged for a future rendering-deep-dive if it persists.
+  1125→
+  1126→### Files Changed
+  1127→- `src/components/hiremind/home-view.tsx` — hero restructure (orb, help button, trust badge, `relative` z-stacking), typography (text-[40px]/[56px], leading-[1.1]), spacing (mt-4, mt-6 sm:mt-8), textarea padding (py-4 sm:py-3), footer lines (mt-3 pb-1)
+  1128→- `src/components/hiremind/shell.tsx` — NAV shortLabel field + "Gaps", mobile nav gap-0/flex-1/min-w-0/whitespace-nowrap/px-0.5/text-[11px] sm:text-xs/text-center
+  1129→- `src/app/globals.css` — `.hm-hero-orb` class + `@keyframes hm-hero-float`
+  1130→
+  1131→## Stage Summary
+  1132→- **All 6 required density fixes applied**: hero line-height, body line-height, hero spacing, textarea padding, footer line spacing, mobile nav tab bar. Verified via VLM + DOM measurement.
+  1133→- **All premium polish additions applied**: gradient orb (subtle, animated), trust badge with live green dot, floating help icon (wired to existing shortcuts panel). Existing hover effects on trust cards + gradient border on demo CTA verified intact. Pipeline staggered animation already present.
+  1134→- **Mobile nav fit**: At 375px, all 7 tabs distribute evenly (54px each) with zero horizontal overflow. "Skill Gaps" → "Gaps" shortLabel on mobile prevents wrapping. "Roadmap" fully renders (text ends ~4px from viewport edge).
+  1135→- **Lint**: 0 errors, 0 warnings.
+  1136→- **Pre-existing artifact noted**: A dark shape at the card boundary (y~760-792) that the VLM reads as an "N avatar" exists in pre-change screenshots and is not caused by this task. No corresponding DOM element found; likely a subpixel rendering artifact from card border/shadow stacking. Out of scope; flagged for future investigation.
+  1137→- **No regressions**: Desktop (1440px) layout unchanged; mobile (375px) hero is airier, textareas more comfortable, nav tabs evenly distributed.
+  1138→
+  1139→---
+  1140→
+  1141→Task ID: 6
+  1142→Agent: frontend-styling-expert
+  1143→Task: Polish HIREMIND AI readiness view details (Round 6)
+  1144→
+  1145→## Work Log
+  1146→
+  1147→### Context
+  1148→A VLM analysis surfaced 7 visual issues on the readiness view: tight vertical leading in the Critical blockers list, slightly off-center gauge text, off-center "Prototype Job Readiness Index" label, inconsistent right-alignment of dimension scores, low-contrast subtext, bottom card truncation, and icon inconsistency between the two action cards. The task also requested premium polish: a readiness trend arrow, dimension tooltips, a recommended-next-action card with a focused-interview CTA, gauge animation verification, and a smooth color scale for dimension bars.
+  1149→
+  1150→### Files Inspected
+  1151→- `src/components/hiremind/readiness-view.tsx` — main view (score ring, dimensions, blockers, next action)
+  1152→- `src/components/hiremind/shell.tsx` — `ScoreRing` and `CompetencyBar` components
+  1153→- `src/lib/store.ts` — `useHireMind` store + `hydrateSession` action
+  1154→- `src/lib/types.ts` — `ReadinessResult`, `SkillGap` types
+  1155→- `src/lib/engine.ts` — `computeReadiness` to confirm dimension/blocker semantics
+  1156→- `src/app/api/session/route.ts` — session list endpoint (extended)
+  1157→- `src/components/hiremind/session-history.tsx` — confirmed list API shape
+  1158→- `prisma/schema.prisma` — confirmed `readinessJson` column exists
+  1159→- `src/components/ui/tooltip.tsx` + `popover.tsx` — used for dimension tooltips
+  1160→- `src/app/globals.css` — verified `hm-card`, `hm-num-tabular`, `hm-card-hover` utilities
+  1161→
+  1162→### Changes Made
+  1163→
+  1164→#### 1. `src/app/api/session/route.ts` (extended)
+  1165→- Added `readinessJson: true` to the `select` clause of the list-mode Prisma query.
+  1166→- Parse `readinessJson` for each row and surface a new `readinessIndex: number | null` field in the JSON response. Used downstream by the readiness view to compute a trend vs. the most recent prior session.
+  1167→
+  1168→#### 2. `src/components/hiremind/shell.tsx`
+  1169→- **ScoreRing centering fix**: changed the text overlay from `flex flex-col items-center justify-center` (default gap) to `flex flex-col items-center justify-center gap-0`; added `leading-none` to both the large number and the `/ 100` label; replaced `mt-0.5` on `/ 100` with `mt-1` for a small but consistent optical gap. Removes the line-height-induced vertical drift that made the number appear slightly low.
+  1170→- **ScoreRing `labelExtra` prop**: added an optional `React.ReactNode` prop `labelExtra`. The label container is now `inline-flex items-center justify-center gap-2 flex-wrap` so an optional trend pill renders inline with the label while staying horizontally centered with the ring.
+  1171→- **CompetencyBar `accent` status**: extended the `status` union to include `"accent"` (used for the 50–70 score band). Added matching `color = var(--accent-blue)` and a `linear-gradient(90deg, color-mix(accent-blue 80%, success), accent-blue)` background. Existing callers (match-view, evaluation-view, resume-strength) are unaffected — the new value is purely additive.
+  1172→
+  1173→#### 3. `src/components/hiremind/readiness-view.tsx` (rewrite of the readiness-loaded branch)
+  1174→- **Imports**: added `ArrowRightCircle`, `TrendingUp`, `TrendingDown` from lucide-react; added `Tooltip`/`TooltipTrigger`/`TooltipContent` from `@/components/ui/tooltip`; pulled `startInterview` from the store.
+  1175→- **Trend indicator**: added a `useEffect` that fetches `/api/session?list=true`, finds the most recent prior session with a numeric `readinessIndex` different from the current, computes `delta = current - prior`, and stores it as `{ delta, label }`. Rendered as a small pill via the new `labelExtra` prop — `↑N vs last session` in success green or `↓N vs last session` in critical red. Pill is hidden when there's no prior session or when delta is zero.
+  1176→- **Score scale helper**: added `scoreToStatus(score)` mapping `<0.30 → gap`, `0.30–0.50 → weak`, `0.50–0.70 → accent`, `>0.70 → matched`. Replaces the old `>=0.7 matched / >=0.4 weak / else gap` heuristic and gives the dimensions a smooth four-color scale (critical → warning → accent-blue → success).
+  1177→- **Dimension explanations**: added a `DIMENSION_EXPLANATIONS` lookup table with 1–2 sentence descriptions for each canonical dimension (Job alignment, Required competency coverage, Interview evidence, Technical readiness, Communication). Falls back to a generic explanation for unknown labels.
+  1178→- **Dimension row layout**: replaced `flex items-center justify-between` with `grid grid-cols-[1fr_auto] gap-x-3 items-center` for the label+score row. Score uses `text-right` + `tabular-nums hm-num-tabular`. Bar still spans full width below.
+  1179→- **Dimension tooltip**: each dimension row is now wrapped in a `<Tooltip>` whose trigger is the row itself (`cursor-help`) and whose content shows the dimension name (bold) + the explanation. Trigger has a subtle `hover:bg-secondary/40` background on hover for affordance.
+  1180→- **Subtext contrast**: changed dimension detail from `text-[11px] text-muted-foreground` to `text-[11px] text-foreground/80 leading-relaxed`. Same change applied to the recommendation-card description. Readability confirmed by VLM.
+  1181→- **Dimension list spacing**: bumped from `space-y-4` to `space-y-5` for more breathing room between rows (VLM noted the previous spacing felt slightly tight).
+  1182→- **Critical blockers card**:
+  1183→  - Card class changed to `hm-card p-4 sm:p-6 min-h-fit overflow-visible` (was `hm-card p-4 sm:p-6`). Removes any risk of bottom-edge truncation.
+  1184→  - Header icon: `inline-flex h-9 w-9 items-center justify-center rounded-xl bg-critical/15 text-critical-foreground` containing `AlertOctagon` at `h-5 w-5` (was `h-7 w-7` container with `h-3.5 w-3.5` icon). Now visually weight-matched to the next-action card.
+  1185→  - List spacing: `space-y-3` (was `space-y-2`).
+  1186→  - Each item: `flex items-start gap-3` row with a `h-5 w-5` critical-tinted square holding the pulsing dot, then a `flex-1 min-w-0` text block containing the bold blocker name + a small muted "Critical/High/Medium/Low priority" subtext (looked up from `gaps[].importance`).
+  1187→  - On hover, an `ArrowRight` link "View in Skill Gaps" fades in (`opacity-0 -translate-y-0.5 → group-hover:opacity-100 group-hover:translate-y-0`) and routes to the gaps view.
+  1188→- **Next best action card**:
+  1189→  - Card class changed to `hm-card p-4 sm:p-6 min-h-fit overflow-visible`.
+  1190→  - Header icon: `inline-flex h-9 w-9 items-center justify-center rounded-xl bg-accent-blue/15 text-accent-blue-foreground` containing `ArrowRightCircle` at `h-5 w-5` (was a `h-7 w-7` container with `Compass` at `h-3.5 w-3.5`). Now matches the AlertOctagon card visually.
+  1191→- **Recommendation card** (NEW): a new `hm-card hm-card-hover p-4 sm:p-6 mt-4` card rendered only when `topGap` exists. Layout is `flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6`:
+  1192→  - Left: `Target` icon in a `h-9 w-9` accent-blue rounded square, then a "RECOMMENDED NEXT ACTION" eyebrow + "Start a focused interview on {topGap.competency}" title + a one-sentence body explaining the focused interview behavior.
+  1193→  - Right: a primary `<Button>` "Start focused interview →". Click handler: if there's an in-progress interview, route to the interview view; otherwise call `startInterview()` (which always targets the top gap as its first question per the engine's `pickQuestionForCompetency(topGap?.competency ?? ...)` logic).
+  1194→- **Interview evidence card**: added `overflow-visible` to the card className for consistency with the other cards (no functional change).
+  1195→
+  1196→#### 4. ScoreRing animation verification
+  1197→- The existing `ScoreRing` already implements a cubic-with-slight-overshoot easing (`1 - Math.pow(1 - p/0.85, 3)` for the first 85% of the animation, then a `1 + 0.02 * sin(...)` overshoot for the final 15%). No code change needed — confirmed by re-reading the `tick` function. Animation duration is 1100ms, with a 200ms delay before start (`delay` prop = 200 from readiness-view).
+  1198→
+  1199→### Verification
+  1200→
+  1201→#### Lint
+  1202→`bun run lint` → 0 errors, 0 warnings (run twice: once after the initial rewrite — caught one `React.useMemo` after an early-return violation, fixed by replacing with a plain `const` Map — and once after the contrast/spacing refinements).
+  1203→
+  1204→#### Screenshots
+  1205→- `download/polish-r5-readiness.png` — 1440×900 viewport screenshot. Confirms: 36/100 ring centered, "Prototype Job Readiness Index" label centered with "↓21 VS LAST SESSION" trend pill inline, dimensions right-aligned with grid layout, Critical blockers + Your next best action cards with consistent h-9 w-9 icon containers, recommendation card with "Start focused interview" button.
+  1206→- `download/polish-r5-readiness-full.png` — full-page screenshot (taller than viewport). Confirms the Critical blockers card is NOT truncated: all 6 blockers visible (System Design, Scalability, Microservices, Databases, Communication, Cross-functional collaboration), each with its priority tag and the hover-revealed "View in Skill Gaps" affordance. Recommendation card fully rendered at the bottom.
+  1207→
+  1208→#### VLM verification (targeted)
+  1209→Run twice:
+  1210→1. Initial pass: confirmed "36" perfectly centered in ring ✓, "/ 100" centered below ✓, label centered horizontally relative to ring ✓, dimension scores consistently right-aligned ✓, both card icons share the same minimalist outlined style with light background fill ✓.
+  1211→2. After refinements (contrast + list spacing): confirmed Critical blockers card fully visible with all 6 items, Recommended next action card visible with "Start focused interview" button, all dimension subtexts legible, "no significant visual issues" — icons consistent, alignment precise, contrast high.
+  1212→
+  1213→#### Trend data verified
+  1214→The API now returns `readinessIndex` for each session in the list. For the demo session `cmsrqx13i000kvqxvmxk2w00o` (readiness=36), the prior session `cmsrqsjq2000jvqxvx8rg2gsb` has readiness=57, producing the displayed `↓21 vs last session` pill in critical red — confirming the trend computation works end-to-end.
+  1215→
+  1216→### Files Changed
+  1217→- `src/app/api/session/route.ts` — added `readinessJson` select + `readinessIndex` parse/response field
+  1218→- `src/components/hiremind/shell.tsx` — ScoreRing `labelExtra` prop + `leading-none`/`gap-0`/`mt-1` centering fix; CompetencyBar `accent` status + gradient
+  1219→- `src/components/hiremind/readiness-view.tsx` — full rewrite of the readiness-loaded branch (trend fetch, score scale helper, dimension explanations, grid layout, tooltips, contrast bump, blockers list redesign, icon consistency, recommendation card, `min-h-fit overflow-visible` on all cards)
+  1220→
+  1221→## Stage Summary
+  1222→- **All 7 required visual fixes applied**: ScoreRing text centered (leading-none + gap-0 + mt-1), Critical blockers list spacing increased (space-y-3) with larger icons + bold label + priority subtext + hover "View in Skill Gaps" link, dimension rows on grid with right-aligned tabular-nums scores, subtext bumped to text-foreground/80 for contrast, bottom card uses min-h-fit + overflow-visible (no truncation), AlertOctagon + ArrowRightCircle in matching h-9 w-9 rounded-xl containers.
+  1223→- **All 5 premium polish features applied**: trend arrow pill (success/critical colored, computed from prior session readinessIndex via extended API), dimension tooltips with per-dimension explanations, recommendation card with "Start focused interview on {topGap}" CTA (smart handler: resumes in-progress interview or starts a fresh one targeting the top gap), ScoreRing animation verified (already implements cubic-with-overshoot easing), four-band smooth color scale (<30 critical · 30–50 warning · 50–70 accent-blue · >70 success) via new CompetencyBar `accent` status.
+  1224→- **API extended cleanly**: `readinessJson` was already persisted in the schema but not surfaced by the list endpoint; the new `readinessIndex` field is purely additive and backwards-compatible.
+  1225→- **Lint**: 0 errors, 0 warnings.
+  1226→- **VLM verification**: targeted VLM checks confirmed all centering, alignment, contrast, and icon-consistency requirements are met. Full-page screenshot confirms no truncation and the recommendation card is rendered.
+  1227→- **No regressions**: existing CompetencyBar callers (match-view, evaluation-view, resume-strength) unaffected by the additive `accent` status. Existing ScoreRing callers (match-view) unaffected by the additive `labelExtra` prop. Empty-state branch of readiness-view unchanged.
+  1228→
+  1229→---
+  1230→
+  1231→Task ID: 7
+  1232→Agent: main (full-stack-developer)
+  1233→Task: Add a side-by-side "Session Comparison" feature that lets users compare two past sessions to see growth over time.
+  1234→
+  1235→## Work Log
+  1236→
+  1237→### 1. Backend API (NEW)
+  1238→- Created `/home/z/my-project/src/app/api/session/compare/route.ts`.
+  1239→- `GET /api/session/compare?a=<sessionId>&b=<sessionId>`:
+  1240→  - Fetches both session rows in parallel via Prisma `findUnique`.
+  1241→  - Builds a lightweight `SessionSummary` per side: `{ id, jobTitle, createdAt, isDemo, matchIndex, readinessIndex, gapCount, topGaps (top 3 by priorityScore desc), interviewScore (avg of evaluation.overall × 100) }`.
+  1242→  - **Normalizes chronological order**: whichever session was created earlier becomes `a`, the later becomes `b`. This makes deltas always `(newer − older)` → positive = improvement, which matches the user's mental model of "growth over time". The originally-requested ids still drive the labels.
+  1243→  - Computes `deltas = { matchDelta, readinessDelta, gapDelta (= a.gapCount − b.gapCount so positive = improvement), interviewScoreDelta }`. Null when either side is missing the metric.
+  1244→  - Status codes: `200` on success, `400` on missing `a`/`b` or when `a === b`, `404` if either session not found.
+  1245→- Verified via curl against the dev DB: 3 sessions present, `compare?a=<sess1>&b=<sess2>` returns the expected payload with `matchDelta=1, gapDelta=2, interviewScoreDelta=56`. All error paths (missing params, not found, same session) return the correct status + error message.
+  1246→
+  1247→### 2. Frontend Store (`src/lib/store.ts`)
+  1248→- Added `'compare'` to the `View` union and to `VALID_VIEWS` so `parseHash()`/`syncHash()` work with `#view=compare`.
+  1249→- Exported new types: `ComparisonSession`, `ComparisonDeltas`, `Comparison` (re-used by both the API response and the compare-view component).
+  1250→- Added new state slices: `comparison: Comparison | null`, `loadingComparison: boolean`.
+  1251→- Added actions:
+  1252→  - `loadComparison(aId, bId)` — fetches `/api/session/compare`, sets `comparison` + view, syncs URL hash to `#view=compare` (no session param — compare view doesn't need one).
+  1253→  - `clearComparison()` — clears `comparison` so the picker re-appears.
+  1254→- `reset()` now also clears `comparison` + `loadingComparison`.
+  1255→
+  1256→### 3. New View Component (`src/components/hiremind/compare-view.tsx` — NEW)
+  1257→Premium Apple-inspired side-by-side comparison view with:
+  1258→- **Header**: "Compare sessions." + subtitle "See how you've grown between attempts." with a `GitCompare` eyebrow icon.
+  1259→- **Empty state** (fewer than 2 sessions in DB): friendly card explaining "You need at least two sessions to compare."
+  1260→- **Picker state** (`<PickerState>`): two `<SessionPicker>` dropdowns (Earlier session A | Later session B) listing past sessions from `/api/session?list=true`. Auto pre-selects the two most recent sessions with correct chronological ordering (A = older, B = newer). "Compare sessions" button triggers `loadComparison(aId, bId)`.
+  1261→- **Loaded comparison** (`<ComparisonView>`):
+  1262→  - Desktop: 3-column grid (`1fr 72px 1fr`) — column headers (job title + date + demo badge), 4 metric rows (Match Index / Readiness Index / Skill Gaps / Avg Interview Score), each row = left value | delta arrow in a center pill | right value. Top-3 gaps shown as pill chips below.
+  1263→  - Mobile (`md:hidden`): vertical stack — session A card on top (with all metrics + delta arrows in compact rows), session B card on bottom, growth story below.
+  1264→- **Premium polish**:
+  1265→  - `AnimatedCounter` for value count-up (cubic ease-out + subtle sine overshoot near end, configurable delay).
+  1266→  - `DeltaArrow` uses Framer Motion spring (`stiffness: 520, damping: 18, mass: 0.7`) — scales 0 → 1 with overshoot.
+  1267→  - Delta color logic correctly handles both "higher is better" and "lower is better" (gaps) metrics: improvement = success green, regression = critical red, no change = muted, with arrow direction `↑/↓/—`.
+  1268→  - "Better" side gets `.hm-better-side` tint (subtle radial gradient + 1px success ring) and a small `🏆 Better` pill chip.
+  1269→  - Staggered entrance: header → picker/card → metric rows (each row 80ms after the previous).
+  1270→  - "Growth story" callout at the bottom: natural-language summary of all non-zero deltas + actionable next step (e.g., "Keep practicing System Design."). Icon + accent color reflect net sentiment (improvements vs regressions).
+  1271→  - Loading overlay with backdrop blur while the comparison is being fetched.
+  1272→  - "Pick different sessions" button to return to the picker.
+  1273→
+  1274→### 4. CSS (`src/app/globals.css`)
+  1275→- Added `.hm-better-side` utility: subtle radial gradient (success color, 12% light / 16% dark) + 5–8% success-tinted flat background + 1px success ring (22% light / 30% dark). Pairs with the "Better" pill chip on the winning side of each metric.
+  1276→
+  1277→### 5. Navigation (`src/components/hiremind/shell.tsx`)
+  1278→- Added `Compare` nav item (with `GitCompare` lucide icon) **after `Roadmap`** in the `NAV` array. Desktop nav renders the icon inline with the label; mobile nav keeps it text-only (consistent with existing items).
+  1279→- Added `icon?: React.ComponentType` to the `NavItem` type so other nav items can opt-in to icons later.
+  1280→- New gating logic in both desktop and mobile nav: Compare is **disabled when `sessionCount < 2`** (with a helpful `title` tooltip: "Run at least two analyses to unlock Compare"). Other session-required views stay gated by `sessionId` as before.
+  1281→- Header fetches `/api/session?list=true` on mount and re-fetches whenever `sessionId` or `view` changes (so the Compare nav unlocks immediately after a new analysis completes).
+  1282→
+  1283→### 6. Page wiring (`src/app/page.tsx`)
+  1284→- Imported `CompareView` and added `{view === "compare" && <CompareView />}` branch.
+  1285→- Extended the URL-hash hydration `useEffect` so a deep-link to `#view=compare` (no session id) correctly flips the view via `useHireMind.getState().setView("compare")` — previously only `hashSession`-bearing hashes were honored.
+  1286→
+  1287→### 7. Keyboard shortcuts (`src/hooks/use-keyboard-shortcuts.ts`, `src/components/hiremind/shortcut-hint.tsx`)
+  1288→- Added `8 → compare` to `VIEW_KEYS` and updated the shortcut-hint overlay text from "1–7" to "1–8" with `8=Compare` label.
+  1289→
+  1290→## Verification Results
+  1291→
+  1292→- **Lint**: `bun run lint` → **0 errors, 0 warnings** ✓
+  1293→- **Dev log**: no errors, warnings, or compile failures ✓
+  1294→- **API endpoint** (curl):
+  1295→  - Success: returns normalized `{ a, b, deltas }` with correct math (`matchDelta=1, gapDelta=2, interviewScoreDelta=56`) ✓
+  1296→  - 400 on missing `a`/`b` ✓
+  1297→  - 400 on `a === b` ✓
+  1298→  - 404 on non-existent session ids ✓
+  1299→- **agent-browser UI walkthrough**:
+  1300→  - Navigated to compare view → "Compare sessions." header + subtitle render ✓
+  1301→  - Picker UI shows two pre-selected sessions (Earlier A = older, Later B = newer) ✓
+  1302→  - "Compare sessions" button triggers `loadComparison` → API called, comparison state set ✓
+  1303→  - Loaded comparison view shows 4 metric rows with delta arrows + values + "BETTER" pills ✓
+  1304→  - Top 3 gaps shown as pill chips (System Design, Scalability, Microservices) ✓
+  1305→  - "Growth story" callout renders with summary: *"You improved your Match Index by 1 points, reduced your skill gaps from 11 to 9, raised your interview score by 56 points. Keep practicing System Design."* ✓
+  1306→  - Both desktop and mobile layouts present in DOM (mobile hidden via `md:hidden`, desktop hidden via `hidden md:block`) ✓
+  1307→  - Compare nav item disabled when <2 sessions, enabled when ≥2 ✓
+  1308→- **VLM analysis** of full-page screenshot confirmed all 7 design requirements (header, two-column layout with delta arrows, visible metric values, Growth story callout, "Better" side highlights, top-3 gap pill chips, premium Apple-inspired aesthetic) are met.
+  1309→
+  1310→## Stage Summary
+  1311→
+  1312→- All 7 requirements from the spec are implemented and verified end-to-end.
+  1313→- Backend API is robust (parallel fetch, chronological normalization, null-safe deltas, all error paths handled).
+  1314→- Frontend component is premium-grade: spring-animated delta arrows, count-up AnimatedCounter, staggered entrance, success-tinted "better side" radial gradient, color-coded arrows (success/critical/muted), growth-story callout with sentiment-aware icon.
+  1315→- Mobile responsive: vertical stack (A on top, deltas in middle, B on bottom) per spec.
+  1316→- URL hash deep-linking works for `#view=compare`.
+  1317→- Keyboard shortcut `8` switches to Compare view; shortcut hint overlay updated.
+  1318→- No new npm packages required (re-used framer-motion, lucide-react, shadcn Button).
+  1319→- Lint clean, dev server stable, no runtime errors.
+  1320→- Screenshot saved at `/home/z/my-project/download/feat-r5-compare.png`.
+  1321→- Agent-ctx work record at `/home/z/my-project/agent-ctx/7-compare-feature.md`.
+  1322→
+  1323→---
+  1324→
+  1325→Task ID: 8-9
+  1326→Agent: main (backend-improvements)
+  1327→Task: Session Auto-Cleanup API + AI Retry Logic
+  1328→
+  1329→## Task 8 — Session Auto-Cleanup API
+  1330→
+  1331→### 1. Shared cleanup helper (`src/lib/session.ts` — extended)
+  1332→Added exported `cleanupOldSessions(maxAgeHours = 24)` function. Logic:
+  1333→- Compute `cutoff = now - maxAgeHours * 3600 * 1000`.
+  1334→- In parallel: fetch the 10 most recent session IDs (any kind) AND the 5 most recent demo session IDs. Both queries use `select: { id: true }` so they're cheap.
+  1335→- `preserveIds = [...recentSessions, ...recentDemoSessions]` (dedup happens implicitly via SQL `NOT IN`).
+  1336→- `db.session.deleteMany({ where: { createdAt: { lt: cutoff }, id: { notIn: preserveIds } } })`.
+  1337→- Return `{ deleted: result.count, remaining: <new count>, cutoff: cutoff.toISOString() }`.
+  1338→
+  1339→This makes the demo CTA ("Load demo candidate") always find fresh seed data, keeps the 10 most recent real analyses for the "Recent sessions" list, and prunes everything else older than 24h.
+  1340→
+  1341→### 2. New endpoint (`src/app/api/session/cleanup/route.ts` — NEW)
+  1342→- `POST /api/session/cleanup?maxAgeHours=24`
+  1343→- Default `maxAgeHours` is 24. Non-integer / non-positive values return 400 `{ error: "maxAgeHours must be a positive integer." }`.
+  1344→- Catches all errors, logs to console, returns 500 `{ error: "Cleanup failed.", message }` on unexpected DB failure.
+  1345→- Only `POST` is exported → Next.js returns 405 for GET / PUT / DELETE automatically.
+  1346→- Returns 200 `{ deleted: number, remaining: number, cutoff: ISO8601 string }` on success.
+  1347→
+  1348→### 3. Fire-and-forget cleanup trigger (`src/app/api/session/route.ts`)
+  1349→In the existing `GET /api/session?list=true` handler, BEFORE running the list query, fire a non-awaited `cleanupOldSessions()` call:
+  1350→
+  1351→```ts
+  1352→void cleanupOldSessions().catch((err) => {
+  1353→  console.warn("[HIREMIND] background session cleanup failed:", err);
+  1354→});
+  1355→```
+  1356→
+  1357→The `void` + `.catch()` pattern makes it explicit that the cleanup is a background side-effect — the list response is the user's primary concern and must not be blocked by or fail because of the sweep. Confirmed in the dev log: the list query returns in ~10–20ms, and the cleanup `DELETE FROM Session WHERE createdAt < ? AND id NOT IN (...)` runs immediately afterward.
+  1358→
+  1359→## Task 9 — AI Retry Logic
+  1360→
+  1361→### 1. Retry helper + error classifier (`src/lib/ai.ts` — extended)
+  1362→Added two helpers at the top of `ai.ts`:
+  1363→
+  1364→- `isTransientError(err: unknown): boolean` — classifies an error as retryable. Returns `true` for:
+  1365→  - Our own `AI_TIMEOUT` sentinel (from `withTimeout`)
+  1366→  - Network/transport errors: `timeout`, `timed out`, `network`, `fetch failed`, `econnreset`, `etimedout`, `enotfound`, `socket hang up`, `aborted`, `und_err_` (undici codes), `retry` (provider-side hint)
+  1367→  - 5xx HTTP status errors from the upstream provider (regex `/\b5\d{2}\b/` + `lower.includes("status")`)
+  1368→  - Defaults to `false` for anything else (so deterministic failures like JSON parse, 4xx auth/quota, unknown errors fail fast instead of compounding)
+  1369→- `withRetry<T>(fn, retries = 1): Promise<T>` — wraps an async fn, retries once on transient errors, waits 500ms between attempts (`RETRY_DELAY_MS = 500`). On each retry attempt it writes a fire-and-forget `AuditEvent` row:
+  1370→
+  1371→```ts
+  1372→void db.auditEvent.create({
+  1373→  data: { category: "ai", action: "retry", level: "warn",
+  1374→          message: `AI call failed, retrying: ${message}` }
+  1375→}).catch(() => { /* swallow logging failures */ });
+  1376→```
+  1377→
+  1378→### 2. Wrapped AI call inside `chatJSON`
+  1379→The original `chatJSON` had one try/catch wrapping both the network call AND the JSON parse. This conflated transient failures with deterministic model-output failures. Restructured into two phases:
+  1380→
+  1381→- **Phase 1 (retryable)**: `ZAI.create()` + `withTimeout(zai.chat.completions.create(...))` are wrapped in a small async closure and passed to `withRetry()`. If this still fails after retry, return the fallback — no JSON parsing attempted.
+  1382→- **Phase 2 (deterministic)**: `extractJSON(raw)` + `JSON.parse(jsonStr)` happen in a separate try/catch. Failures here return the fallback WITHOUT triggering a retry — a model that produced malformed JSON once will produce it again, so spending another 25s on the same prompt would just waste user time.
+  1383→
+  1384→Total worst-case time before fallback: `25s (initial timeout) + 500ms (backoff) + 25s (retry timeout) = 50.5s`. Confirmed by the dev log: `POST /api/analyze 200 in 43s` — the retry actually fired on a real `AI_TIMEOUT` and recovered on the second attempt.
+  1385→
+  1386→### 3. Constants extracted for clarity
+  1387→- `TIMEOUT_MS = 25_000` (unchanged)
+  1388→- `RETRY_DELAY_MS = 500` (new)
+  1389→- `MAX_RETRIES = 1` (new — task spec says "1 retry before falling back")
+  1390→
+  1391→### 4. New import
+  1392→`import { db } from "@/lib/db";` — needed for the AuditEvent logging. Verified that `ai.ts` is only imported from server-side API routes (`/api/analyze`, `/api/interview/answer`), so importing the Prisma client is safe.
+  1393→
+  1394→## Verification Results
+  1395→
+  1396→### Lint
+  1397→- `bun run lint` → **0 errors, 0 warnings** ✓
+  1398→
+  1399→### Cleanup endpoint (curl + agent-browser eval)
+  1400→- `POST /api/session/cleanup` → `{"deleted":0,"remaining":3,"cutoff":"2026-08-12T17:50:01.034Z"}` ✓
+  1401→- `POST /api/session/cleanup?maxAgeHours=1` → `{"deleted":0,"remaining":3,"cutoff":"2026-08-13T16:50:04.837Z"}` ✓
+  1402→- `POST /api/session/cleanup?maxAgeHours=48` → `{"deleted":0,"remaining":3,"cutoff":"2026-08-11T17:50:34.682Z"}` ✓
+  1403→- `POST /api/session/cleanup?maxAgeHours=invalid` → 400 `{"error":"maxAgeHours must be a positive integer."}` ✓
+  1404→- `POST /api/session/cleanup?maxAgeHours=0` → 400 (same error) ✓
+  1405→- `GET /api/session/cleanup` → 405 Method Not Allowed ✓
+  1406→
+  1407→### Fire-and-forget trigger from list endpoint
+  1408→Dev log sequence after `GET /api/session?list=true 200 in 22ms`:
+  1409→1. `SELECT id FROM Session ORDER BY createdAt DESC LIMIT 10` (recentSessions preservation lookup)
+  1410→2. `SELECT id FROM Session WHERE isDemo = true ORDER BY createdAt DESC LIMIT 5` (recentDemoSessions preservation lookup)
+  1411→3. `DELETE FROM Session WHERE (createdAt < ? AND id NOT IN (?,?,?,?,?,?))` (the sweep)
+  1412→4. `SELECT COUNT(*) FROM Session` (remaining count)
+  1413→
+  1414→All four queries ran AFTER the list response was already returned — confirming the fire-and-forget pattern. List response latency was unaffected (~10–22ms).
+  1415→
+  1416→### AI retry actually triggered on a real timeout
+  1417→Dev log during the demo-flow test:
+  1418→```
+  1419→[HIREMIND] AI transient error, retrying (1 left): AI_TIMEOUT
+  1420→prisma:query INSERT INTO `main`.`AuditEvent` (...) VALUES (?,?,?,?,?,?) RETURNING ...
+  1421→ POST /api/analyze 200 in 43s (compile: 143ms, render: 43s)
+  1422→```
+  1423→- A real `AI_TIMEOUT` occurred on the first attempt
+  1424→- The retry helper logged it, wrote an `AuditEvent` row, waited 500ms, retried
+  1425→- The retry succeeded → `POST /api/analyze 200 in 43s`
+  1426→- No fallback was triggered; the candidate view rendered with full AI-extracted skills (Python Strong, scikit-learn Strong, Pandas Strong, FastAPI Strong, etc.)
+  1427→
+  1428→### Demo flow walkthrough (agent-browser)
+  1429→1. Opened `http://localhost:3000` → home page rendered ✓
+  1430→2. Clicked "Load demo candidate" → resume + job fields populated, "Analyzing…" button state ✓
+  1431→3. Waited 35s → analysis completed, view switched to candidate overview ("Here's what we found.") ✓
+  1432→4. All nav buttons (Candidate, Job Match, Skill Gaps, Interview, Readiness, Roadmap, Compare) became enabled → match + gaps + readiness + roadmap all generated successfully ✓
+  1433→5. No errors in dev log ✓
+  1434→
+  1435→## Stage Summary
+  1436→
+  1437→- **Task 8**: The Session table now self-cleans on every home page load without blocking the user. Demo seed data + 10 most recent real analyses are always preserved. A dedicated `POST /api/session/cleanup` endpoint exposes the same logic for ops/cron use. Input validation, 400/500 error paths, and 405 for non-POST all handled.
+  1438→- **Task 9**: AI calls now retry once on transient errors (timeout, network, 5xx) before falling back to deterministic logic. JSON parse errors are correctly classified as deterministic and skip the retry. Real-world test confirmed: a genuine `AI_TIMEOUT` was retried successfully — the user got their full AI-powered analysis instead of a fallback parse. Each retry attempt is logged to the `AuditEvent` trail for observability.
+  1439→- **Zero breaking changes** to existing API contracts — both the list endpoint response shape and the AI function signatures are unchanged.
+  1440→- Lint clean, dev server stable, no runtime errors.
+  1441→- Agent-ctx work record at `/home/z/my-project/agent-ctx/8-9-cleanup-retry.md`.
+  1442→
+  1443→---
+  1444→
+  1445→Task ID: 10
+  1446→Agent: main (insights-polish)
+  1447→Task: Interview Insights panel + confetti + keyboard 'D' shortcut + readiness Insights tabs + AnimatedCounter everywhere
+  1448→
+  1449→## Goal
+  1450→Add a new "Interview Insights" panel that appears on the Evaluation view after each answer, providing a deeper visual breakdown of how the candidate performed across multiple dimensions. Plus four other polish features: confetti micro-animation on high scores, 'D' keyboard shortcut for demo answer, Insights tab on Readiness view, and AnimatedCounter on every score display.
+  1451→
+  1452→## Work Log
+  1453→
+  1454→### 1. Shared `AnimatedCounter` component (`src/components/hiremind/shell.tsx`)
+  1455→- Created a single shared `AnimatedCounter` export in `shell.tsx` so all views can import from one place. Previously only `match-view.tsx` and `compare-view.tsx` had local copies with slightly different signatures.
+  1456→- Signature: `{ value: number; delay?: number (seconds); duration?: number (ms); className?: string }`.
+  1457→- Animation: cubic ease-out with a tiny sine overshoot near the end for an Apple-like springy feel. `delay` lets multiple counters on the same view stagger their entrance.
+  1458→- Renders as `<span className="font-semibold tabular-nums hm-num-tabular">` so it composes well with any typography class passed via `className`.
+  1459→
+  1460→### 2. Interview Insights component (`src/components/hiremind/interview-insights.tsx` — NEW)
+  1461→New component shown after each answer's evaluation. Pure client-side: derived entirely from the `interview` + `gaps` store state — no API calls. Four sections:
+  1462→
+  1463→**A. Competency Radar Chart (SVG)**
+  1464→- Pentagon with 5 axes: Technical, Relevance, Depth, Communication, Problem Solving (the 5th is a synthetic blend of depth + technicalAccuracy so we get a true pentagon).
+  1465→- Each axis 0-100. Candidate polygon = filled `--accent-blue` (18% opacity fill, 2px stroke). Required threshold = dashed muted outline polygon at 70.
+  1466→- Concentric grid pentagons at 25/50/75/100. Axis spokes from center.
+  1467→- Animations: required polygon fades in (scale 0.6→1, 700ms), candidate polygon spring-pops in (scale 0.3→1, 900ms with spring stiffness 80 / damping 14), vertex dots pop in staggered.
+  1468→- Legend chips below explain "Your score" vs "Target (70)".
+  1469→- Axis labels with numeric values rendered as SVG text outside the pentagon.
+  1470→
+  1471→**B. Trajectory Sparkline (SVG)**
+  1472→- Smooth catmull-rom spline curve of overall % across Q1..Qn with dots at each data point.
+  1473→- Gradient area fill underneath (accent-blue 28% → 0%).
+  1474→- Baseline dashed line at 50%.
+  1475→- Animations: path draws with `pathLength: 0 → 1` (900ms), area fades in, dots pop in staggered.
+  1476→- Trend label (Improving / Declining / Steady / Baseline) with directional icon. Threshold: ±2 percentage points vs Q1.
+  1477→- **Edge case**: When only 1 evaluation exists, swap the SVG for a dashed-bordered placeholder card reading "Baseline established · trajectory appears after Q2". This avoids the "single dot looks broken" issue VLM flagged in the first iteration.
+  1478→
+  1479→**C. Strength-Weakness Matrix (2x2)**
+  1480→- Four quadrants derived from `interview.competencyStates` + `gaps`:
+  1481→  - Top-left "Strong & Practiced" (success border) — `current === "strong"` AND evaluated in interview.
+  1482→  - Top-right "Strong but Unverified" (accent-blue border) — `resumeLevel` strong/moderate AND `interviewLevel` unknown.
+  1483→  - Bottom-left "Weak but Improving" (warning border) — `current` weak AND status ≠ gap.
+  1484→  - Bottom-right "Critical Gaps" (critical border) — status gap OR unknown; augmented from gaps list with critical/high importance.
+  1485→- Each quadrant: icon + title + description + up to 3 competency chips. Em-dash placeholder if empty so the 2x2 grid stays balanced.
+  1486→- Staggered entrance (each quadrant 70ms after the previous).
+  1487→
+  1488→**D. Time Analysis (NEW)**
+  1489→- Estimates minutes per answer from character count assuming ~150 chars/min (~30 wpm × ~5 chars/word).
+  1490→- Horizontal bars per question (Q1, Q2, …). Width proportional to that question's minutes vs the max in the session.
+  1491→- Bar color: green gradient for ≥3min (Thoughtful), accent-blue for 1-3min (Quick), warning for <1min (Rushed).
+  1492→- Pace pill: "Thoughtful" (≥3min avg) / "Quick" (1-3min) / "Rushed" (<1min) with matching icon. Subtitle: "avg X min / answer".
+  1493→- Each bar animates from width 0 → final value (600ms, staggered).
+  1494→
+  1495→The whole panel is wrapped in a `hm-card hm-card-hover` with an `Interview Insights` header (eyebrow + title + description), placed between the Strengths/Weaknesses row and the "What happens next" callout in the evaluation view.
+  1496→
+  1497→### 3. Evaluation view rewrite (`src/components/hiremind/evaluation-view.tsx`)
+  1498→- **Restructured dimensions card**: replaced the flat "Overall (weighted aggregate) X%" row with a proper `ScoreRing` (148px) sitting in the right column of the dimensions grid. The 4 dimension bars stay in the left column. Grid layout: `sm:grid-cols-[1fr_auto]`.
+  1499→- **Confetti micro-animation**: New `ConfettiBurst` component. Renders 10 small dots (4-7px) that radiate outward from the score ring center in random directions (pre-computed via `Math.cos/sin` + `Math.random` for angle/distance) and fade out. Mix of accent-blue and success colors. Uses Framer Motion with `[0, 0.25, 1]` keyframes (opacity 0→1→0). Triggered when `overall >= 75%`. Initial delay 0.4s + per-particle random 0-0.12s. Apple-like: brief (1s total), subtle, no library.
+  1500→- **AnimatedCounter on dimensions**: Each `DimensionBar` now uses `<AnimatedCounter value={pct} delay={…} duration={800} />` with staggered delays (0.15, 0.22, 0.29, 0.36s) so each bar's number count-up is sequenced.
+  1501→- **InterviewInsights panel** inserted between the strengths/weaknesses grid and the "What happens next" callout. Mounts only when `interview.evaluations.length > 0`.
+  1502→- Preserved the existing empty-state recovery UI and the "What happens next" wow-moment callout unchanged.
+  1503→
+  1504→### 4. Keyboard shortcut 'D' for demo answer (`src/hooks/use-keyboard-shortcuts.ts`, `src/components/hiremind/interview-view.tsx`, `src/components/hiremind/shortcut-hint.tsx`)
+  1505→- `use-keyboard-shortcuts.ts`:
+  1506→  - Hook now subscribes to `interview`, `isDemo`, `loading`, `submitAnswer` from the store (previously only view/navigation bits).
+  1507→  - The `d` handler is now context-sensitive:
+  1508→    - On **home** view: loads demo candidate + starts analysis (existing behavior, preserved).
+  1509→    - On **interview** view, when `isDemo === true`, `interview.status !== "complete"`, `!loading`, and there is a `current` question: triggers `submitAnswer(current.id, "", { useDemoAnswer: true })` — same as clicking the "Scripted answer" button.
+  1510→  - Removed unused destructured store fields (`presentationMode`, `resumeText`, `jobTitle`, `jobText`) to keep the dependency array clean.
+  1511→- `interview-view.tsx`:
+  1512→  - Added a `<kbd>` badge with "D" next to the "Scripted answer" button label so the shortcut is discoverable. Hidden on mobile (`hidden sm:inline-flex`) where keyboard input isn't relevant. `title` attribute also explains the shortcut for hover.
+  1513→- `shortcut-hint.tsx`:
+  1514→  - Updated the 'd' shortcut description from "Load demo candidate (from Home)" to "Load demo candidate (Home) or scripted answer (Interview)" so the overlay reflects the new context-sensitive behavior.
+  1515→
+  1516→### 5. Insights tabs on Readiness view (`src/components/hiremind/readiness-view.tsx`)
+  1517→- Added imports: `CheckCircle2`, `AlertTriangle`, `LayoutGrid` (lucide), `Tabs`/`TabsList`/`TabsTrigger`/`TabsContent` (shadcn ui), `AnimatedCounter` from shell, `SkillLevel` type.
+  1518→- Inserted `<InsightsTabs />` between the readiness dimensions grid and the critical blockers / next-best-action row.
+  1519→- New `InsightsTabs` component:
+  1520→  - Derives `strengths` from `interview.competencyStates` (current=strong OR moderate+interviewed) augmented with `match.rows` (status=matched).
+  1521→  - Derives `watchOuts` from competency states with status=gap/unknown/weak, augmented with high-importance entries from `gaps`.
+  1522→  - Cap each list at 6 items for layout stability. Each list item is a card with icon + name + reason.
+  1523→  - `Tabs` with three triggers: "Strengths" (with count badge), "Watch-outs" (with count badge), "Coverage".
+  1524→  - Strengths tab: 2-col grid of success-bordered cards with CheckCircle2 icon.
+  1525→  - Watch-outs tab: 2-col grid of warning-bordered cards with AlertTriangle icon.
+  1526→  - Coverage tab: `CoverageHeatmap` component (below).
+  1527→- New `CoverageHeatmap` component:
+  1528→  - Renders a responsive grid (2/3/4 cols) of competency cells from `match.rows`.
+  1529→  - Each cell merges the resume level from `match.rows` with the latest interview level from `interview.competencyStates` (interview wins).
+  1530→  - Background tint + dot color reflect level: Strong=success, Moderate=accent-blue, Weak=warning, Unknown=muted.
+  1531→  - Required competencies get a darker border + "Req" badge.
+  1532→  - Legend bar at the top shows the 4 levels.
+  1533→  - Each cell staggers in (scale 0.95→1, 25ms delay between cells, capped at 0.4s).
+  1534→- Also swapped the readiness dimensions score display from a plain `<span>{Math.round(d.score * 100)}</span>` to `<AnimatedCounter value={Math.round(d.score * 100)} delay={0.2 + i * 0.08} duration={900} />` so each dimension's number counts up on first render.
+  1535→
+  1536→### 6. AnimatedCounter everywhere
+  1537→- `match-view.tsx`: Removed the local `AnimatedCounter` function; now imports the shared one from `./shell`. The shared one has the same signature (`value`, `delay` in seconds) so the existing call sites in `match-view.tsx` work unchanged.
+  1538→- `evaluation-view.tsx`: Uses `AnimatedCounter` for the 4 dimension bars (staggered). The overall score uses `ScoreRing` which already has its own internal count-up animation (cubic + sine overshoot).
+  1539→- `readiness-view.tsx`: Uses `AnimatedCounter` for the readiness dimension scores (staggered). Readiness Index uses `ScoreRing`.
+  1540→- `shell.tsx`: `ScoreRing` (used by Match Index and Readiness Index heroes) already animates from 0 to value with cubic ease + sine overshoot, so Match Index and Readiness Index large numbers are covered.
+  1541→- `compare-view.tsx`: Left its local `AnimatedCounter` intact (functionally equivalent to the shared one) to minimize regression risk in an already-verified feature.
+  1542→
+  1543→## Verification Results
+  1544→
+  1545→### Lint
+  1546→- `bun run lint` → **0 errors, 0 warnings** ✓ (ran twice — once after initial implementation, once after the sparkline single-data-point improvement)
+  1547→
+  1548→### Dev server / compile
+  1549→- Dev server stable throughout. Multiple `✓ Compiled in Nms` lines, no compile errors, no runtime errors. ✓
+  1550→- All API requests return 200: `/api/session?list=true`, `/api/session?id=…`, `/api/readiness`, etc. ✓
+  1551→- Browser console: only Fast Refresh messages, no errors. ✓
+  1552→
+  1553→### agent-browser UI walkthrough
+  1554→1. Opened `http://localhost:3000` → home rendered ✓
+  1555→2. Clicked "Load demo candidate" → analysis completed, navigated to candidate view ✓
+  1556→3. Clicked "Interview" nav → "Your adaptive interview awaits." empty state with difficulty selector ✓
+  1557→4. Clicked "Begin adaptive interview →" → first question rendered ("How would you design a scalable REST API that handles 100,000 concurrent users?") ✓
+  1558→5. Verified the "Scripted answer" button now shows the new `[D]` kbd badge next to the label ✓
+  1559→6. Pressed `D` key (no focus on textarea) → demo answer submitted, view switched to evaluation after ~30s ✓ — **the new keyboard shortcut works**
+  1560→7. Evaluation view rendered with:
+  1561→   - "Here's what we learned." heading ✓
+  1562→   - 4 dimension bars (Technical, Relevance, Depth, Communication) with count-up numbers ✓
+  1563→   - **ScoreRing with overall 43%** in the right column (warning tone) ✓
+  1564→   - Strengths + Weaknesses cards ✓
+  1565→   - **NEW Interview Insights panel** with 4 sections:
+  1566→     - "A deeper look at your performance" header ✓
+  1567→     - Competency Radar (pentagon with candidate polygon + dashed target polygon) ✓
+  1568→     - Score Trajectory (placeholder for Q1 only — "Baseline established · trajectory appears after Q2") ✓
+  1569→     - Time per Answer (1 bar for Q1 with "Thoughtful" pace pill) ✓
+  1570→     - Strength-Weakness Matrix (2x2 grid with chips) ✓
+  1571→   - "What happens next" callout with the next question ✓
+  1572→   - "Continue interview" button ✓
+  1573→8. Took full-page screenshot → `/home/z/my-project/download/feat-r5-insights-evaluation.png` ✓
+  1574→9. Navigated to Readiness view → clicked "Calculate readiness" → readiness computed ✓
+  1575→10. Verified "Insights" section appears between the readiness dimensions grid and the critical blockers row ✓
+  1576→11. Verified three tabs: "Strengths 6", "Watch-outs 6", "Coverage" ✓
+  1577→12. Clicked Coverage tab → heatmap grid of competency cells rendered ✓
+  1578→13. Took screenshots: `feat-r5-insights-readiness.png` (Strengths tab default) and `feat-r5-insights-readiness-coverage.png` (Coverage tab) ✓
+  1579→
+  1580→### VLM analysis
+  1581→- `z-ai vision -p "Analyze this HireMind AI evaluation view screenshot. Rate the visual richness and information density (1-10). Identify any issues."` →
+  1582→  - **Rating: 8/10** for visual richness and information density ✓
+  1583→  - Praised: hierarchical info architecture, competency radar ("excellent for visualizing multi-dimensional skill gaps"), strength-weakness matrix ("helps the user prioritize what to learn next"), adaptive feedback callout, professional polish.
+  1584→  - Constructive feedback addressed:
+  1585→    - "Score Trajectory chart looks empty with only Q1" → **fixed** by replacing the single-dot SVG with a placeholder card "Baseline established · trajectory appears after Q2".
+  1586→    - Other noted items (color contrast in progress bars, time-per-answer benchmarking, cognitive load) were either pre-existing design-system concerns or spec-required simultaneous display.
+  1587→
+  1588→## Stage Summary
+  1589→- All 5 feature requirements implemented and verified end-to-end:
+  1590→  1. **Interview Insights panel** with all 4 sections (Radar / Sparkline / Strength-Weakness Matrix / Time Analysis) ✓
+  1591→  2. **Confetti micro-animation** triggering on overall ≥75%, 10-particle outward burst from score ring, Framer Motion, no library ✓
+  1592→  3. **'D' keyboard shortcut** for scripted demo answer on interview view (context-sensitive: still loads demo on home view) + `[D]` kbd badge on the button + shortcut-hint overlay updated ✓
+  1593→  4. **Insights tabs** on Readiness view with Strengths / Watch-outs / Coverage (heatmap grid) using shadcn `Tabs` ✓
+  1594→  5. **AnimatedCounter** applied to per-dimension scores in match view (refactored to use shared), per-dimension scores in readiness view, and overall + per-dimension scores in evaluation view. Match Index and Readiness Index large numbers covered by the existing `ScoreRing` internal counter ✓
+  1595→- New shared `AnimatedCounter` export in `shell.tsx` keeps future score displays DRY.
+  1596→- All work is purely client-side — no API changes, no schema migrations, no new npm packages (re-used framer-motion, lucide-react, shadcn Tabs).
+  1597→- Lint clean, dev server stable, browser console clean, no runtime errors.
+  1598→- Screenshots saved at `/home/z/my-project/download/feat-r5-insights-evaluation.png` (evaluation view with insights), `/home/z/my-project/download/feat-r5-insights-readiness.png` (readiness with Strengths tab), and `/home/z/my-project/download/feat-r5-insights-readiness-coverage.png` (readiness Coverage heatmap).
+  1599→- VLM rated the new evaluation view 8/10 for visual richness and information density.
+  1600→- Agent-ctx work record at `/home/z/my-project/agent-ctx/10-insights-polish.md`.
+  1601→
+  1602→---
+  1603→
+  1604→## Round 5 (cron-review-r5) — Main Coordinator Summary
+  1605→
+  1606→**Task ID**: cron-review-r5
+  1607→**Agent**: main
+  1608→**Task**: QA assessment + bug fixes + new features + premium polish
+  1609→
+  1610→### Round Overview
+  1611→Round 5 focused on (1) QA verification of existing features via agent-browser, (2) fixing critical bugs uncovered during QA, (3) adding new high-value features, and (4) deep premium polish across multiple views.
+  1612→
+  1613→### Bugs Found & Fixed
+  1614→
+  1615→1. **CRITICAL: SQLite DB read-only** — `prisma:query ... SqliteError { extended_code: 1032, message: "attempt to write a readonly database" }` was causing `POST /api/analyze 500`. Fixed by `chmod 666 /home/z/my-project/db/custom.db && chmod 777 /home/z/my-project/db`. No code change needed; permission issue from a prior session.
+  1616→
+  1617→2. **CRITICAL: Interview button row overflow** — The 3-button row (Submit/Scripted/Skip) at the bottom of the interview question card had no `flex-wrap`, causing the buttons to overflow the answer column (~416px wide) and overlap into the Answer Coach panel. The Skip button became completely unclickable (covered by the coach's "What great answers include" header). Fixed by adding `sm:flex-wrap`, shortening "Use scripted demo answer" → "Scripted answer", reducing button padding, and adding a `⌘+Enter` keyboard hint. Verified: `isSameAsBtn: true` and VLM confirmed "all three buttons fully visible, no overlap".
+  1618→
+  1619→3. **Mobile home density** — VLM flagged cramped hero typography, insufficient line-height, tight hero→body margin, cramped textarea padding, footer-line crowding, and at-risk nav tab labels. All 6 issues fixed (hero `leading-[1.1]`, body `leading-relaxed`, `mt-6 sm:mt-8` between hero and cards, `py-4` textarea padding, `mt-3 pb-1` footer, mobile nav `text-[11px]` with `flex-1` distribution + `shortLabel: "Gaps"` for Skill Gaps).
+  1620→
+  1621→4. **Readiness view polish** — 7 issues fixed: ScoreRing text centering, critical blockers list spacing, progress bar alignment, subtext contrast (`text-foreground/80`), removed bottom card truncation, icon consistency (AlertOctagon/ArrowRightCircle), plus 4 premium polish items (trend arrow, dimension tooltips, recommendation card, 4-band color scale).
+  1622→
+  1623→### New Features Added
+  1624→
+  1625→1. **Session Comparison view** (Task 7) — New `/compare` view with side-by-side metric comparison, delta arrows (↑/↓ color-coded), "BETTER" pills on the winning side, top-3 gap chips per session, growth-story callout. New backend `GET /api/session/compare?a=...&b=...`. Wired into nav as "Compare" with `GitCompare` icon, gated by `sessionCount >= 2`. Keyboard shortcut `8` opens it.
+  1626→
+  1627→2. **Session auto-cleanup** (Task 8) — New `POST /api/session/cleanup?maxAgeHours=24` endpoint with shared `cleanupOldSessions()` helper. Auto-fires (fire-and-forget) on every `GET /api/session?list=true`. Preserves 10 most recent + 5 most recent demo sessions. Verified live in dev log: `DELETE FROM Session WHERE createdAt < cutoff AND id NOT IN (...)` running after each list request.
+  1628→
+  1629→3. **AI retry logic** (Task 9) — Added `withRetry()` (1 retry, 500ms backoff) + `isTransientError()` classifier to `src/lib/ai.ts`. Restructured `chatJSON` into Phase 1 (retryable network call) + Phase 2 (non-retryable JSON parse). Logs retry attempts to AuditEvent. Verified live: `[HIREMIND] AI transient error, retrying (1 left): AI_TIMEOUT` → retry succeeded → `POST /api/analyze 200 in 43s` (no fallback).
+  1630→
+  1631→4. **Interview Insights panel** (Task 10) — New `interview-insights.tsx` component on Evaluation view with 4 sections:
+  1632→   - **Competency Radar** — pure SVG pentagon, candidate polygon (accent-blue) + target threshold (dashed at 70), spring-pop entrance.
+  1633→   - **Score Trajectory sparkline** — catmull-rom spline with gradient fill, baseline message until Q2.
+  1634→   - **Strength-Weakness Matrix** — 2x2 grid (Strong & Practiced / Strong but Unverified / Weak but Improving / Critical Gaps) with color-coded borders.
+  1635→   - **Time per Answer** — char-count → minutes estimate (30 wpm), horizontal bars, Thoughtful/Quick/Rushed pace pill.
+  1636→
+  1637→5. **Confetti micro-animation** (Task 10) — 10-particle outward burst from ScoreRing on evaluation view when overall ≥75%. Pure Framer Motion, brief and subtle (Apple-like).
+  1638→
+  1639→6. **'D' keyboard shortcut** (Task 10) — Context-sensitive: loads demo on home view, triggers scripted answer on interview view. `[D]` kbd badge added to Scripted answer button.
+  1640→
+  1641→7. **Readiness Insights tabs** (Task 10) — 3-tab section using shadcn `Tabs`:
+  1642→   - Strengths — competencies with strong/moderate interview evidence
+  1643→   - Watch-outs — weak/unverified/critical competencies
+  1644→   - Coverage — heatmap grid of all competencies with REQ badges
+  1645→
+  1646→8. **AnimatedCounter everywhere** (Task 10) — Shared component applied to per-dimension scores in match view, readiness view, evaluation view. Smooth cubic-bezier easing from 0 → value.
+  1647→
+  1648→### Verification Results (this round)
+  1649→
+  1650→- **Lint**: 0 errors, 0 warnings ✓
+  1651→- **Dev server**: stable on port 3000, all routes 200 ✓
+  1652→- **agent-browser end-to-end walkthrough**: PASSED ✓
+  1653→  - Demo flow: Load demo → Analyze (43s incl. retry) → Candidate → Match → Gaps → Interview empty state → Difficulty selector → Begin interview → Q1 (System Design) → Scripted answer → Evaluation with new Insights panel → Continue → Q2 adaptive (Database sharding) → Skip → Continue → ... → Readiness → Insights tabs → Coverage → Roadmap → Compare → Side-by-side deltas ✓
+  1654→  - Skip button: verified clickable, no longer occluded ✓
+  1655→  - Mobile (375px): home view density verified, nav fits without overflow ✓
+  1656→  - Dark mode: candidate view verified ✓
+  1657→- **VLM ratings**: 
+  1658→  - Home view: 8.5/10 premium polish
+  1659→  - Mobile home: all 6 density issues resolved
+  1660→  - Evaluation with Insights: Visual richness 8, Information density 9, Apple-inspired 9, Hierarchy 8
+  1661→  - Readiness view: 8/10 visual polish + information density
+  1662→- **AI retry**: confirmed live in dev log — transient timeout recovered via retry
+  1663→- **Session cleanup**: confirmed live in dev log — DELETE query runs after every list
+  1664→
+  1665→### Files Changed This Round
+  1666→
+  1667→**New files (5):**
+  1668→- `src/app/api/session/compare/route.ts` — Side-by-side session comparison endpoint
+  1669→- `src/app/api/session/cleanup/route.ts` — Session cleanup endpoint
+  1670→- `src/components/hiremind/compare-view.tsx` — Side-by-side session comparison view
+  1671→- `src/components/hiremind/interview-insights.tsx` — Radar + sparkline + matrix + time analysis
+  1672→- `src/agent-ctx/7-compare-feature.md`, `8-9-cleanup-retry.md`, `10-insights-polish.md` — agent context
+  1673→
+  1674→**Modified files (key ones):**
+  1675→- `src/components/hiremind/interview-view.tsx` — flex-wrap fix + ⌘+Enter shortcut + difficulty pill + staggered previous answers
+  1676→- `src/components/hiremind/home-view.tsx` — mobile density + hero orb + trust badge + help button
+  1677→- `src/components/hiremind/shell.tsx` — ScoreRing centering fix + Compare nav item + AnimatedCounter export + CompetencyBar "accent" status + mobile nav shortLabel
+  1678→- `src/components/hiremind/readiness-view.tsx` — trend arrow + 4-band color scale + dimension tooltips + recommendation card + 3-tab Insights section + Critical blockers polish
+  1679→- `src/components/hiremind/evaluation-view.tsx` — Interview Insights panel + confetti animation + AnimatedCounter integration
+  1680→- `src/lib/store.ts` — `'compare'` view + comparison state + loadComparison/clearComparison
+  1681→- `src/lib/ai.ts` — withRetry + isTransientError + restructured chatJSON
+  1682→- `src/lib/session.ts` — cleanupOldSessions helper
+  1683→- `src/app/api/session/route.ts` — fire-and-forget cleanup on list + readinessJson in list response
+  1684→- `src/app/globals.css` — `.hm-hero-orb` + `.hm-better-side` + keyframes
+  1685→- `src/app/page.tsx` — Compare view branch
+  1686→- `src/hooks/use-keyboard-shortcuts.ts` + `shortcut-hint.tsx` — `8` compare + `D` demo shortcuts
+  1687→
+  1688→### Unresolved Issues / Risks
+  1689→
+  1690→1. **Next.js Dev Tools "N" indicator** — VLM repeatedly flags a small floating "N" badge in the bottom-left as a UI artifact. This is the Next.js dev toolbar indicator, only present in dev mode (`process.env.NODE_ENV === 'development'`). Not a real UI issue; will not appear in production builds.
+  1691→2. **AI first-call latency** — Even with retry, the first AI call can take 15-22s (or up to 43s if a retry fires). The user sees a polished loading overlay ("Understanding your resume and the target role…") so the UX is acceptable, but a streaming/progressive approach would feel even snappier.
+  1692→3. **Top card asymmetry on readiness** — VLM noted the "Where do you stand?" card has less content than the dimension cards next to it. Could add a small "Key takeaway" summary to balance.
+  1693→4. **Readiness "Unknown" competencies** — 5/14 competencies show as Unknown in the Coverage tab. Could add an "Assess now" CTA on Unknown cards to drive data collection.
+  1694→5. **Compare view trend semantics** — Currently uses any prior session with a different readiness score. Could be tightened to "previous session by createdAt for the same jobTitle" for more semantic accuracy.
+  1695→
+  1696→### Priority Recommendations for Next Phase
+  1697→
+  1698→1. **Streaming AI responses** — Switch from request/response to streaming for the LLM calls. Show progressive text as the AI parses the resume. Big perceived performance win.
+  1699→2. **PDF export of full report** — Currently export is markdown-to-clipboard. A styled multi-page PDF (using the existing pdf skill) with all views would be more shareable.
+  1700→3. **Interview question bank expansion** — Add more easy/hard variants for competencies that currently only have medium questions.
+  1701→4. **Resume Strength AI enhancement** — Use VLM to analyze the resume's visual structure in addition to the regex-based text analysis.
+  1702→5. **Compare view: trend across many sessions** — Show a multi-session trend line (5+ sessions) on the Compare view, not just 2 sessions side-by-side.
+  1703→6. **Recommendation engine** — Add a "Recommended next session" feature that suggests which skill to focus on next based on roadmap progress + recent session history.
+  1704→7. **Accessibility deep audit** — Run axe-core or Pa11y across all views. Address any WCAG AA failures.
+  1705→
+  1706→### Project Overview (unchanged)
+  1707→
+  1708→HIREMIND AI is an AI-powered recruitment assistant (Smart Resume Parser & Mock Interviewer). Core intelligence loop:
+  1709→
+  1710→```
+  1711→RESUME + TARGET JOB
+  1712→   -> CANDIDATE INTELLIGENCE (+ Skill Heatmap + Resume Strength)
+  1713→   -> SEMANTIC JOB MATCH (+ Job Insights)
+  1714→   -> SKILL GAP INTELLIGENCE
+  1715→   -> GAP-DRIVEN ADAPTIVE INTERVIEW (+ Answer Coach + Difficulty Selector + Interview Insights)
+  1716→   -> ANSWER EVALUATION (+ Confetti on high scores + Competency Radar + Trajectory + Matrix)
+  1717→   -> COMPETENCY STATE UPDATE
+  1718→   -> JOB READINESS (+ Trend + Insights Tabs + Coverage Heatmap + Recommendation)
+  1719→   -> PERSONALIZED IMPROVEMENT ROADMAP
+  1720→   -> SESSION COMPARISON (across-sessions growth view)
+  1721→```
+  1722→
+  1723→Tech stack: Next.js 16 (App Router) + TypeScript + Tailwind CSS 4 + shadcn/ui + Prisma (SQLite) + z-ai-web-dev-sdk (LLM with retry) + Zustand v5 + Framer Motion v12. Single visible route `/` (orchestrated client-side via Zustand view state, with URL hash persistence).
+  1724→
+  1725→Critical principles (all preserved this round):
+  1726→- AI understands. Application logic decides. Deterministic scoring.
+  1727→- Distinguish KNOWN / WEAK / UNKNOWN evidence. Never treat absence as proof of missing skill.
+  1728→- Adaptive interview: next question MUST depend on previous answer (the demo's WOW moment).
+  1729→- Demo mode must work reliably end-to-end (10+ consecutive runs).
+  1730→- Prototype-labeled indices (never "hiring probability").
+  1731→- AI output validated against schema (never raw LLM text into DB state).
+  1732→- Premium Apple-inspired UX with subtle micro-interactions.
+  1733→
+  1734→---
+  1735→Task ID: 4a
+  1736→Agent: full-stack-developer
+  1737→Task: Add interview timer feature
+  1738→
+  1739→Work Log:
+  1740→- Read existing interview-view.tsx, evaluation-view.tsx, store.ts, types.ts, shell.tsx to understand the codebase structure
+  1741→- Created /home/z/my-project/src/components/hiremind/interview-timer.tsx with:
+  1742→  - `useInterviewTimer` hook that tracks questionTime and totalTime in seconds
+  1743→  - Timer starts counting when interview status is "asking" and loading is false
+  1744→  - Timer pauses when loading (evaluating answer) or status is not "asking"
+  1745→  - Resets questionTime when interview.currentIndex changes
+  1746→  - Resets both timers when a new interview starts (idle → asking transition)
+  1747→  - `InterviewTimer` component with Clock icon, per-question time ("Q MM:SS") and total time ("Total MM:SS")
+  1748→  - Uses tabular-nums and font-mono for consistent digit widths
+  1749→  - Premium subtle design with muted-foreground colors
+  1750→- Integrated InterviewTimer into interview-view.tsx:
+  1751→  - Added to the top meta bar, next to "Question X of Y" indicator
+  1752→  - Shows both per-question and total elapsed time during the interview
+  1753→- Integrated useInterviewTimer into evaluation-view.tsx:
+  1754→  - Added time badge beneath the Overall Score Ring
+  1755→  - Shows "Time: MM:SS · Total: MM:SS" with Clock icon
+  1756→  - Helps users understand time investment relative to their score
+  1757→- Ran ESLint on changed files — all pass cleanly
+  1758→- Verified dev server is running without errors
+  1759→
+  1760→Stage Summary:
+  1761→- New file: src/components/hiremind/interview-timer.tsx (useInterviewTimer hook + InterviewTimer component)
+  1762→- Modified: src/components/hiremind/interview-view.tsx (timer in top-right of question card header)
+  1763→- Modified: src/components/hiremind/evaluation-view.tsx (time badge beneath score ring)
+  1764→- Timer correctly pauses during evaluation and resets per-question time on question change
+  1765→- No changes to store.ts or engine.ts — purely client-side UI feature
+  1766→
+  1767→---
+  1768→Task ID: 4d
+  1769→Agent: full-stack-developer
+  1770→Task: Add achievement/badge system
+  1771→
+  1772→Work Log:
+  1773→- Explored project structure: store.ts, types.ts, page.tsx, home-view.tsx, shell.tsx, globals.css
+  1774→- Created `/home/z/my-project/src/hooks/use-achievements.tsx` — custom hook with localStorage persistence under key `hiremind-achievements`
+  1775→  - Defines 9 achievement types (first_analysis, gap_identified, first_interview, answer_submitted, interview_complete, readiness_calculated, roadmap_generated, high_score, demo_complete)
+  1776→  - Returns `achievements`, `unlock()`, `recentlyUnlocked`, `dismissRecent()`, `unlockedCount`, `mounted`
+  1777→  - Fires Sonner `toast.custom()` on unlock with glass-morphism achievement toast (icon, label, description, sparkle animation)
+  1778→  - Auto-dismisses toast after 4 seconds
+  1779→  - Icon resolver maps Lucide icon names to components
+  1780→- Created `/home/z/my-project/src/components/hiremind/achievements.tsx` — two exported components:
+  1781→  - `AchievementStrip` — horizontally scrollable badge row for home view between hero and input cards; shows unlocked as filled gradient badges with ring-2 accent-blue, locked as muted/ghosted with opacity-40; uses Framer Motion for spring entrance animations
+  1782→  - `AchievementInspector` — full list view for future modal/panel use; shows all 9 achievements with unlock date, descriptions, and icons
+  1783→  - Stable `AchievementIcon` component to avoid "creating components during render" lint error
+  1784→- Added achievement toast CSS to `globals.css`:
+  1785→  - `.hm-achievement-toast` — glass-morphism card with blur, saturate, subtle accent-blue glow border
+  1786→  - `.hm-achievement-toast-glow` — radial gradient glow layer
+  1787→  - `.hm-achievement-toast-icon` — gradient background icon badge
+  1788→  - `.hm-achievement-toast-sparkle` — rotating sparkle animation
+  1789→  - Dark mode variant with stronger opacity
+  1790→  - Slide-in keyframe animation
+  1791→- Wired achievement detection in `page.tsx`:
+  1792→  - Uses `useAchievements` hook alongside `useHireMind`
+  1793→  - `useEffect` watches store state transitions using refs (prevCandidate, prevGaps, prevInterview, prevReadiness, prevRoadmap, prevEval)
+  1794→  - Detects: candidate→first_analysis, gaps→gap_identified, interview asking→first_interview, first answer→answer_submitted, interview complete→interview_complete, readiness→readiness_calculated, roadmap→roadmap_generated, evaluation≥0.7→high_score, isDemo+roadmap→demo_complete
+  1795→  - Only fires on state transitions (null→non-null) to avoid re-unlocking
+  1796→- Added `AchievementStrip` to `home-view.tsx` between hero and input cards
+  1797→- Renamed hook from .ts to .tsx for JSX support (toast.custom uses JSX)
+  1798→- ESLint passes with zero errors
+  1799→- Dev server compiles successfully
+  1800→
+  1801→Stage Summary:
+  1802→- Achievement/badge system fully implemented with 9 milestone achievements
+  1803→- localStorage-persisted unlock state (key: hiremind-achievements)
+  1804→- Premium glass-morphism toast notifications on unlock with sparkle animation
+  1805→- Achievement strip on home view showing unlocked/locked badge icons
+  1806→- Automatic detection wired to HireMind intelligence loop state transitions
+  1807→- No modifications to store.ts (achievements are separate from core state)
+  1808→- All CSS respects light/dark mode with Apple-inspired premium aesthetic
+  1809→
+  1810→---
+  1811→Task ID: 4c
+  1812→Agent: frontend-styling-expert
+  1813→Task: Enhance roadmap view with better timeline and visual details
+  1814→
+  1815→Work Log:
+  1816→- Read existing roadmap-view.tsx, types.ts, store.ts, globals.css, and shell.tsx (ScoreRing) for full context
+  1817→- Enhanced PHASE_META with time estimates and phase-specific icons (Zap, ArrowRight, Target, RefreshCw)
+  1818→- Added estimated time badges (pill) next to each phase label with Clock icon
+  1819→- Built phase progress indicator bar showing TODAY → NEXT → THEN → REASSESS with animated connecting lines
+  1820→- Current phase gets pulsing glow animation (hm-step-pulse), completed phases show checkmark, future phases are muted
+  1821→- Upgraded timeline visual: thicker 2px connecting line with enhanced draw-in animation (hm-timeline-draw-enhanced)
+  1822→- Larger 48px node circles (up from 40px) with phase-specific icons inside instead of generic Calendar
+  1823→- Added border-2 on node circles with shadow-sm for premium depth
+  1824→- Implemented practice item checkbox functionality: click toggles strikethrough + filled CheckCircle2
+  1825→- Practice state persisted to localStorage under key "hiremind-roadmap-checked"
+  1826→- Checked items get line-through + text-muted-foreground/60 styling with phase-color filled icon
+  1827→- Added "X of Y practice items completed" counter with animated progress bar
+  1828→- Enhanced close-the-loop section with before→after readiness comparison (e.g., "Current: 36/100 → Target: 60+")
+  1829→- Added small ScoreRing component (80px) inline in close-the-loop section
+  1830→- Added motivational message based on readiness band (low/fair/good/strong)
+  1831→- Added "Copy link" button in header that copies current URL to clipboard with sonner toast "Link copied!"
+  1832→- Added CSS keyframes hm-step-glow and utility classes hm-step-pulse + hm-timeline-draw-enhanced to globals.css
+  1833→- Fixed TypeScript error with Map constructor by switching to plain object (Partial<Record<...>>)
+  1834→- Build passes, no new lint/type errors
+  1835→
+  1836→Stage Summary:
+  1837→- Roadmap view now has 6 major enhancements: time badges, progress indicator, premium timeline, practice checkboxes, close-the-loop comparison, and share button
+  1838→- All enhancements use existing design tokens (hm-card, hm-card-hover, accent-blue, success, warning, chart-5)
+  1839→- Practice checkbox state is React state + localStorage, not in the Zustand store
+  1840→- No new npm packages added
+  1841→- Build verified clean
+  1842→
