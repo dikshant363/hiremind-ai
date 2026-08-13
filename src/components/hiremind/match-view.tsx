@@ -41,22 +41,22 @@ export function MatchView() {
       : "critical";
 
   return (
-    <div className="mx-auto max-w-5xl px-5 sm:px-8 py-10 sm:py-14">
+    <div className="mx-auto max-w-5xl px-4 sm:px-8 py-8 sm:py-14">
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Job Match</div>
-        <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">How well do you align?</h1>
-        <p className="mt-2 text-[14px] text-muted-foreground max-w-xl">
+        <h1 className="text-2xl sm:text-4xl font-semibold tracking-tight">How well do you align?</h1>
+        <p className="mt-2 text-sm text-muted-foreground max-w-xl">
           This is a Prototype Job Match Index — a transparent aggregate of your evidence against the role's required and preferred competencies.
         </p>
       </motion.div>
 
-      <div className="mt-8 grid gap-4 lg:grid-cols-5">
+      <div className="mt-6 sm:mt-8 grid gap-4 lg:grid-cols-5">
         {/* Score */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="hm-card p-6 lg:col-span-2 flex flex-col items-center justify-center text-center relative"
+          className="hm-card p-4 sm:p-6 lg:col-span-2 flex flex-col items-center justify-center text-center relative"
         >
           <motion.div
             initial={{ scale: 0.9 }}
@@ -81,7 +81,7 @@ export function MatchView() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="hm-card p-6 lg:col-span-3"
+          className="hm-card p-4 sm:p-6 lg:col-span-3"
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[13px] font-semibold">Why this score</h3>
@@ -120,13 +120,13 @@ export function MatchView() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.15 }}
-        className="hm-card p-6 mt-4"
+        className="hm-card p-4 sm:p-6 mt-4"
       >
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-[13px] font-semibold">Your profile vs. target role</h3>
           <span className="text-[11px] text-muted-foreground">{match.rows.length} competencies</span>
         </div>
-        <div className="grid gap-x-8 gap-y-4 md:grid-cols-2">
+        <div className="grid gap-x-4 sm:gap-x-8 gap-y-3 sm:gap-y-4 md:grid-cols-2">
           {match.rows.map((row) => {
             const score =
               row.candidateLevel === "strong"
@@ -142,7 +142,7 @@ export function MatchView() {
               <div key={row.competency} className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-[13px] font-medium">{row.competency}</span>
+                    <span className="text-sm font-medium line-clamp-1">{row.competency}</span>
                     {row.required && (
                       <span className="rounded bg-secondary text-secondary-foreground px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider">
                         Required

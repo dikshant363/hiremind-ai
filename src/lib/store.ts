@@ -80,6 +80,7 @@ interface StoreState {
   startInterview: () => Promise<void>;
   submitAnswer: (questionId: string, answer: string, opts?: { useDemoAnswer?: boolean }) => Promise<void>;
   computeReadiness: () => Promise<void>;
+  hydrateSession: (sessionId: string, view?: View) => Promise<void>;
   reset: () => void;
 }
 
@@ -90,9 +91,37 @@ const LOADING_STEPS: Record<string, string> = {
   readiness: "Calculating your job readiness…",
 };
 
+const VALID_VIEWS: View[] = ["home", "candidate", "match", "gaps", "interview", "evaluation", "readiness", "roadmap"];
+
+export function parseHash(): { view: View; sessionId: string | null } {
+  if (typeof window === "undefined") return { view: "home", sessionId: null };
+  const hash = window.location.hash.replace(/^#/, "");
+  if (!hash) return { view: "home", sessionId: null };
+  const params = new URLSearchParams(hash);
+  const v = params.get("view");
+  const view: View = v && VALID_VIEWS.includes(v as View) ? (v as View) : "home";
+  const sessionId = params.get("session");
+  return { view, sessionId };
+}
+
+export function syncHash(view: View, sessionId: string | null) {
+  if (typeof window === "undefined") return;
+  const params = new URLSearchParams();
+  if (view !== "home") params.set("view", view);
+  if (sessionId) params.set("session", sessionId);
+  const str = params.toString();
+  const newHash = str ? `#${str}` : "";
+  if (window.location.hash !== newHash) {
+    window.history.replaceState(null, "", newHash || window.location.pathname);
+  }
+}
+
 export const useHireMind = create<StoreState>((set, get) => ({
   view: "home",
-  setView: (v) => set({ view: v }),
+  setView: (v) => {
+    set({ view: v });
+    syncHash(v, get().sessionId);
+  },
 
   presentationMode: false,
   togglePresentationMode: () => set((s) => ({ presentationMode: !s.presentationMode })),
@@ -151,6 +180,7 @@ export const useHireMind = create<StoreState>((set, get) => ({
         meta: { resumeFallback: data.meta?.resumeFallback, jobFallback: data.meta?.jobFallback },
         view: "candidate",
       });
+      syncHash("candidate", data.id);
     } catch (err) {
       set({ error: (err as Error).message });
     } finally {
@@ -174,6 +204,7 @@ export const useHireMind = create<StoreState>((set, get) => ({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Couldn't start interview.");
       set({ interview: data.interview, view: "interview" });
+      syncHash("interview", get().sessionId);
     } catch (err) {
       set({ error: (err as Error).message });
     } finally {
@@ -202,6 +233,7 @@ export const useHireMind = create<StoreState>((set, get) => ({
         meta: { ...get().meta, evalFallback: data.meta?.evalFallback },
         view: "evaluation",
       });
+      syncHash("evaluation", get().sessionId);
     } catch (err) {
       set({ error: (err as Error).message });
     } finally {
@@ -225,6 +257,7 @@ export const useHireMind = create<StoreState>((set, get) => ({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Couldn't compute readiness.");
       set({ readiness: data.readiness, roadmap: data.roadmap, view: "readiness" });
+      syncHash("readiness", get().sessionId);
     } catch (err) {
       set({ error: (err as Error).message });
     } finally {
@@ -232,7 +265,38 @@ export const useHireMind = create<StoreState>((set, get) => ({
     }
   },
 
-  reset: () =>
+  hydrateSession: async (sid, targetView) => {
+    set({ loading: true, loadingStep: "Restoring your session…", error: null });
+    try {
+      const res = await fetch(`/api/session?id=${encodeURIComponent(sid)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Session not found.");
+      set({
+        sessionId: data.id,
+        isDemo: data.isDemo,
+        resumeText: data.resume?.lines ? "" : "", // Don't need raw text after hydration
+        jobTitle: data.job?.title || "",
+        jobText: "",
+        candidate: data.candidate,
+        job: data.jobProfile,
+        match: data.match,
+        gaps: data.gaps,
+        interview: data.interview,
+        readiness: data.readiness,
+        roadmap: data.roadmap,
+        lastEvaluation: null,
+        view: targetView || (data.readiness ? "readiness" : data.interview ? "interview" : data.match ? "match" : "candidate"),
+      });
+      syncHash(get().view, data.id);
+    } catch (err) {
+      set({ error: (err as Error).message, view: "home" });
+      syncHash("home", null);
+    } finally {
+      set({ loading: false, loadingStep: "" });
+    }
+  },
+
+  reset: () => {
     set({
       view: "home",
       presentationMode: false,
@@ -253,5 +317,7 @@ export const useHireMind = create<StoreState>((set, get) => ({
       loadingStep: "",
       error: null,
       meta: {},
-    }),
+    });
+    syncHash("home", null);
+  },
 }));

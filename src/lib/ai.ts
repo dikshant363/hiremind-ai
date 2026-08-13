@@ -306,18 +306,21 @@ export async function generateQuestion(
   category: string,
   gapReason: string,
   previousAnswers: { question: string; answer: string; evaluation: string }[],
-  fallback: InterviewQuestion
-): Promise<{ question: InterviewQuestion; usedFallback: boolean }> {
+  fallback: InterviewQuestion,
+  count: number = 1
+): Promise<{ questions: InterviewQuestion[]; usedFallback: boolean }> {
   const system = `You are HireMind AI's interview question generator for a gap-driven adaptive interview.
 
-Generate ONE focused technical interview question that:
-- Targets the specified competency
-- Is appropriate for a ${category} role context
-- Avoids duplication with previous questions
-- Probes depth, not trivia
-- Is 1-2 sentences max
+Generate ${count} diverse focused technical interview question${count > 1 ? "s" : ""} that:
+- Target the specified competency
+- Are appropriate for a ${category} role context
+- Avoid duplication with previous questions
+- Probe depth, not trivia
+- Are 1-2 sentences max each
+${count > 1 ? `- Cover different difficulty levels (easy, medium, hard) and angles (conceptual, practical, tradeoff-based)
+- Each should test a different facet of the competency` : ""}
 
-Respond with ONLY JSON: { "text": string, "difficulty": "easy"|"medium"|"hard", "reason": string }`;
+Respond with ONLY JSON: { "questions": [{ "text": string, "difficulty": "easy"|"medium"|"hard", "reason": string }] }`;
 
   const historyStr = previousAnswers.length
     ? `\n\nPrevious Q&A (avoid duplication, build on weaknesses):\n${previousAnswers.map((p, i) => `${i + 1}. Q: ${p.question}\nA: ${p.answer}\nEval: ${p.evaluation}`).join("\n")}`
@@ -325,24 +328,44 @@ Respond with ONLY JSON: { "text": string, "difficulty": "easy"|"medium"|"hard", 
 
   const user = `Competency to test: ${competency}\nWhy we're asking: ${gapReason}${historyStr}`;
 
-  const { data, usedFallback } = await chatJSON<{ text: string; difficulty: "easy" | "medium" | "hard"; reason: string }>(
+  const fallbackArr = [{
+    text: fallback.text,
+    difficulty: fallback.difficulty,
+    reason: fallback.reason,
+  }];
+
+  const { data, usedFallback } = await chatJSON<{ questions: { text: string; difficulty: "easy" | "medium" | "hard"; reason: string }[] }>(
     system,
     user,
-    { text: fallback.text, difficulty: fallback.difficulty, reason: fallback.reason }
+    { questions: fallbackArr }
   );
 
-  return {
-    question: {
+  const rawQuestions = Array.isArray(data?.questions) ? data.questions : fallbackArr;
+
+  const questions: InterviewQuestion[] = rawQuestions.slice(0, count).map((q, i) => ({
+    id: `${fallback.id}-${i}`,
+    competency,
+    category: category as InterviewQuestion["category"],
+    text: q.text?.trim() || fallback.text,
+    difficulty: q.difficulty || fallback.difficulty,
+    mode: "technical" as const,
+    reason: q.reason?.trim() || fallback.reason,
+  }));
+
+  // Ensure at least one question
+  if (questions.length === 0) {
+    questions.push({
       id: fallback.id,
       competency,
       category: category as InterviewQuestion["category"],
-      text: data.text?.trim() || fallback.text,
-      difficulty: data.difficulty || fallback.difficulty,
+      text: fallback.text,
+      difficulty: fallback.difficulty,
       mode: "technical",
-      reason: data.reason?.trim() || fallback.reason,
-    },
-    usedFallback,
-  };
+      reason: fallback.reason,
+    });
+  }
+
+  return { questions, usedFallback };
 }
 
 // ---------- Answer Evaluation ----------

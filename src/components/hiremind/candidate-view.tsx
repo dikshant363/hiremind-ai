@@ -17,11 +17,11 @@ export function CandidateView() {
   const weakSkills = candidate.evidence.filter((e) => e.level === "weak");
 
   return (
-    <div className="mx-auto max-w-5xl px-5 sm:px-8 py-10 sm:py-14">
+    <div className="mx-auto max-w-5xl px-4 sm:px-8 py-8 sm:py-14">
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Candidate Intelligence</div>
-        <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">Here's what we found.</h1>
-        <p className="mt-2 text-[14px] text-muted-foreground max-w-xl">
+        <h1 className="text-2xl sm:text-4xl font-semibold tracking-tight">Here's what we found.</h1>
+        <p className="mt-2 text-sm text-muted-foreground max-w-xl">
           We extracted only what's actually in your resume — no invented skills, no inflated evidence.
         </p>
         {isDemo && (
@@ -31,24 +31,24 @@ export function CandidateView() {
         )}
       </motion.div>
 
-      <div className="mt-8 grid gap-4 lg:grid-cols-3">
+      <div className="mt-6 sm:mt-8 grid gap-4 lg:grid-cols-3">
         {/* Profile summary */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.05 }}
-          className="hm-card p-6 lg:col-span-1"
+          className="hm-card p-4 sm:p-6 lg:col-span-1"
         >
           <div className="flex items-center gap-2 mb-4">
             <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-secondary-foreground text-[12px] font-semibold">
               {candidate.name?.[0] ?? "C"}
             </span>
             <div>
-              <div className="text-[14px] font-semibold">{candidate.name ?? "Candidate"}</div>
+              <div className="text-sm font-semibold">{candidate.name ?? "Candidate"}</div>
               <div className="text-[11px] text-muted-foreground">{job.title}</div>
             </div>
           </div>
-          <p className="text-[13px] text-muted-foreground leading-relaxed">{candidate.summary}</p>
+          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">{candidate.summary}</p>
 
           <div className="mt-5 space-y-3 text-[12px]">
             <Stat label="Skills detected" value={candidate.skills.length} />
@@ -64,10 +64,10 @@ export function CandidateView() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="hm-card p-6 lg:col-span-2"
+          className="hm-card p-4 sm:p-6 lg:col-span-2"
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-[13px] font-semibold">Demonstrated skills</h3>
+            <h3 className="text-sm font-semibold">Demonstrated skills</h3>
             <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
               <Legend color="var(--success)" label="Strong" />
               <Legend color="var(--warning)" label="Moderate" />
@@ -97,11 +97,11 @@ export function CandidateView() {
                   <div key={i} className="flex gap-3">
                     <Briefcase className="h-3.5 w-3.5 text-muted-foreground mt-1 shrink-0" />
                     <div>
-                      <div className="text-[13px] font-medium">
+                      <div className="text-sm font-medium line-clamp-1">
                         {x.role}
                         {x.company && <span className="text-muted-foreground"> · {x.company}</span>}
                       </div>
-                      <div className="text-[12px] text-muted-foreground leading-relaxed">{x.description}</div>
+                      <div className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{x.description}</div>
                     </div>
                   </div>
                 ))}
@@ -118,8 +118,8 @@ export function CandidateView() {
                   <div key={i} className="flex gap-3">
                     <FolderGit2 className="h-3.5 w-3.5 text-muted-foreground mt-1 shrink-0" />
                     <div>
-                      <div className="text-[13px] font-medium">{p.name}</div>
-                      <div className="text-[12px] text-muted-foreground leading-relaxed">{p.description}</div>
+                      <div className="text-sm font-medium line-clamp-1">{p.name}</div>
+                      <div className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{p.description}</div>
                     </div>
                   </div>
                 ))}
@@ -200,7 +200,7 @@ function SkillRow({ ev }: { ev: SkillEvidence }) {
         className="w-full flex items-center justify-between px-3 py-2 text-left"
       >
         <div className="flex items-center gap-2">
-          <span className="text-[13px] font-medium">{ev.competency}</span>
+          <span className="text-sm font-medium line-clamp-1">{ev.competency}</span>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-[11px] text-muted-foreground capitalize">{ev.level}</span>
@@ -216,7 +216,7 @@ function SkillRow({ ev }: { ev: SkillEvidence }) {
         <div className="px-3 pb-3 pt-1">
           <div className="flex gap-2 text-[12px] text-muted-foreground leading-relaxed bg-secondary/40 rounded-md p-2.5">
             <Quote className="h-3 w-3 mt-0.5 shrink-0 opacity-60" />
-            <span>{ev.evidence}</span>
+            <span className="line-clamp-2">{ev.evidence}</span>
           </div>
         </div>
       </motion.div>

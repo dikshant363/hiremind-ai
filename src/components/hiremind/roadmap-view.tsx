@@ -19,11 +19,11 @@ export function RoadmapView() {
   if (!roadmap) return null;
 
   return (
-    <div className="mx-auto max-w-4xl px-5 sm:px-8 py-10 sm:py-14">
+    <div className="mx-auto max-w-4xl px-4 sm:px-8 py-8 sm:py-14">
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Improvement Roadmap</div>
-        <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">Your improvement path.</h1>
-        <p className="mt-2 text-[14px] text-muted-foreground max-w-xl">
+        <h1 className="text-2xl sm:text-4xl font-semibold tracking-tight">Your improvement path.</h1>
+        <p className="mt-2 text-sm text-muted-foreground max-w-xl">
           Every step is generated directly from your detected gaps and interview weaknesses. No generic filler.
         </p>
       </motion.div>
@@ -32,7 +32,7 @@ export function RoadmapView() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.05 }}
-        className="hm-card mt-8 p-6"
+        className="hm-card mt-6 sm:mt-8 p-4 sm:p-6"
       >
         <div className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">Your current gap</div>
         <div className="text-2xl font-semibold tracking-tight">{roadmap.currentGap}</div>
@@ -40,7 +40,7 @@ export function RoadmapView() {
 
       {/* Timeline */}
       <div className="mt-6 relative">
-        <div className="absolute left-[19px] top-2 bottom-2 w-px bg-border hm-timeline-draw" />
+        <div className="absolute left-[19px] top-2 bottom-2 w-px bg-border hm-timeline-draw hidden sm:block" />
         <div className="space-y-4">
           {roadmap.steps.map((step, i) => {
             const meta = PHASE_META[step.phase];
@@ -58,7 +58,7 @@ export function RoadmapView() {
                 >
                   <Calendar className="h-4 w-4" style={{ color: meta.tone }} />
                 </span>
-                <div className="hm-card p-5">
+                <div className="hm-card p-4 sm:p-5">
                   <div className="flex items-center justify-between">
                     <span
                       className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider"
@@ -68,8 +68,8 @@ export function RoadmapView() {
                     </span>
                     <span className="text-[11px] text-muted-foreground">{step.competency}</span>
                   </div>
-                  <div className="mt-2 text-[14px] font-medium text-foreground">{step.focus}</div>
-                  <div className="mt-2 text-[12px] text-muted-foreground leading-relaxed">{step.reason}</div>
+                  <div className="mt-2 text-sm font-medium text-foreground">{step.focus}</div>
+                  <div className="mt-2 text-xs text-muted-foreground leading-relaxed">{step.reason}</div>
                   {step.practice.length > 0 && (
                     <ul className="mt-3 space-y-1.5">
                       {step.practice.map((p, j) => (
@@ -92,13 +92,13 @@ export function RoadmapView() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.4 }}
-        className="hm-card mt-8 p-6 sm:p-8 text-center"
+        className="hm-card mt-6 sm:mt-8 p-5 sm:p-8 text-center"
       >
         <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-accent-blue/10 text-accent-blue-foreground mx-auto">
           <Repeat className="h-5 w-5" />
         </span>
-        <h3 className="mt-3 text-[15px] font-semibold">Close the loop.</h3>
-        <p className="mt-1 text-[13px] text-muted-foreground max-w-md mx-auto leading-relaxed">
+        <h3 className="mt-3 text-sm font-semibold">Close the loop.</h3>
+        <p className="mt-1 text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
           Practice, then re-run the adaptive interview. Your roadmap should be re-driven by new evidence — not a static to-do list.
         </p>
         <div className="mt-5 flex flex-col sm:flex-row gap-3 justify-center">

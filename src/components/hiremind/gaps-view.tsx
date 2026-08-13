@@ -15,11 +15,11 @@ export function GapsView() {
   const others = gaps.slice(1, 6);
 
   return (
-    <div className="mx-auto max-w-5xl px-5 sm:px-8 py-10 sm:py-14">
+    <div className="mx-auto max-w-5xl px-4 sm:px-8 py-8 sm:py-14">
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Skill Gaps</div>
-        <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">Your biggest opportunity.</h1>
-        <p className="mt-2 text-[14px] text-muted-foreground max-w-xl">
+        <h1 className="text-2xl sm:text-4xl font-semibold tracking-tight">Your biggest opportunity.</h1>
+        <p className="mt-2 text-sm text-muted-foreground max-w-xl">
           We prioritized every gap by job importance, candidate evidence and semantic alignment. The first one is where your time will matter most.
         </p>
       </motion.div>
@@ -30,7 +30,7 @@ export function GapsView() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.05 }}
-          className="hm-gradient-border-critical mt-8 p-8 sm:p-10 relative overflow-hidden"
+          className="hm-gradient-border-critical mt-6 sm:mt-8 p-6 sm:p-10 relative overflow-hidden"
         >
           <div
             className="absolute -top-24 -right-24 h-64 w-64 rounded-full opacity-[0.07]"
@@ -42,8 +42,8 @@ export function GapsView() {
             </span>
             <PriorityPill priority={top.priority} />
           </div>
-          <h2 className="text-4xl sm:text-5xl font-semibold tracking-tight">{top.competency}</h2>
-          <p className="mt-3 text-[14px] text-muted-foreground max-w-xl leading-relaxed">{top.reason}</p>
+          <h2 className="text-3xl sm:text-5xl font-semibold tracking-tight">{top.competency}</h2>
+          <p className="mt-3 text-sm text-muted-foreground max-w-xl leading-relaxed">{top.reason}</p>
 
           <div className="mt-6 grid sm:grid-cols-3 gap-4 text-[12px]">
             <div className="rounded-lg bg-secondary/40 p-3">

@@ -10,23 +10,57 @@ import { ScoreRing } from "./shell";
 import { cn } from "@/lib/utils";
 
 export function InterviewView() {
-  const { interview, submitAnswer, loading, loadingStep, setView, isDemo } = useHireMind();
+  const { interview, startInterview, submitAnswer, loading, loadingStep, setView, isDemo } = useHireMind();
   const [answer, setAnswer] = React.useState("");
 
-  if (!interview) return null;
+  if (!interview) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 sm:px-8 py-10 sm:py-14 text-center">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+          <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-accent-blue/10 text-accent-blue-foreground">
+            <Sparkles className="h-7 w-7" />
+          </span>
+          <h1 className="mt-5 text-2xl sm:text-3xl font-semibold tracking-tight">Your adaptive interview awaits.</h1>
+          <p className="mt-3 text-sm text-muted-foreground max-w-md mx-auto">
+            The interview targets your highest-impact skill gap and adapts based on your answers.
+          </p>
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-7"
+          >
+            <Button size="lg" className="h-11 sm:h-12 px-6 sm:px-7 gap-2" onClick={() => startInterview()} disabled={loading}>
+              {loading ? (
+                <>
+                  <Sparkles className="h-4 w-4 hm-thinking" />
+                  {loadingStep || "Starting interview…"}
+                </>
+              ) : (
+                "Begin interview →"
+              )}
+            </Button>
+          </motion.div>
+          <p className="mt-4 text-xs text-muted-foreground">
+            Or go to <button className="text-accent-blue-foreground underline underline-offset-2" onClick={() => setView("gaps")}>Skill Gaps</button> to review your gaps first.
+          </p>
+        </motion.div>
+      </div>
+    );
+  }
 
   const current = interview.questions[interview.currentIndex];
   const isComplete = interview.status === "complete";
 
   if (isComplete) {
     return (
-      <div className="mx-auto max-w-3xl px-5 sm:px-8 py-14 text-center">
+      <div className="mx-auto max-w-3xl px-4 sm:px-8 py-10 sm:py-14 text-center">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}>
           <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-success/15 text-success-foreground">
             <CheckCircle2 className="h-7 w-7" />
           </span>
-          <h1 className="mt-5 text-3xl sm:text-4xl font-semibold tracking-tight">Interview complete.</h1>
-          <p className="mt-3 text-[14px] text-muted-foreground max-w-md mx-auto">
+          <h1 className="mt-5 text-2xl sm:text-4xl font-semibold tracking-tight">Interview complete.</h1>
+          <p className="mt-3 text-sm text-muted-foreground max-w-md mx-auto">
             We gathered fresh evidence across {interview.evaluations.length} question{interview.evaluations.length === 1 ? "" : "s"}. Let's see where you stand now.
           </p>
           <div className="mt-6 inline-flex items-center gap-2 rounded-lg bg-secondary/50 px-4 py-2 text-[12px] text-muted-foreground">
@@ -45,7 +79,7 @@ export function InterviewView() {
 
   if (!current) {
     return (
-      <div className="mx-auto max-w-3xl px-5 sm:px-8 py-14 text-center">
+      <div className="mx-auto max-w-3xl px-4 sm:px-8 py-10 sm:py-14 text-center">
         <p className="text-muted-foreground">No active question.</p>
         <Button className="mt-4" onClick={() => setView("gaps")}>Back to gaps</Button>
       </div>
@@ -67,7 +101,7 @@ export function InterviewView() {
 
   return (
     <div className="hm-ambient min-h-[80vh]">
-      <div className="mx-auto max-w-3xl px-5 sm:px-8 py-10 sm:py-14">
+      <div className="mx-auto max-w-3xl px-4 sm:px-8 py-8 sm:py-14">
         {/* Top meta */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <div className="flex items-center justify-between text-[11px] text-muted-foreground">
@@ -119,7 +153,7 @@ export function InterviewView() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -16 }}
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            className="hm-card mt-8 p-8 sm:p-10"
+            className="hm-card mt-6 sm:mt-8 p-6 sm:p-10"
           >
             <div className="text-[11px] font-semibold text-accent-blue-foreground uppercase tracking-wider">
               {current.competency} · {current.difficulty}
@@ -150,7 +184,7 @@ export function InterviewView() {
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
                 placeholder="Write your answer here. Take your time — depth matters more than length."
-                className="min-h-[160px] resize-none text-[14px] leading-relaxed bg-transparent border-border/60 hm-focus-ring transition-all duration-200"
+                className="min-h-[140px] sm:min-h-[160px] resize-none text-sm leading-relaxed bg-transparent border-border/60 hm-focus-ring transition-all duration-200"
                 disabled={loading}
               />
               <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
@@ -160,7 +194,7 @@ export function InterviewView() {
             </div>
 
             <div className="mt-5 flex flex-col sm:flex-row gap-3">
-              <Button onClick={onSubmit} size="lg" disabled={loading || answer.trim().length < 5} className="h-12 px-6 gap-2">
+              <Button onClick={onSubmit} size="lg" disabled={loading || answer.trim().length < 5} className="h-11 sm:h-12 px-5 sm:px-6 gap-2">
                 {loading ? (
                   <>
                     <Sparkles className="h-4 w-4 hm-thinking" />
@@ -173,7 +207,7 @@ export function InterviewView() {
                 )}
               </Button>
               {isDemo && (
-                <Button onClick={onDemoAnswer} variant="outline" size="lg" disabled={loading} className="h-12 px-5 gap-2">
+                <Button onClick={onDemoAnswer} variant="outline" size="lg" disabled={loading} className="h-11 sm:h-12 px-5 gap-2">
                   <Wand2 className="h-4 w-4" />
                   Use scripted demo answer
                 </Button>
@@ -186,7 +220,7 @@ export function InterviewView() {
                   submitAnswer(current.id, "I'd like to skip this one.");
                   setAnswer("");
                 }}
-                className="h-12 px-5 text-muted-foreground gap-2"
+                className="h-11 sm:h-12 px-5 text-muted-foreground gap-2"
               >
                 <SkipForward className="h-4 w-4" /> Skip
               </Button>

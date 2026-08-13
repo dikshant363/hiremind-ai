@@ -100,7 +100,7 @@ function EvidenceRow({
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: baseDelay, ease: [0.22, 1, 0.36, 1] }}
-      className="flex items-center justify-center gap-0 py-3 border-b border-border/40 last:border-0"
+      className="flex items-center justify-center gap-0 py-3 border-b border-border/40 last:border-0 overflow-x-auto no-scrollbar"
     >
       <EvidenceNode
         label={competency}

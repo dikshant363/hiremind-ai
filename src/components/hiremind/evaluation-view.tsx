@@ -17,11 +17,11 @@ export function EvaluationView() {
   const nextQ = interview.questions[interview.currentIndex];
 
   return (
-    <div className="mx-auto max-w-3xl px-5 sm:px-8 py-10 sm:py-14">
+    <div className="mx-auto max-w-3xl px-4 sm:px-8 py-8 sm:py-14">
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Answer Evaluation</div>
-        <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">Here's what we learned.</h1>
-        <p className="mt-2 text-[14px] text-muted-foreground max-w-xl">
+        <h1 className="text-2xl sm:text-4xl font-semibold tracking-tight">Here's what we learned.</h1>
+        <p className="mt-2 text-sm text-muted-foreground max-w-xl">
           We evaluated your answer along four dimensions. The overall score is computed by application logic — never raw model output.
         </p>
       </motion.div>
@@ -31,7 +31,7 @@ export function EvaluationView() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.05 }}
-        className="hm-card mt-8 p-6 sm:p-8"
+        className="hm-card mt-6 sm:mt-8 p-5 sm:p-8"
       >
         <div className="grid sm:grid-cols-2 gap-x-8 gap-y-4">
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}>
@@ -55,12 +55,12 @@ export function EvaluationView() {
       </motion.div>
 
       {/* Strengths & weaknesses */}
-      <div className="mt-4 grid sm:grid-cols-2 gap-4">
+      <div className="mt-4 grid sm:grid-cols-2 gap-3 sm:gap-4">
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="hm-card p-6"
+          className="hm-card p-4 sm:p-6"
         >
           <div className="flex items-center gap-2 mb-3">
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-success/15 text-success-foreground">
@@ -86,7 +86,7 @@ export function EvaluationView() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.15 }}
-          className="hm-card p-6"
+          className="hm-card p-4 sm:p-6"
         >
           <div className="flex items-center gap-2 mb-3">
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-warning/15 text-warning-foreground">
@@ -117,7 +117,7 @@ export function EvaluationView() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="hm-card mt-6 p-8 sm:p-10 relative overflow-hidden hm-radial-glow"
+            className="hm-card mt-5 sm:mt-6 p-6 sm:p-10 relative overflow-hidden hm-radial-glow"
           >
             <div
               className="absolute -top-32 -right-32 h-72 w-72 rounded-full opacity-[0.08]"

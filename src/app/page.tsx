@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useHireMind } from "@/lib/store";
+import { useHireMind, parseHash } from "@/lib/store";
 import { SiteHeader, SiteFooter } from "@/components/hiremind/shell";
 import { HomeView } from "@/components/hiremind/home-view";
 import { CandidateView } from "@/components/hiremind/candidate-view";
@@ -20,9 +20,20 @@ import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useTheme } from "next-themes";
 
 export default function Home() {
-  const { view, error, presentationMode } = useHireMind();
+  const { view, error, presentationMode, sessionId, hydrateSession } = useHireMind();
   const { showHints, setShowHints } = useKeyboardShortcuts();
   const { setTheme, theme } = useTheme();
+
+  // Hydrate from URL hash on initial mount
+  const hydratedRef = React.useRef(false);
+  useEffect(() => {
+    if (hydratedRef.current) return;
+    hydratedRef.current = true;
+    const { view: hashView, sessionId: hashSession } = parseHash();
+    if (hashSession && hashView !== "home") {
+      hydrateSession(hashSession, hashView);
+    }
+  }, [hydrateSession]);
 
   useEffect(() => {
     if (error) toast.error(error);

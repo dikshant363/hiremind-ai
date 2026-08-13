@@ -2,12 +2,14 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { FileText, Briefcase, Sparkles, ArrowRight, Wand2, ShieldCheck, GitBranch } from "lucide-react";
+import { FileText, Briefcase, Sparkles, ArrowRight, Wand2, ShieldCheck, GitBranch, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useHireMind } from "@/lib/store";
 import { DEMO_RESUME, DEMO_JOB, DEMO_JOB_TITLE } from "@/lib/demo";
+import { FileUpload } from "./file-upload";
+import { SessionHistory } from "./session-history";
 
 export function HomeView() {
   const { resumeText, jobTitle, jobText, setResumeText, setJobTitle, setJobText, analyze, loading, error } = useHireMind();
@@ -25,7 +27,7 @@ export function HomeView() {
 
   return (
     <div className="hm-ambient hm-particles">
-      <section className="mx-auto max-w-5xl px-5 sm:px-8 pt-16 sm:pt-24 pb-12">
+      <section className="mx-auto max-w-5xl px-4 sm:px-8 pt-12 sm:pt-24 pb-10 sm:pb-12">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -36,12 +38,12 @@ export function HomeView() {
             <Sparkles className="h-3 w-3" />
             <span>Evidence-based job readiness · AI-assisted assessment</span>
           </div>
-          <h1 className="text-4xl sm:text-6xl font-semibold tracking-tight text-balance leading-[1.05]">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-semibold tracking-tight text-balance leading-[1.05]">
             Know your job
             <br />
             <span className="hm-text-gradient">readiness.</span>
           </h1>
-          <p className="mt-5 mx-auto max-w-xl text-[15px] sm:text-base text-muted-foreground leading-relaxed text-pretty">
+          <p className="mt-5 mx-auto max-w-xl text-sm sm:text-base text-muted-foreground leading-relaxed text-pretty">
             Upload your resume and choose a target role. HireMind finds your strongest evidence, identifies your biggest gap, and tests it in an adaptive AI interview.
           </p>
         </motion.div>
@@ -50,24 +52,25 @@ export function HomeView() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-          className="mt-12 grid gap-4 md:grid-cols-2"
+          className="mt-10 sm:mt-12 grid gap-4 md:grid-cols-2"
         >
           {/* Resume input */}
-          <div className="hm-card p-5 sm:p-6 flex flex-col">
+          <div className="hm-card p-4 sm:p-6 flex flex-col">
             <div className="flex items-center gap-2 mb-3">
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
                 <FileText className="h-3.5 w-3.5" />
               </span>
               <div>
-                <h3 className="text-[13px] font-semibold">Your resume</h3>
-                <p className="text-[11px] text-muted-foreground">Paste as plain text</p>
+                <h3 className="text-sm font-semibold">Your resume</h3>
+                <p className="text-[11px] text-muted-foreground">Paste or upload a file</p>
               </div>
             </div>
+            <FileUpload onTextExtracted={setResumeText} className="mb-3" />
             <Textarea
               value={resumeText}
               onChange={(e) => setResumeText(e.target.value)}
-              placeholder="Paste your resume text here — name, experience, skills, projects…"
-              className="flex-1 min-h-[180px] resize-none text-[13px] leading-relaxed bg-transparent border-border/60 focus-visible:ring-1 focus-visible:ring-ring/40"
+              placeholder="Or paste your resume text here — name, experience, skills, projects…"
+              className="flex-1 min-h-[100px] sm:min-h-[120px] resize-none text-sm leading-relaxed bg-transparent border-border/60 focus-visible:ring-1 focus-visible:ring-ring/40"
             />
             <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
               <span>Never stored beyond this session</span>
@@ -76,13 +79,13 @@ export function HomeView() {
           </div>
 
           {/* Target role input */}
-          <div className="hm-card p-5 sm:p-6 flex flex-col">
+          <div className="hm-card p-4 sm:p-6 flex flex-col">
             <div className="flex items-center gap-2 mb-3">
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
                 <Briefcase className="h-3.5 w-3.5" />
               </span>
               <div>
-                <h3 className="text-[13px] font-semibold">Target role</h3>
+                <h3 className="text-sm font-semibold">Target role</h3>
                 <p className="text-[11px] text-muted-foreground">The job you want</p>
               </div>
             </div>
@@ -90,13 +93,13 @@ export function HomeView() {
               value={jobTitle}
               onChange={(e) => setJobTitle(e.target.value)}
               placeholder="e.g. AI/ML Software Engineer"
-              className="text-[13px] bg-transparent border-border/60"
+              className="text-sm bg-transparent border-border/60"
             />
             <Textarea
               value={jobText}
               onChange={(e) => setJobText(e.target.value)}
               placeholder="Paste the job description — responsibilities, required skills, preferred qualifications…"
-              className="mt-3 flex-1 min-h-[140px] resize-none text-[13px] leading-relaxed bg-transparent border-border/60 focus-visible:ring-1 focus-visible:ring-ring/40"
+              className="mt-3 flex-1 min-h-[120px] sm:min-h-[140px] resize-none text-sm leading-relaxed bg-transparent border-border/60 focus-visible:ring-1 focus-visible:ring-ring/40"
             />
             <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
               <span>Required + preferred skills matter</span>
@@ -125,7 +128,7 @@ export function HomeView() {
             onClick={onAnalyze}
             disabled={!canAnalyze || loading}
             size="lg"
-            className="h-12 px-7 rounded-xl text-[14px] font-medium gap-2 shadow-sm"
+            className="h-11 sm:h-12 px-6 sm:px-7 rounded-xl text-sm font-medium gap-2 shadow-sm"
           >
             {loading ? "Analyzing…" : "Analyze my readiness"}
             {!loading && <ArrowRight className="h-4 w-4" />}
@@ -137,7 +140,7 @@ export function HomeView() {
               disabled={loading}
               variant="outline"
               size="lg"
-              className="h-12 px-6 rounded-[calc(var(--radius)+5px)] text-[14px] font-medium gap-2 border-0 bg-card hover:bg-secondary/80"
+              className="h-11 sm:h-12 px-5 sm:px-6 rounded-[calc(var(--radius)+5px)] text-sm font-medium gap-2 border-0 bg-card hover:bg-secondary/80"
             >
               <Wand2 className="h-4 w-4" />
               Load demo candidate
@@ -148,11 +151,13 @@ export function HomeView() {
         <p className="mt-4 text-center text-[11px] text-muted-foreground">
           The demo runs end-to-end: match · biggest gap · adaptive interview · readiness · roadmap.
         </p>
+
+        <SessionHistory />
       </section>
 
       {/* Trust strip */}
       <section className="border-t border-border/60 bg-card/30 relative hm-particles-inner">
-        <div className="mx-auto max-w-5xl px-5 sm:px-8 py-10 grid sm:grid-cols-3 gap-6">
+        <div className="mx-auto max-w-5xl px-4 sm:px-8 py-8 sm:py-10 grid sm:grid-cols-3 gap-5 sm:gap-6">
           {[
             {
               icon: <GitBranch className="h-4 w-4" />,
@@ -169,11 +174,14 @@ export function HomeView() {
               title: "Explainable scores",
               body: "Every Prototype Job Match Index and Readiness Index is broken down into the factors that actually produced it.",
             },
-          ].map((f) => (
+          ].map((f, i) => (
             <motion.div
               key={f.title}
-              whileHover={{ scale: 1.03, y: -2 }}
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 + i * 0.12, ease: [0.22, 1, 0.36, 1] }}
+              whileHover={{ scale: 1.03, y: -2, transition: { type: "spring", stiffness: 400, damping: 25 } }}
+              whileTap={{ scale: 0.99 }}
               className="flex gap-3 cursor-default"
             >
               <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">

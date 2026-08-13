@@ -1,6 +1,6 @@
 /**
- * GET /api/session?id=...
- * Returns the full SessionPayload for a given session id.
+ * GET /api/session?id=...       → full SessionPayload
+ * GET /api/session?list=true    → recent sessions summary (limit 10)
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -10,7 +10,55 @@ import { loadSession } from "@/lib/session";
 export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
-  const id = req.nextUrl.searchParams.get("id");
+  const params = req.nextUrl.searchParams;
+  const id = params.get("id");
+  const list = params.get("list");
+
+  // List mode: return recent sessions
+  if (list === "true") {
+    const rows = await db.session.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      select: {
+        id: true,
+        isDemo: true,
+        status: true,
+        createdAt: true,
+        jobTitle: true,
+        candidateProfileJson: true,
+        matchJson: true,
+      },
+    });
+
+    const sessions = rows.map((r) => {
+      let candidateName: string | null = null;
+      let matchIndex: number | null = null;
+      try {
+        const candidate = JSON.parse(r.candidateProfileJson);
+        candidateName = candidate?.name || null;
+      } catch { /* ignore */ }
+      try {
+        if (r.matchJson) {
+          const match = JSON.parse(r.matchJson);
+          matchIndex = match?.index ?? null;
+        }
+      } catch { /* ignore */ }
+
+      return {
+        id: r.id,
+        isDemo: r.isDemo,
+        status: r.status,
+        createdAt: r.createdAt.toISOString(),
+        jobTitle: r.jobTitle,
+        candidateName,
+        matchIndex,
+      };
+    });
+
+    return NextResponse.json({ sessions });
+  }
+
+  // Single session mode
   if (!id) return NextResponse.json({ error: "Missing id." }, { status: 400 });
   const payload = await loadSession(id);
   if (!payload) return NextResponse.json({ error: "Session not found." }, { status: 404 });

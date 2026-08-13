@@ -233,13 +233,37 @@
     border: 1px solid var(--border);
     border-radius: calc(var(--radius) + 6px);
     box-shadow:
-      0 1px 2px color-mix(in oklch, var(--foreground) 4%, transparent),
-      0 8px 24px -16px color-mix(in oklch, var(--foreground) 12%, transparent);
+      0 1px 2px color-mix(in oklch, var(--foreground) 3%, transparent),
+      0 8px 24px -16px color-mix(in oklch, var(--foreground) 8%, transparent);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  }
+  .hm-card:hover {
+    box-shadow:
+      0 2px 4px color-mix(in oklch, var(--foreground) 5%, transparent),
+      0 12px 32px -16px color-mix(in oklch, var(--foreground) 12%, transparent);
+  }
+  /* Dark mode: softer shadows (light-on-dark needs less intensity) */
+  .dark .hm-card {
+    box-shadow:
+      0 1px 2px color-mix(in oklch, var(--foreground) 2%, transparent),
+      0 8px 24px -16px color-mix(in oklch, var(--foreground) 5%, transparent);
+  }
+  .dark .hm-card:hover {
+    box-shadow:
+      0 2px 4px color-mix(in oklch, var(--foreground) 3%, transparent),
+      0 12px 32px -16px color-mix(in oklch, var(--foreground) 8%, transparent);
   }
 
   .hm-elevated {
     background: var(--elevated);
     border: 1px solid var(--border);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .hm-elevated:hover {
+    box-shadow: 0 2px 8px color-mix(in oklch, var(--foreground) 4%, transparent);
+  }
+  .dark .hm-elevated:hover {
+    box-shadow: 0 2px 8px color-mix(in oklch, var(--foreground) 2%, transparent);
   }
 
   /* Soft inner section divider */
@@ -251,6 +275,15 @@
       transparent
     );
     height: 1px;
+  }
+  /* Dark mode: dividers need slightly more opacity to remain visible */
+  .dark .hm-divider {
+    background: linear-gradient(
+      to right,
+      transparent,
+      color-mix(in oklch, var(--border) 70%, var(--muted)),
+      transparent
+    );
   }
 
   /* Gradient text — used very sparingly for the hero number */
@@ -264,12 +297,30 @@
     background-clip: text;
     -webkit-text-fill-color: transparent;
   }
+  /* Dark mode: softer gradient to avoid jarring bright→dim on dark bg */
+  .dark .hm-text-gradient {
+    background: linear-gradient(
+      180deg,
+      var(--foreground) 0%,
+      color-mix(in oklch, var(--foreground) 82%, var(--muted-foreground)) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 
   /* Subtle ambient background — premium soft radial wash */
   .hm-ambient {
     background:
       radial-gradient(60% 50% at 20% 10%, color-mix(in oklch, var(--accent-blue) 8%, transparent), transparent 60%),
       radial-gradient(50% 50% at 90% 20%, color-mix(in oklch, var(--chart-5) 6%, transparent), transparent 60%),
+      var(--background);
+  }
+  /* Dark mode: slightly stronger ambient wash so gradients remain visible */
+  .dark .hm-ambient {
+    background:
+      radial-gradient(60% 50% at 20% 10%, color-mix(in oklch, var(--accent-blue) 12%, transparent), transparent 60%),
+      radial-gradient(50% 50% at 90% 20%, color-mix(in oklch, var(--chart-5) 10%, transparent), transparent 60%),
       var(--background);
   }
 
@@ -379,7 +430,7 @@
     background: linear-gradient(
       105deg,
       transparent 40%,
-      color-mix(in oklch, var(--card) 80%, white) 50%,
+      color-mix(in oklch, var(--foreground) 6%, var(--card)) 50%,
       transparent 60%
     );
     animation: hm-shimmer 1.8s ease-in-out 1s 1 both;
@@ -606,6 +657,54 @@
     );
     pointer-events: none;
     animation: hm-ring-glow 2s ease-out forwards;
+  }
+  .dark .hm-radial-glow::before {
+    background: radial-gradient(
+      circle,
+      color-mix(in oklch, var(--accent-blue) 14%, transparent),
+      transparent 70%
+    );
+  }
+
+  /* ─── Skeleton Loading ─── */
+  .hm-skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--muted) 25%,
+      color-mix(in oklch, var(--muted) 60%, var(--card)) 50%,
+      var(--muted) 75%
+    );
+    background-size: 200% 100%;
+    animation: hm-skeleton-pulse 1.5s ease-in-out infinite;
+    border-radius: calc(var(--radius) - 2px);
+  }
+  @keyframes hm-skeleton-pulse {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ─── Mobile Utilities ─── */
+  /* Hide scrollbar for horizontally scrolling containers */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Safe area padding for mobile devices (notch/bottom bar) */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .pl-safe {
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+  .pr-safe {
+    padding-right: env(safe-area-inset-right, 0px);
   }
 
   /* ─── Presentation Mode ─── */

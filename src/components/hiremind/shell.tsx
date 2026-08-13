@@ -27,7 +27,7 @@ export function SiteHeader() {
   React.useEffect(() => setMounted(true), []);
 
   return (
-    <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-background/70 border-b border-border/60">
+    <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-background/70 border-b border-border/60 pt-safe">
       <div className="mx-auto max-w-6xl px-5 sm:px-8 h-14 flex items-center justify-between gap-4">
         <button
           onClick={() => setView("home")}
@@ -57,7 +57,7 @@ export function SiteHeader() {
                 disabled={disabled}
                 onClick={() => setView(item.id)}
                 className={cn(
-                  "hm-nav-item px-3 py-1.5 rounded-md text-[13px] font-medium transition-all",
+                  "hm-nav-item px-3 py-1.5 rounded-md text-[13px] font-medium transition-all relative",
                   active
                     ? "bg-secondary text-secondary-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
@@ -65,6 +65,7 @@ export function SiteHeader() {
                 )}
               >
                 {item.label}
+                {active && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] w-3 rounded-full bg-accent-blue transition-all duration-300" />}
               </button>
             );
           })}
@@ -113,7 +114,7 @@ export function SiteHeader() {
       </div>
 
       {/* Mobile nav */}
-      <nav className="md:hidden flex items-center gap-1 overflow-x-auto px-4 pb-2 -mt-1 no-scrollbar">
+      <nav className="md:hidden flex items-center gap-1 overflow-x-auto px-4 pb-2 -mt-1 no-scrollbar pl-safe pr-safe">
         {NAV.map((item) => {
           const disabled = NAV_REQUIRES_SESSION.includes(item.id) && !sessionId;
           const active = view === item.id;
@@ -123,7 +124,7 @@ export function SiteHeader() {
               disabled={disabled}
               onClick={() => setView(item.id)}
               className={cn(
-                "shrink-0 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all",
+                "shrink-0 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all relative",
                 active
                   ? "bg-secondary text-secondary-foreground"
                   : "text-muted-foreground",
@@ -131,6 +132,7 @@ export function SiteHeader() {
               )}
             >
               {item.label}
+              {active && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 w-4 rounded-full bg-accent-blue" />}
             </button>
           );
         })}
@@ -141,8 +143,8 @@ export function SiteHeader() {
 
 export function SiteFooter() {
   return (
-    <footer className="hm-footer-hide mt-auto border-t border-border/60 bg-background/50">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-[13px] text-muted-foreground">
+    <footer className="hm-footer-hide mt-auto border-t border-border/60 bg-background/50 pb-safe">
+      <div className="mx-auto max-w-6xl px-5 sm:px-8 py-6 sm:py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-[13px] text-muted-foreground">
         <div className="flex items-center gap-2">
           <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <BrainCircuit className="h-3 w-3" />
@@ -269,7 +271,7 @@ export function ScoreRing({
             <div
               className="absolute inset-0"
               style={{
-                background: `linear-gradient(105deg, transparent 40%, color-mix(in oklch, ${toneColor} 8%, white) 50%, transparent 60%)`,
+                background: `linear-gradient(105deg, transparent 40%, color-mix(in oklch, ${toneColor} 10%, var(--card)) 50%, transparent 60%)`,
                 animation: "hm-shimmer 1.6s ease-in-out 1 both",
               }}
             />

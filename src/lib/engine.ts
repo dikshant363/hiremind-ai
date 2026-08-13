@@ -243,49 +243,99 @@ export const QUESTION_BANK: Record<string, Omit<InterviewQuestion, "id" | "reaso
   "System Design": [
     { competency: "System Design", category: "system_design", text: "How would you design a scalable REST API that handles 100,000 concurrent users?", difficulty: "hard", mode: "technical" },
     { competency: "System Design", category: "system_design", text: "Walk me through the architecture you'd propose for a real-time notifications service.", difficulty: "hard", mode: "technical" },
+    { competency: "System Design", category: "system_design", text: "How would you design a rate limiter for a public API? What data structures would you use?", difficulty: "medium", mode: "technical" },
+    { competency: "System Design", category: "system_design", text: "Explain the tradeoffs between a microservices and monolithic architecture for a small team.", difficulty: "easy", mode: "technical" },
   ],
   "Scalability": [
     { competency: "Scalability", category: "system_design", text: "How would you introduce caching and load balancing to scale an existing web service?", difficulty: "hard", mode: "technical" },
     { competency: "Scalability", category: "system_design", text: "Compare horizontal vs vertical scaling. When would you choose each for a stateful service?", difficulty: "medium", mode: "technical" },
+    { competency: "Scalability", category: "system_design", text: "What is the C.A.P. theorem and how does it influence your choice of database for a distributed system?", difficulty: "medium", mode: "technical" },
   ],
   "Fault Tolerance": [
     { competency: "Fault Tolerance", category: "system_design", text: "Design a system that stays available when a primary dependency goes down.", difficulty: "hard", mode: "technical" },
+    { competency: "Fault Tolerance", category: "system_design", text: "Explain circuit breakers and bulkheads. How do they prevent cascading failures?", difficulty: "medium", mode: "technical" },
+    { competency: "Fault Tolerance", category: "system_design", text: "What is graceful degradation? Give a real-world example from a service you'd build.", difficulty: "easy", mode: "technical" },
   ],
   "Caching": [
     { competency: "Caching", category: "system_design", text: "What cache invalidation strategies would you use and why?", difficulty: "medium", mode: "technical" },
+    { competency: "Caching", category: "system_design", text: "Compare write-through, write-back, and write-around caches. When is each appropriate?", difficulty: "hard", mode: "technical" },
+    { competency: "Caching", category: "system_design", text: "How would you design a distributed cache? What consistency guarantees can you offer?", difficulty: "hard", mode: "technical" },
   ],
   "Load Balancing": [
     { competency: "Load Balancing", category: "system_design", text: "Compare round-robin, least-connections and consistent hashing for load balancing.", difficulty: "medium", mode: "technical" },
+    { competency: "Load Balancing", category: "system_design", text: "What is a health check in the context of load balancing? How does it affect traffic routing?", difficulty: "easy", mode: "technical" },
   ],
   "REST APIs": [
     { competency: "REST APIs", category: "backend", text: "Design a paginated, filterable REST API for a product catalog.", difficulty: "medium", mode: "technical" },
+    { competency: "REST APIs", category: "backend", text: "What are idempotency and safety in HTTP methods? Why do they matter for APIs?", difficulty: "easy", mode: "technical" },
+    { competency: "REST APIs", category: "backend", text: "How would you version a REST API? Compare URL versioning vs header versioning.", difficulty: "medium", mode: "technical" },
+  ],
+  "Microservices": [
+    { competency: "Microservices", category: "backend", text: "What are the main challenges of inter-service communication in microservices? How do you address them?", difficulty: "medium", mode: "technical" },
+    { competency: "Microservices", category: "backend", text: "Compare synchronous (REST/gRPC) vs asynchronous (message queue) communication between services.", difficulty: "hard", mode: "technical" },
+    { competency: "Microservices", category: "backend", text: "How do you handle data consistency across microservices without distributed transactions?", difficulty: "hard", mode: "technical" },
   ],
   "Databases": [
     { competency: "Databases", category: "backend", text: "How do you choose between SQL and NoSQL for a new service? Give a concrete tradeoff.", difficulty: "medium", mode: "technical" },
+    { competency: "Databases", category: "backend", text: "Explain database indexing. How do you decide which columns to index?", difficulty: "easy", mode: "technical" },
+    { competency: "Databases", category: "backend", text: "What is database sharding? Compare it with partitioning and replication.", difficulty: "medium", mode: "technical" },
   ],
   "Docker": [
     { competency: "Docker", category: "devops", text: "How would you secure and optimize a Docker image for production?", difficulty: "medium", mode: "technical" },
+    { competency: "Docker", category: "devops", text: "Explain the difference between COPY and ADD in a Dockerfile. When would you use each?", difficulty: "easy", mode: "technical" },
+    { competency: "Docker", category: "devops", text: "How do you manage secrets in Docker containers? What are the security risks of environment variables?", difficulty: "medium", mode: "technical" },
   ],
   "Kubernetes": [
     { competency: "Kubernetes", category: "devops", text: "Explain how a Kubernetes Deployment, Service and Ingress work together.", difficulty: "medium", mode: "technical" },
+    { competency: "Kubernetes", category: "devops", text: "What is a Kubernetes Pod? How does it differ from a container?", difficulty: "easy", mode: "technical" },
+    { competency: "Kubernetes", category: "devops", text: "How would you configure auto-scaling in Kubernetes? What metrics would you use?", difficulty: "hard", mode: "technical" },
   ],
   "AWS": [
     { competency: "AWS", category: "cloud", text: "Design a highly available 3-tier web application on AWS.", difficulty: "hard", mode: "technical" },
+    { competency: "AWS", category: "cloud", text: "Compare S3, EBS and EFS. When would you use each?", difficulty: "easy", mode: "technical" },
+    { competency: "AWS", category: "cloud", text: "How would you implement Infrastructure as Code on AWS? Compare CloudFormation and Terraform.", difficulty: "medium", mode: "technical" },
+  ],
+  "MLOps": [
+    { competency: "MLOps", category: "ml", text: "How would you set up a CI/CD pipeline for an ML model? What stages are needed?", difficulty: "medium", mode: "technical" },
+    { competency: "MLOps", category: "ml", text: "What is model drift? How do you detect and respond to it in production?", difficulty: "hard", mode: "technical" },
+    { competency: "MLOps", category: "ml", text: "Compare A/B testing and shadow deployment for releasing a new ML model.", difficulty: "medium", mode: "technical" },
   ],
   "Python": [
     { competency: "Python", category: "languages", text: "Explain the GIL and how it affects multi-threaded Python programs.", difficulty: "medium", mode: "technical" },
+    { competency: "Python", category: "languages", text: "Compare list comprehensions, generators, and map/filter. When is each most appropriate?", difficulty: "easy", mode: "technical" },
+    { competency: "Python", category: "languages", text: "How does Python's memory management work? Explain reference counting and the garbage collector.", difficulty: "medium", mode: "technical" },
   ],
   "Machine Learning": [
     { competency: "Machine Learning", category: "ml", text: "How would you decide between a simpler model and a deep learning model for a tabular dataset?", difficulty: "medium", mode: "technical" },
+    { competency: "Machine Learning", category: "ml", text: "Explain the bias-variance tradeoff. How do you diagnose underfitting vs overfitting?", difficulty: "easy", mode: "technical" },
+    { competency: "Machine Learning", category: "ml", text: "How would you handle imbalanced classes in a classification problem?", difficulty: "medium", mode: "technical" },
   ],
   "Deep Learning": [
     { competency: "Deep Learning", category: "ml", text: "Explain backpropagation and how vanishing gradients are mitigated.", difficulty: "hard", mode: "technical" },
+    { competency: "Deep Learning", category: "ml", text: "Compare CNNs and Transformers for sequence modeling. When would you choose each?", difficulty: "medium", mode: "technical" },
+    { competency: "Deep Learning", category: "ml", text: "What is transfer learning? How does fine-tuning differ from feature extraction?", difficulty: "easy", mode: "technical" },
+  ],
+  "NLP": [
+    { competency: "NLP", category: "ml", text: "Explain the difference between bag-of-words, TF-IDF, and word embeddings for text representation.", difficulty: "easy", mode: "technical" },
+    { competency: "NLP", category: "ml", text: "How do attention mechanisms work in Transformers? Explain self-attention.", difficulty: "hard", mode: "technical" },
+    { competency: "NLP", category: "ml", text: "What are the challenges of evaluating NLP models? Compare BLEU, ROUGE, and human evaluation.", difficulty: "medium", mode: "technical" },
+  ],
+  "Feature Engineering": [
+    { competency: "Feature Engineering", category: "ml", text: "What is feature importance and how do you measure it? Compare at least two methods.", difficulty: "medium", mode: "technical" },
+    { competency: "Feature Engineering", category: "ml", text: "Explain feature scaling and normalization. When does the choice matter?", difficulty: "easy", mode: "technical" },
   ],
   "Communication": [
     { competency: "Communication", category: "communication", text: "Tell me about a time you had to explain a complex technical decision to a non-technical stakeholder.", difficulty: "easy", mode: "hr" },
+    { competency: "Communication", category: "communication", text: "How do you handle disagreements on technical direction within a team?", difficulty: "medium", mode: "hr" },
+    { competency: "Communication", category: "communication", text: "Describe how you document your architectural decisions for the team.", difficulty: "easy", mode: "hr" },
+  ],
+  "Cross-functional collaboration": [
+    { competency: "Cross-functional collaboration", category: "communication", text: "How do you align engineering work with product and design priorities?", difficulty: "medium", mode: "hr" },
+    { competency: "Cross-functional collaboration", category: "communication", text: "Describe a project where you worked closely with a non-engineering team. What did you learn?", difficulty: "easy", mode: "hr" },
   ],
   "Leadership": [
     { competency: "Leadership", category: "communication", text: "Describe a situation where you led a team through an ambiguous problem.", difficulty: "medium", mode: "hr" },
+    { competency: "Leadership", category: "communication", text: "How do you mentor junior engineers? Give a specific example.", difficulty: "easy", mode: "hr" },
   ],
 };
 
@@ -313,7 +363,7 @@ export function initInterview(gaps: SkillGap[], candidate: CandidateProfile, mat
     for (const r of weakRows) targetCompetencies.push(r.competency);
   }
 
-  const totalQuestions = Math.min(5, Math.max(3, targetCompetencies.length + 1));
+  const totalQuestions = Math.min(7, Math.max(3, targetCompetencies.length + 2));
 
   // Initialize competency states from candidate evidence
   const { byCompetency } = indexCandidateSkills(candidate);
