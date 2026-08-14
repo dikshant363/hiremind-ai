@@ -1,24 +1,12 @@
 "use client";
 
 import * as React from "react";
+import dynamic from "next/dynamic";
 import { useHireMind, parseHash } from "@/lib/store";
 import { SiteHeader, SiteFooter } from "@/components/hiremind/shell";
 import { HomeView } from "@/components/hiremind/home-view";
-import { CandidateView } from "@/components/hiremind/candidate-view";
-import { MatchView } from "@/components/hiremind/match-view";
-import { GapsView } from "@/components/hiremind/gaps-view";
-import { InterviewView } from "@/components/hiremind/interview-view";
-import { EvaluationView } from "@/components/hiremind/evaluation-view";
-import { ReadinessView } from "@/components/hiremind/readiness-view";
-import { RoadmapView } from "@/components/hiremind/roadmap-view";
-import { CompareView } from "@/components/hiremind/compare-view";
 import { LoadingOverlay } from "@/components/hiremind/loading-overlay";
 import { ShortcutHint } from "@/components/hiremind/shortcut-hint";
-import { CommandPalette } from "@/components/hiremind/command-palette";
-import { OnboardingTooltip } from "@/components/hiremind/onboarding-tooltip";
-import { AchievementGallery } from "@/components/hiremind/achievement-gallery";
-import { AboutModal } from "@/components/hiremind/about-modal";
-import { QuestionBankModal } from "@/components/hiremind/question-bank-modal";
 import { FlowProgress } from "@/components/hiremind/flow-progress";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -27,20 +15,76 @@ import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useAchievements } from "@/hooks/use-achievements";
 import { useTheme } from "next-themes";
 
+// Code splitting: dynamically import non-home views
+const CandidateView = dynamic(() => import("@/components/hiremind/candidate-view").then((m) => m.CandidateView), {
+  loading: () => <div className="min-h-[400px] flex items-center justify-center text-sm text-muted-foreground">Loading candidate profile…</div>,
+});
+const MatchView = dynamic(() => import("@/components/hiremind/match-view").then((m) => m.MatchView), {
+  loading: () => <div className="min-h-[400px] flex items-center justify-center text-sm text-muted-foreground">Loading semantic match…</div>,
+});
+const GapsView = dynamic(() => import("@/components/hiremind/gaps-view").then((m) => m.GapsView), {
+  loading: () => <div className="min-h-[400px] flex items-center justify-center text-sm text-muted-foreground">Loading skill gaps…</div>,
+});
+const InterviewView = dynamic(() => import("@/components/hiremind/interview-view").then((m) => m.InterviewView), {
+  loading: () => <div className="min-h-[400px] flex items-center justify-center text-sm text-muted-foreground">Loading interview simulator…</div>,
+});
+const EvaluationView = dynamic(() => import("@/components/hiremind/evaluation-view").then((m) => m.EvaluationView), {
+  loading: () => <div className="min-h-[400px] flex items-center justify-center text-sm text-muted-foreground">Loading evaluation…</div>,
+});
+const ReadinessView = dynamic(() => import("@/components/hiremind/readiness-view").then((m) => m.ReadinessView), {
+  loading: () => <div className="min-h-[400px] flex items-center justify-center text-sm text-muted-foreground">Loading readiness report…</div>,
+});
+const RoadmapView = dynamic(() => import("@/components/hiremind/roadmap-view").then((m) => m.RoadmapView), {
+  loading: () => <div className="min-h-[400px] flex items-center justify-center text-sm text-muted-foreground">Loading roadmap…</div>,
+});
+const CompareView = dynamic(() => import("@/components/hiremind/compare-view").then((m) => m.CompareView), {
+  loading: () => <div className="min-h-[400px] flex items-center justify-center text-sm text-muted-foreground">Loading comparison…</div>,
+});
+
+// Code splitting: dynamically import heavy modals
+const CommandPalette = dynamic(() => import("@/components/hiremind/command-palette").then((m) => m.CommandPalette), { ssr: false });
+const OnboardingTooltip = dynamic(() => import("@/components/hiremind/onboarding-tooltip").then((m) => m.OnboardingTooltip), { ssr: false });
+const AchievementGallery = dynamic(() => import("@/components/hiremind/achievement-gallery").then((m) => m.AchievementGallery), { ssr: false });
+const AboutModal = dynamic(() => import("@/components/hiremind/about-modal").then((m) => m.AboutModal), { ssr: false });
+const QuestionBankModal = dynamic(() => import("@/components/hiremind/question-bank-modal").then((m) => m.QuestionBankModal), { ssr: false });
+const ControlCenter = dynamic(() => import("@/components/hiremind/control-center").then((m) => m.ControlCenter), { ssr: false });
+const AuthModal = dynamic(() => import("@/components/hiremind/auth-modal").then((m) => m.AuthModal), { ssr: false });
+
 export default function Home() {
-  const { view, error, presentationMode, sessionId, hydrateSession, candidate, gaps, interview, readiness, roadmap, lastEvaluation, isDemo } = useHireMind();
+  const {
+    view,
+    error,
+    presentationMode,
+    sessionId,
+    hydrateSession,
+    candidate,
+    gaps,
+    interview,
+    readiness,
+    roadmap,
+    lastEvaluation,
+    isDemo,
+    fetchCurrentUser,
+    fetchSystemConfig,
+    fetchStats,
+  } = useHireMind();
   const { showHints, setShowHints } = useKeyboardShortcuts();
   const { unlock, mounted: achievementsMounted } = useAchievements();
   const { setTheme, theme } = useTheme();
 
-  // Achievement gallery state
+  // Modal states
   const [showAchievements, setShowAchievements] = React.useState(false);
-
-  // About modal state
   const [showAbout, setShowAbout] = React.useState(false);
-
-  // Question bank modal state
   const [showQuestionBank, setShowQuestionBank] = React.useState(false);
+  const [showControlCenter, setShowControlCenter] = React.useState(false);
+  const [showAuth, setShowAuth] = React.useState(false);
+
+  // Initial load: fetch user profile, system configuration, and stats
+  useEffect(() => {
+    fetchCurrentUser();
+    fetchSystemConfig();
+    fetchStats();
+  }, [fetchCurrentUser, fetchSystemConfig, fetchStats]);
 
   // Hydrate from URL hash on initial mount
   const hydratedRef = React.useRef(false);
@@ -51,8 +95,6 @@ export default function Home() {
     if (hashSession && hashView !== "home") {
       hydrateSession(hashSession, hashView);
     } else if (hashView !== "home" && !hashSession) {
-      // Views that don't need an active session (e.g. "compare") can be
-      // deep-linked directly — just flip the view, no hydration required.
       useHireMind.getState().setView(hashView);
     }
   }, [hydrateSession]);
@@ -73,37 +115,43 @@ export default function Home() {
     return () => document.removeEventListener("hm-toggle-theme", handler);
   }, [setTheme, theme]);
 
-  // Listen for help button click from header (opens shortcut hint overlay)
+  // Listen for shortcut overlays & modals
   useEffect(() => {
     const handler = () => setShowHints(true);
     document.addEventListener("hm-show-shortcuts", handler);
     return () => document.removeEventListener("hm-show-shortcuts", handler);
   }, [setShowHints]);
 
-  // Listen for achievement gallery toggle event (from header button + keyboard shortcut)
   useEffect(() => {
     const handler = () => setShowAchievements((v) => !v);
     document.addEventListener("hm-show-achievements", handler);
     return () => document.removeEventListener("hm-show-achievements", handler);
   }, []);
 
-  // Listen for about modal toggle event (from footer link + keyboard shortcut)
   useEffect(() => {
     const handler = () => setShowAbout(true);
     document.addEventListener("hm-show-about", handler);
     return () => document.removeEventListener("hm-show-about", handler);
   }, []);
 
-  // Listen for question bank modal open event (from interview-view button + 'q' keyboard shortcut)
   useEffect(() => {
     const handler = () => setShowQuestionBank(true);
     document.addEventListener("hm-show-question-bank", handler);
     return () => document.removeEventListener("hm-show-question-bank", handler);
   }, []);
 
-  // Listen for "Start interview" CTA from question bank modal — navigate to
-  // interview view AND close the question bank modal so the user lands on a
-  // clean interview screen.
+  useEffect(() => {
+    const handler = () => setShowControlCenter(true);
+    document.addEventListener("hm-open-control-center", handler);
+    return () => document.removeEventListener("hm-open-control-center", handler);
+  }, []);
+
+  useEffect(() => {
+    const handler = () => setShowAuth(true);
+    document.addEventListener("hm-open-auth", handler);
+    return () => document.removeEventListener("hm-open-auth", handler);
+  }, []);
+
   useEffect(() => {
     const handler = () => {
       setShowQuestionBank(false);
@@ -114,16 +162,6 @@ export default function Home() {
   }, []);
 
   // ─── Achievement detection ───
-  // Watch store state and unlock achievements as milestones are reached.
-  // Uses refs to avoid re-running on every render; only fires when the
-  // relevant piece of state actually transitions to a truthy value.
-  //
-  // IMPORTANT: We track an `isHydrating` flag. When a session is hydrated
-  // (from URL hash or recent-sessions click), all state pieces transition
-  // from null → non-null in a single batch. That would otherwise fire 6-7
-  // achievement toasts at once. Instead, during hydration we silently
-  // sync the "previous" refs to current state without unlocking anything.
-  // Only *new* actions taken during the live session unlock achievements.
   const prevCandidate = React.useRef(candidate);
   const prevGaps = React.useRef(gaps);
   const prevInterview = React.useRef(interview);
@@ -132,27 +170,18 @@ export default function Home() {
   const prevEval = React.useRef(lastEvaluation);
   const isHydrating = React.useRef(false);
 
-  // Detect hydration calls (hydrateSession sets loading + view transitions)
-  const prevLoading = React.useRef(false);
   useEffect(() => {
-    const { loading } = useHireMind.getState();
-    // If we just landed on a non-home view via hydration (URL hash present),
-    // mark hydrating so the achievement effect skips the initial batch.
     if (hydratedRef.current && typeof window !== "undefined") {
       const hash = window.location.hash;
       if (hash.includes("session=") && hash.includes("view=")) {
         isHydrating.current = true;
       }
     }
-    prevLoading.current = loading;
   }, [candidate, gaps, interview, readiness, roadmap]);
 
   useEffect(() => {
     if (!achievementsMounted) return;
 
-    // If we're in hydration mode, just sync refs without unlocking.
-    // The first time loading flips back to false AFTER hydration, we clear
-    // the hydrating flag so subsequent real user actions unlock normally.
     if (isHydrating.current) {
       prevCandidate.current = candidate;
       prevGaps.current = gaps;
@@ -160,27 +189,22 @@ export default function Home() {
       prevReadiness.current = readiness;
       prevRoadmap.current = roadmap;
       prevEval.current = lastEvaluation;
-      // Clear hydrating flag once we've synced once
       isHydrating.current = false;
       return;
     }
 
-    // first_analysis: candidate just became non-null
     if (candidate && !prevCandidate.current) {
       unlock("first_analysis");
     }
 
-    // gap_identified: gaps just became non-null with items
     if (gaps && gaps.length > 0 && (!prevGaps.current || prevGaps.current.length === 0)) {
       unlock("gap_identified");
     }
 
-    // first_interview: interview status just became "asking"
     if (interview?.status === "asking" && prevInterview.current?.status !== "asking") {
       unlock("first_interview");
     }
 
-    // answer_submitted: interview just got its first answer
     if (
       interview &&
       interview.answers.length > 0 &&
@@ -189,32 +213,26 @@ export default function Home() {
       unlock("answer_submitted");
     }
 
-    // interview_complete: interview status just became "complete"
     if (interview?.status === "complete" && prevInterview.current?.status !== "complete") {
       unlock("interview_complete");
     }
 
-    // readiness_calculated: readiness just became non-null
     if (readiness && !prevReadiness.current) {
       unlock("readiness_calculated");
     }
 
-    // roadmap_generated: roadmap just became non-null
     if (roadmap && !prevRoadmap.current) {
       unlock("roadmap_generated");
     }
 
-    // high_score: latest evaluation has overall >= 0.7
     if (lastEvaluation && lastEvaluation.overall >= 0.7 && (!prevEval.current || prevEval.current.overall < 0.7)) {
       unlock("high_score");
     }
 
-    // demo_complete: demo mode + roadmap generated = end of demo flow
     if (isDemo && roadmap && !prevRoadmap.current) {
       unlock("demo_complete");
     }
 
-    // Update refs
     prevCandidate.current = candidate;
     prevGaps.current = gaps;
     prevInterview.current = interview;
@@ -232,7 +250,7 @@ export default function Home() {
           key={view}
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.2 }}
         >
           {view === "home" && <HomeView />}
           {view === "candidate" && <CandidateView />}
@@ -252,6 +270,8 @@ export default function Home() {
       <AchievementGallery open={showAchievements} onClose={() => setShowAchievements(false)} />
       <AboutModal open={showAbout} onClose={() => setShowAbout(false)} />
       <QuestionBankModal open={showQuestionBank} onClose={() => setShowQuestionBank(false)} />
+      <ControlCenter open={showControlCenter} onClose={() => setShowControlCenter(false)} />
+      <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
       {view === "home" && <OnboardingTooltip />}
     </>
   );

@@ -166,9 +166,9 @@ export function CandidateView() {
             <div className="mt-4">
               <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Top strengths</div>
               <div className="flex flex-wrap gap-1.5">
-                {strongSkills.slice(0, 3).map((s) => (
+                {strongSkills.slice(0, 3).map((s, idx) => (
                   <span
-                    key={s.competency}
+                    key={`top-${s.competency}-${idx}`}
                     className="hm-badge-sheen inline-flex items-center gap-1 rounded-full bg-success/10 text-success-foreground px-2.5 py-1 text-[11px] font-medium"
                   >
                     <span className="h-1.5 w-1.5 rounded-full bg-success" />
@@ -241,7 +241,7 @@ export function CandidateView() {
           <div className="space-y-2">
             {[...strongSkills, ...moderateSkills, ...weakSkills].map((ev, i) => (
               <motion.div
-                key={ev.competency}
+                key={`skill-${ev.competency}-${ev.level}-${i}`}
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.35, delay: i * 0.04, ease: [0.22, 1, 0.36, 1] }}
@@ -285,7 +285,7 @@ export function CandidateView() {
                       i === 0 ? "var(--success)" : i === 1 ? "var(--warning)" : "var(--muted-foreground)";
                     return (
                       <motion.div
-                        key={i}
+                        key={`exp-${x.role}-${x.company ?? "org"}-${i}`}
                         initial={{ opacity: 0, x: -6 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.3, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
@@ -293,22 +293,20 @@ export function CandidateView() {
                       >
                         {/* Timeline dot */}
                         <div
-                          className="absolute -left-5 top-1.5 h-2 w-2 rounded-full ring-2 ring-background"
-                          style={{ background: dotColor, left: "-17px" }}
+                          className="absolute -left-5 top-1.5 h-2 w-2 rounded-full border border-background"
+                          style={{ background: dotColor }}
                         />
                         <div>
-                          <div className="text-sm font-medium line-clamp-1">
-                            {x.role}
-                            {x.company && <span className="text-muted-foreground"> · {x.company}</span>}
-                          </div>
-                          <div className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+                          <div className="text-sm font-semibold line-clamp-1">{x.role}</div>
+                          {x.company && (
+                            <div className="text-xs text-muted-foreground">
+                              {x.company}
+                              {hint && <span className="ml-1 text-[10px] text-muted-foreground/80">({hint})</span>}
+                            </div>
+                          )}
+                          <div className="mt-1 text-xs text-muted-foreground leading-relaxed line-clamp-2">
                             {x.description}
                           </div>
-                          {hint && (
-                            <span className="mt-0.5 inline-block text-[10px] text-muted-foreground/70 bg-secondary/50 rounded px-1.5 py-0.5">
-                              {hint}
-                            </span>
-                          )}
                         </div>
                       </motion.div>
                     );
@@ -327,7 +325,7 @@ export function CandidateView() {
                   const techStack = extractTechStack(p.description);
                   return (
                     <motion.div
-                      key={i}
+                      key={`proj-${p.name}-${i}`}
                       initial={{ opacity: 0, x: -6 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.3, delay: i * 0.06, ease: [0.22, 1, 0.36, 1] }}
@@ -339,9 +337,9 @@ export function CandidateView() {
                         <div className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{p.description}</div>
                         {techStack.length > 0 && (
                           <div className="mt-1.5 flex flex-wrap gap-1">
-                            {techStack.map((tech) => (
+                            {techStack.map((tech, techIdx) => (
                               <span
-                                key={tech}
+                                key={`proj-tech-${tech}-${techIdx}`}
                                 className="inline-flex items-center rounded-full bg-secondary/60 text-[10px] font-medium text-muted-foreground px-2 py-0.5"
                               >
                                 {tech}
@@ -363,7 +361,7 @@ export function CandidateView() {
               <h4 className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">Education</h4>
               <div className="space-y-2">
                 {candidate.education.map((e, i) => (
-                  <div key={i} className="flex gap-3">
+                  <div key={`edu-${e.degree}-${e.institution ?? "inst"}-${i}`} className="flex gap-3">
                     <GraduationCap className="h-3.5 w-3.5 text-muted-foreground mt-1 shrink-0" />
                     <div className="text-[13px]">
                       <span className="font-medium">{e.degree}</span>

@@ -15,10 +15,14 @@ export function EvaluationView() {
   const { lastEvaluation, interview, setView, isDemo, startInterview, loading } = useHireMind();
   const { formattedQuestion, formattedTotal, questionTime, totalTime } = useInterviewTimer();
 
-  // Empty state — happens when user refreshes on /evaluation view, since
-  // lastEvaluation isn't persisted (only the interview state is). Show a
-  // friendly recovery state.
-  if (!lastEvaluation || !interview) {
+  const effectiveEvaluation =
+    lastEvaluation ||
+    (interview?.evaluations?.length
+      ? interview.evaluations[interview.evaluations.length - 1]
+      : null);
+
+  // Empty state — only when there is truly no interview or no evaluations at all
+  if (!effectiveEvaluation || !interview) {
     const isComplete = interview?.status === "complete";
     return (
       <div className="mx-auto max-w-3xl px-4 sm:px-8 py-10 sm:py-14 text-center">
@@ -59,7 +63,7 @@ export function EvaluationView() {
     );
   }
 
-  const ev: AnswerEvaluation = lastEvaluation;
+  const ev: AnswerEvaluation = effectiveEvaluation;
   const isComplete = interview.status === "complete";
   const nextQ = interview.questions[interview.currentIndex];
   const overallPct = Math.round(ev.overall * 100);
@@ -140,7 +144,7 @@ export function EvaluationView() {
           {ev.strengths.length > 0 ? (
             <ul className="space-y-2">
               {ev.strengths.map((s, i) => (
-                <li key={i} className="text-[13px] text-muted-foreground leading-relaxed flex gap-2">
+                <li key={`str-${i}-${s.slice(0, 10)}`} className="text-[13px] text-muted-foreground leading-relaxed flex gap-2">
                   <span className="text-success-foreground">·</span>
                   {s}
                 </li>
@@ -166,7 +170,7 @@ export function EvaluationView() {
           {ev.weaknesses.length > 0 ? (
             <ul className="space-y-2">
               {ev.weaknesses.map((s, i) => (
-                <li key={i} className="text-[13px] text-muted-foreground leading-relaxed flex gap-2">
+                <li key={`weak-${i}-${s.slice(0, 10)}`} className="text-[13px] text-muted-foreground leading-relaxed flex gap-2">
                   <span className="text-warning-foreground">·</span>
                   {s}
                 </li>
@@ -274,14 +278,14 @@ function ConfettiBurst({ trigger }: { trigger: boolean }) {
     if (!trigger) return [];
     const count = 10;
     return Array.from({ length: count }, (_, i) => {
-      const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4;
-      const distance = 70 + Math.random() * 35;
+      const angle = (Math.PI * 2 * i) / count + (((i * 7) % 5) - 2) * 0.08;
+      const distance = 70 + ((i * 13) % 7) * 5;
       return {
         id: i,
         x: Math.cos(angle) * distance,
         y: Math.sin(angle) * distance,
-        size: 4 + Math.random() * 3,
-        delay: Math.random() * 0.12,
+        size: 4 + ((i * 3) % 4),
+        delay: ((i * 5) % 6) * 0.02,
         color: i % 2 === 0 ? "var(--accent-blue)" : "var(--success)",
       };
     });

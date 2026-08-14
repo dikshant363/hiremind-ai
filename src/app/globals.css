@@ -1238,44 +1238,13 @@
      (transform is composited on the GPU; opacity is too, but isolating it
      to the class avoids the keyframe/class cascade fighting each other). */
 
-  @keyframes hm-mesh-drift-1 {
-    0%   { transform: translate(0, 0) scale(1); }
-    50%  { transform: translate(60px, 80px) scale(1.12); }
-    100% { transform: translate(-40px, 120px) scale(0.95); }
-  }
-  @keyframes hm-mesh-drift-2 {
-    0%   { transform: translate(0, 0) scale(1); }
-    33%  { transform: translate(-80px, 60px) scale(1.08); }
-    66%  { transform: translate(40px, 100px) scale(0.92); }
-    100% { transform: translate(-60px, -40px) scale(1.05); }
-  }
-  @keyframes hm-mesh-drift-3 {
-    0%   { transform: translate(0, 0) scale(1); }
-    50%  { transform: translate(80px, -60px) scale(1.1); }
-    100% { transform: translate(-50px, 40px) scale(0.94); }
-  }
-  @keyframes hm-mesh-drift-4 {
-    0%   { transform: translate(0, 0) scale(1); }
-    40%  { transform: translate(-70px, -80px) scale(1.06); }
-    75%  { transform: translate(50px, -50px) scale(0.96); }
-    100% { transform: translate(60px, 70px) scale(1.08); }
-  }
-
-  /* Apply each drift animation to its respective blob. Different durations
-     (22s, 26s, 24s, 28s) so blobs never sync up — keeps the motion feeling
-     organic and unforced. Opacity is inherited from .hm-mesh-blob (0.04 light,
-     0.06 dark). */
-  .hm-mesh-blob-1 {
-    animation: hm-mesh-drift-1 22s ease-in-out infinite alternate;
-  }
-  .hm-mesh-blob-2 {
-    animation: hm-mesh-drift-2 26s ease-in-out infinite alternate;
-  }
-  .hm-mesh-blob-3 {
-    animation: hm-mesh-drift-3 24s ease-in-out infinite alternate;
-  }
+  /* Static performance-optimized mesh blobs — subtle atmosphere without CPU/GPU composition churn */
+  .hm-mesh-blob-1,
+  .hm-mesh-blob-2,
+  .hm-mesh-blob-3,
   .hm-mesh-blob-4 {
-    animation: hm-mesh-drift-4 28s ease-in-out infinite alternate;
+    transform: translateZ(0);
+    will-change: auto;
   }
 
   /* ─── Premium micro-interactions ─── */

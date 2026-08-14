@@ -18,7 +18,7 @@ import type {
   InterviewQuestion,
   InterviewState,
 } from "./types";
-import { normalizeSkill } from "./taxonomy";
+import { normalizeSkill, TAXONOMY } from "./taxonomy";
 import { evidenceStrength } from "./text";
 import { db } from "@/lib/db";
 
@@ -117,16 +117,99 @@ async function withRetry<T>(fn: () => Promise<T>, retries = MAX_RETRIES): Promis
   }
 }
 
-async function chatJSON<T>(system: string, user: string, fallback: T): Promise<{ data: T; usedFallback: boolean; raw?: string }> {
-  // Phase 1: get a raw completion string from the model, with retry on transient
+export type AIStatusType = "connected" | "fallback" | "unavailable";
+
+export interface AIStatusInfo {
+  status: AIStatusType;
+  provider: "gemini" | "zai-sdk" | "deterministic-fallback";
+  model?: string;
+  isConfigured: boolean;
+  message: string;
+}
+
+export function getAIStatus(): AIStatusInfo {
+  const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  const isValidFormat = Boolean(geminiKey && geminiKey.trim().length >= 20 && !geminiKey.trim().startsWith("AQ."));
+  if (isValidFormat) {
+    return {
+      status: "connected",
+      provider: "gemini",
+      model: "gemini-2.5-flash",
+      isConfigured: true,
+      message: "Live Google Gemini AI engine connected.",
+    };
+  }
+  return {
+    status: "fallback",
+    provider: "deterministic-fallback",
+    isConfigured: false,
+    message: "Deterministic intelligence engine active (resilient offline fallback).",
+  };
+}
+
+async function callGeminiDirect(system: string, user: string, apiKey: string): Promise<string> {
+  const models = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash"];
+  let lastErr: Error | null = null;
+
+  for (const model of models) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: `System Instruction:\n${system}\n\nUser Request:\n${user}` }],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.2,
+            responseMimeType: "application/json",
+          },
+        }),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text().catch(() => "");
+        throw new Error(`Gemini ${model} status ${res.status}: ${errorText.slice(0, 150)}`);
+      }
+
+      const data = await res.json();
+      const content = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+      if (content) return content;
+    } catch (err) {
+      lastErr = err as Error;
+    }
+  }
+
+  throw lastErr || new Error("Gemini API call failed");
+}
+
+async function chatJSON<T>(system: string, user: string, fallback: T): Promise<{ data: T; usedFallback: boolean; source: "live-ai" | "deterministic-fallback"; raw?: string }> {
+  // Phase 1: get a raw completion string from Gemini or SDK, with retry on transient
   // errors (timeout / network). JSON parsing is excluded from retry because a
   // malformed response is deterministic — retrying would just waste 25 more
   // seconds producing the same broken JSON.
   let raw = "";
+  const geminiKey = (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "").trim();
+  const isKeyUsable = geminiKey.length >= 20 && !geminiKey.startsWith("AQ.");
+
   try {
     const fetchCompletion = async () => {
+      // 1. Try Gemini API directly if key is configured and valid
+      if (isKeyUsable) {
+        try {
+          return await withTimeout(callGeminiDirect(system, user, geminiKey), TIMEOUT_MS);
+        } catch (geminiErr) {
+          console.warn("[HIREMIND] Gemini direct API notice, trying SDK fallback:", (geminiErr as Error).message);
+        }
+      }
+
+      // 2. Try ZAI SDK
       const zai = await ZAI.create();
-      return withTimeout(
+      const completion = await withTimeout(
         zai.chat.completions.create({
           messages: [
             { role: "system", content: system },
@@ -135,31 +218,31 @@ async function chatJSON<T>(system: string, user: string, fallback: T): Promise<{
           thinking: { type: "disabled" },
         })
       );
+      return completion.choices[0]?.message?.content ?? "";
     };
-    const completion = await withRetry(fetchCompletion);
-    raw = completion.choices[0]?.message?.content ?? "";
+    raw = await withRetry(fetchCompletion);
   } catch (err) {
-    console.warn(
-      "[HIREMIND] AI call failed after retry, using fallback:",
+    console.info(
+      "[HIREMIND] AI resilience fallback active (using built-in deterministic engine):",
       (err as Error).message
     );
-    return { data: fallback, usedFallback: true };
+    return { data: fallback, usedFallback: true, source: "deterministic-fallback" };
   }
 
   // Phase 2: parse JSON — deterministic. No retry.
   try {
     const jsonStr = extractJSON(raw);
     if (!jsonStr) {
-      return { data: fallback, usedFallback: true, raw };
+      return { data: fallback, usedFallback: true, source: "deterministic-fallback", raw };
     }
     const parsed = JSON.parse(jsonStr);
-    return { data: parsed as T, usedFallback: false, raw };
+    return { data: parsed as T, usedFallback: false, source: "live-ai", raw };
   } catch (err) {
     console.warn(
       "[HIREMIND] AI response JSON parse failed (deterministic, no retry), using fallback:",
       (err as Error).message
     );
-    return { data: fallback, usedFallback: true, raw };
+    return { data: fallback, usedFallback: true, source: "deterministic-fallback", raw };
   }
 }
 
@@ -183,7 +266,7 @@ function extractJSON(raw: string): string | null {
 
 // ---------- Resume Intelligence ----------
 
-export async function extractResume(text: string): Promise<{ profile: CandidateProfile; usedFallback: boolean }> {
+export async function extractResume(text: string): Promise<{ profile: CandidateProfile; usedFallback: boolean; source: "live-ai" | "deterministic-fallback" }> {
   const fallback = deterministicResume(text);
   const system = `You are HireMind AI's resume parser. Extract a structured candidate profile from raw resume text.
 
@@ -205,9 +288,9 @@ Respond with ONLY a JSON object matching this TypeScript type:
   "evidence": [{ "skill": string, "evidence": string, "strength": number }] // strength 0..1
 }`;
 
-  const { data, usedFallback } = await chatJSON<CandidateProfile>(system, `Resume text:\n\n${text}`, fallback);
+  const { data, usedFallback, source } = await chatJSON<CandidateProfile>(system, `Resume text:\n\n${text}`, fallback);
 
-  if (usedFallback) return { profile: fallback, usedFallback: true };
+  if (usedFallback) return { profile: fallback, usedFallback: true, source: "deterministic-fallback" };
 
   // Post-process: normalize + compute deterministic strength if missing
   const profile: CandidateProfile = {
@@ -247,33 +330,36 @@ Respond with ONLY a JSON object matching this TypeScript type:
   }
   profile.evidence = Array.from(byComp.values());
 
-  return { profile, usedFallback: false };
+  return { profile, usedFallback: false, source };
 }
 
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+const ALL_TAXONOMY_KEYWORDS = Array.from(
+  new Set(TAXONOMY.flatMap((node) => [node.competency, ...node.aliases]))
+).sort((a, b) => b.length - a.length);
+
 function deterministicResume(text: string): CandidateProfile {
-  // Naive line-based extraction fallback
   const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
   const name = lines[0] ?? null;
-
-  const knownSkills = [
-    "Python", "JavaScript", "TypeScript", "React", "Node.js", "FastAPI", "Django",
-    "SQL", "PostgreSQL", "MongoDB", "Docker", "Kubernetes", "AWS", "GCP", "Azure",
-    "Machine Learning", "Deep Learning", "PyTorch", "TensorFlow", "scikit-learn",
-    "Pandas", "NumPy", "REST APIs", "GraphQL", "Microservices", "Redis", "Kafka",
-    "CI/CD", "Git", "Linux", "System Design", "Scalability", "Caching",
-  ];
 
   const skills: string[] = [];
   const evidence: SkillEvidence[] = [];
   const lower = text.toLowerCase();
-  for (const s of knownSkills) {
-    if (lower.includes(s.toLowerCase())) {
-      skills.push(s);
+  for (const s of ALL_TAXONOMY_KEYWORDS) {
+    if (s.length < 2) continue;
+    // Word boundary check for short terms
+    const regex = s.length <= 3 ? new RegExp(`\\b${escapeRegex(s.toLowerCase())}\\b`, "i") : null;
+    const matches = regex ? regex.test(lower) : lower.includes(s.toLowerCase());
+    if (matches) {
       const norm = normalizeSkill(s);
+      skills.push(norm.competency);
       const ev = extractContextSentence(text, s);
       const strength = evidenceStrength(ev);
       evidence.push({
-        skill: s,
+        skill: norm.competency,
         competency: norm.competency,
         category: norm.category,
         level: strength >= 0.75 ? "strong" : strength >= 0.4 ? "moderate" : strength > 0 ? "weak" : "unknown",
@@ -284,15 +370,24 @@ function deterministicResume(text: string): CandidateProfile {
     }
   }
 
+  // Deduplicate evidence by competency, keep highest strength
+  const byComp = new Map<string, SkillEvidence>();
+  for (const e of evidence) {
+    const ex = byComp.get(e.competency);
+    if (!ex || e.strength > ex.strength) byComp.set(e.competency, e);
+  }
+  const dedupedEvidence = Array.from(byComp.values());
+  const dedupedSkills = Array.from(new Set(skills));
+
   return {
     name,
-    summary: `Candidate with ${skills.length} detected skills. (Deterministic fallback parse — AI was unavailable.)`,
-    skills,
+    summary: `Candidate with ${dedupedSkills.length} detected skills. (Deterministic fallback parse — AI was unavailable.)`,
+    skills: dedupedSkills,
     experience: [],
     projects: [],
     education: [],
     certifications: [],
-    evidence,
+    evidence: dedupedEvidence,
     raw: {
       sectionsDetected: detectSections(text),
       lines: lines.length,
@@ -321,7 +416,7 @@ function detectSections(text: string): string[] {
 
 // ---------- Job Intelligence ----------
 
-export async function extractJob(title: string, text: string): Promise<{ profile: JobProfile; usedFallback: boolean }> {
+export async function extractJob(title: string, text: string): Promise<{ profile: JobProfile; usedFallback: boolean; source: "live-ai" | "deterministic-fallback" }> {
   const fallback = deterministicJob(title, text);
   const system = `You are HireMind AI's job description parser. Extract structured job requirements from raw job description text.
 
@@ -339,9 +434,9 @@ Respond with ONLY a JSON object matching this TypeScript type:
   "requirements": [{ "skill": string, "importance": "critical"|"high"|"medium"|"low", "required": boolean }]
 }`;
 
-  const { data, usedFallback } = await chatJSON<JobProfile>(system, `Job title: ${title}\n\nJob description:\n${text}`, fallback);
+  const { data, usedFallback, source } = await chatJSON<JobProfile>(system, `Job title: ${title}\n\nJob description:\n${text}`, fallback);
 
-  if (usedFallback) return { profile: fallback, usedFallback: true };
+  if (usedFallback) return { profile: fallback, usedFallback: true, source: "deterministic-fallback" };
 
   const profile: JobProfile = {
     title: data.title ?? title,
@@ -368,26 +463,24 @@ Respond with ONLY a JSON object matching this TypeScript type:
 
   if (profile.requirements.length === 0) profile.requirements = fallback.requirements;
 
-  return { profile, usedFallback: false };
+  return { profile, usedFallback: false, source };
 }
 
 function deterministicJob(title: string, text: string): JobProfile {
-  const knownSkills = [
-    "Python", "JavaScript", "TypeScript", "React", "Node.js", "FastAPI",
-    "SQL", "PostgreSQL", "MongoDB", "Docker", "Kubernetes", "AWS",
-    "Machine Learning", "Deep Learning", "PyTorch", "TensorFlow", "scikit-learn",
-    "REST APIs", "GraphQL", "Microservices", "Redis", "Kafka", "CI/CD",
-    "System Design", "Scalability", "Communication", "Leadership",
-  ];
   const lower = text.toLowerCase();
   const requirements: JobRequirement[] = [];
   const seen = new Set<string>();
-  for (const s of knownSkills) {
-    if (lower.includes(s.toLowerCase())) {
+  for (const s of ALL_TAXONOMY_KEYWORDS) {
+    if (s.length < 2) continue;
+    const regex = s.length <= 3 ? new RegExp(`\\b${escapeRegex(s.toLowerCase())}\\b`, "i") : null;
+    const matches = regex ? regex.test(lower) : lower.includes(s.toLowerCase());
+    if (matches) {
       const norm = normalizeSkill(s);
       if (seen.has(norm.competency)) continue;
       seen.add(norm.competency);
-      const importance = /must have|required|strong|expert|deep|years/.test(lower.slice(lower.indexOf(s.toLowerCase()) - 30, lower.indexOf(s.toLowerCase()) + 50)) ? "high" : "medium";
+      const importance = /must have|required|strong|expert|deep|years|5\+|6\+|3\+/.test(
+        lower.slice(Math.max(0, lower.indexOf(s.toLowerCase()) - 40), Math.min(lower.length, lower.indexOf(s.toLowerCase()) + 60))
+      ) ? "high" : "medium";
       requirements.push({
         skill: s,
         competency: norm.competency,
@@ -415,7 +508,7 @@ export async function generateQuestion(
   previousAnswers: { question: string; answer: string; evaluation: string }[],
   fallback: InterviewQuestion,
   count: number = 1
-): Promise<{ questions: InterviewQuestion[]; usedFallback: boolean }> {
+): Promise<{ questions: InterviewQuestion[]; usedFallback: boolean; source: "live-ai" | "deterministic-fallback" }> {
   const system = `You are HireMind AI's interview question generator for a gap-driven adaptive interview.
 
 Generate ${count} diverse focused technical interview question${count > 1 ? "s" : ""} that:
@@ -441,7 +534,7 @@ Respond with ONLY JSON: { "questions": [{ "text": string, "difficulty": "easy"|"
     reason: fallback.reason,
   }];
 
-  const { data, usedFallback } = await chatJSON<{ questions: { text: string; difficulty: "easy" | "medium" | "hard"; reason: string }[] }>(
+  const { data, usedFallback, source } = await chatJSON<{ questions: { text: string; difficulty: "easy" | "medium" | "hard"; reason: string }[] }>(
     system,
     user,
     { questions: fallbackArr }
@@ -472,7 +565,7 @@ Respond with ONLY JSON: { "questions": [{ "text": string, "difficulty": "easy"|"
     });
   }
 
-  return { questions, usedFallback };
+  return { questions, usedFallback, source };
 }
 
 // ---------- Answer Evaluation ----------
@@ -481,7 +574,7 @@ export async function evaluateAnswer(
   question: InterviewQuestion,
   answer: string,
   fallback: AnswerEvaluation
-): Promise<{ evaluation: AnswerEvaluation; usedFallback: boolean }> {
+): Promise<{ evaluation: AnswerEvaluation; usedFallback: boolean; source: "live-ai" | "deterministic-fallback" }> {
   const system = `You are HireMind AI's structured answer evaluator for a technical mock interview.
 
 Evaluate the candidate's answer to a ${question.competency} question.
@@ -507,9 +600,9 @@ Rules:
 
   const user = `Question (competency: ${question.competency}):\n${question.text}\n\nCandidate's answer:\n${answer}`;
 
-  const { data, usedFallback } = await chatJSON<AnswerEvaluation>(system, user, fallback);
+  const { data, usedFallback, source } = await chatJSON<AnswerEvaluation>(system, user, fallback);
 
-  if (usedFallback) return { evaluation: fallback, usedFallback: true };
+  if (usedFallback) return { evaluation: fallback, usedFallback: true, source: "deterministic-fallback" };
 
   // Clamp + validate
   const clamp = (n: unknown) => Math.max(0, Math.min(1, typeof n === "number" ? n : 0));
@@ -535,7 +628,7 @@ Rules:
     nextFocus: typeof data.nextFocus === "string" && data.nextFocus.length > 0 ? data.nextFocus : null,
   };
 
-  return { evaluation, usedFallback: false };
+  return { evaluation, usedFallback: false, source };
 }
 
 // ---------- Roadmap polish (optional AI assist) ----------
@@ -543,8 +636,8 @@ Rules:
 export async function polishRoadmapReason(
   competency: string,
   reason: string
-): Promise<{ reason: string; usedFallback: boolean }> {
+): Promise<{ reason: string; usedFallback: boolean; source: "live-ai" | "deterministic-fallback" }> {
   const system = `You are HireMind AI. Rewrite the given roadmap reason in 1 short, motivating, specific sentence. Do not invent facts. Respond with ONLY JSON: { "reason": string }`;
-  const { data, usedFallback } = await chatJSON<{ reason: string }>(system, `Competency: ${competency}\nReason: ${reason}`, { reason });
-  return { reason: data.reason?.trim() || reason, usedFallback };
+  const { data, usedFallback, source } = await chatJSON<{ reason: string }>(system, `Competency: ${competency}\nReason: ${reason}`, { reason });
+  return { reason: data.reason?.trim() || reason, usedFallback, source };
 }

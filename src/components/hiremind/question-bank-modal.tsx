@@ -101,13 +101,15 @@ function CategoryBadge({ category }: { category: CompetencyCategory }) {
   );
 }
 
+import type { Variants } from "framer-motion";
+
 /* ─── Animation variants ─── */
-const sectionVariants = {
+const sectionVariants: Variants = {
   hidden: { opacity: 0, y: 12 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: Math.min(i * 0.04, 0.4), duration: 0.3, ease: [0.22, 1, 0.36, 1] },
+    transition: { delay: Math.min(i * 0.04, 0.4), duration: 0.3, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
   }),
 };
 

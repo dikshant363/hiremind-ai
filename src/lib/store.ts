@@ -1,8 +1,9 @@
 /**
  * HIREMIND AI — Client store (Zustand).
  *
- * Holds the single-page app's view state + session data, and orchestrates
- * the API calls that drive the core intelligence loop:
+ * Holds the single-page app's view state + session data, authentication,
+ * dynamic system configuration, and orchestrates the API calls that drive
+ * the core intelligence loop:
  *
  *   analyze -> startInterview -> submitAnswer (loop) -> computeReadiness
  */
@@ -21,6 +22,8 @@ import type {
   ReadinessResult,
   Roadmap,
 } from "@/lib/types";
+import type { AuthUser } from "@/lib/auth";
+import type { AppSystemConfig } from "@/lib/config";
 
 export type View =
   | "home"
@@ -65,6 +68,13 @@ interface AnalyzeMeta {
   evalFallback?: boolean;
 }
 
+export interface SystemStats {
+  totalSessions: number;
+  completedSessions: number;
+  registeredUsers: number;
+  averageReadiness: number | null;
+}
+
 interface StoreState {
   view: View;
   setView: (v: View) => void;
@@ -72,6 +82,22 @@ interface StoreState {
   // Presentation mode
   presentationMode: boolean;
   togglePresentationMode: () => void;
+
+  // Authentication
+  currentUser: AuthUser | null;
+  authLoading: boolean;
+  fetchCurrentUser: () => Promise<void>;
+  setCurrentUser: (u: AuthUser | null) => void;
+
+  // Dynamic System Configuration
+  systemConfig: AppSystemConfig | null;
+  configLoading: boolean;
+  fetchSystemConfig: () => Promise<void>;
+  updateConfig: (patch: Partial<AppSystemConfig>) => Promise<void>;
+
+  // Real Database Analytics
+  stats: SystemStats | null;
+  fetchStats: () => Promise<void>;
 
   // Session
   sessionId: string | null;
@@ -160,6 +186,76 @@ export const useHireMind = create<StoreState>((set, get) => ({
   presentationMode: false,
   togglePresentationMode: () => set((s) => ({ presentationMode: !s.presentationMode })),
 
+  currentUser: null,
+  authLoading: false,
+  fetchCurrentUser: async () => {
+    set({ authLoading: true });
+    try {
+      const res = await fetch("/api/auth/me");
+      if (res.ok) {
+        const data = await res.json();
+        set({ currentUser: data.user });
+      } else {
+        set({ currentUser: null });
+      }
+    } catch {
+      set({ currentUser: null });
+    } finally {
+      set({ authLoading: false });
+    }
+  },
+  setCurrentUser: (u) => set({ currentUser: u }),
+
+  systemConfig: null,
+  configLoading: false,
+  fetchSystemConfig: async () => {
+    set({ configLoading: true });
+    try {
+      const res = await fetch("/api/config");
+      if (res.ok) {
+        const data = await res.json();
+        set({ systemConfig: data.config });
+        // Apply dynamic accent color to document root
+        if (data.config?.accentColor && typeof document !== "undefined") {
+          document.documentElement.setAttribute("data-accent", data.config.accentColor);
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to fetch system config:", err);
+    } finally {
+      set({ configLoading: false });
+    }
+  },
+  updateConfig: async (patch) => {
+    try {
+      const res = await fetch("/api/config", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update config.");
+      set({ systemConfig: data.config });
+      if (data.config?.accentColor && typeof document !== "undefined") {
+        document.documentElement.setAttribute("data-accent", data.config.accentColor);
+      }
+    } catch (err) {
+      set({ error: (err as Error).message });
+      throw err;
+    }
+  },
+
+  stats: null,
+  fetchStats: async () => {
+    try {
+      const res = await fetch("/api/session?stats=true");
+      if (res.ok) {
+        const data = await res.json();
+        set({ stats: data });
+      }
+    } catch { /* ignore */ }
+  },
+
   sessionId: null,
   isDemo: false,
 
@@ -218,6 +314,7 @@ export const useHireMind = create<StoreState>((set, get) => ({
         view: "candidate",
       });
       syncHash("candidate", data.id);
+      get().fetchStats(); // Refresh real stats
     } catch (err) {
       set({ error: (err as Error).message });
     } finally {
@@ -226,12 +323,12 @@ export const useHireMind = create<StoreState>((set, get) => ({
   },
 
   startInterview: async (opts) => {
-    const { sessionId } = get();
+    const { sessionId, systemConfig } = get();
     if (!sessionId) {
       set({ error: "Run an analysis first." });
       return;
     }
-    const difficulty = opts?.difficulty ?? "auto";
+    const difficulty = opts?.difficulty ?? (systemConfig?.defaultDifficulty || "auto");
     set({ loading: true, loadingStep: LOADING_STEPS.interview_start, error: null });
     try {
       const res = await fetch("/api/interview/start", {
@@ -296,6 +393,7 @@ export const useHireMind = create<StoreState>((set, get) => ({
       if (!res.ok) throw new Error(data.error || "Couldn't compute readiness.");
       set({ readiness: data.readiness, roadmap: data.roadmap, view: "readiness" });
       syncHash("readiness", get().sessionId);
+      get().fetchStats(); // Refresh real stats
     } catch (err) {
       set({ error: (err as Error).message });
     } finally {
@@ -312,17 +410,19 @@ export const useHireMind = create<StoreState>((set, get) => ({
       set({
         sessionId: data.id,
         isDemo: data.isDemo,
-        resumeText: data.resume?.lines ? "" : "", // Don't need raw text after hydration
-        jobTitle: data.job?.title || "",
+        resumeText: "",
+        jobTitle: data.job?.title || data.jobProfile?.title || "",
         jobText: "",
-        candidate: data.candidate,
-        job: data.jobProfile,
-        match: data.match,
-        gaps: data.gaps,
-        interview: data.interview,
-        readiness: data.readiness,
-        roadmap: data.roadmap,
-        lastEvaluation: null,
+        candidate: data.candidate ?? null,
+        job: data.jobProfile ?? data.job ?? null,
+        match: data.match ?? null,
+        gaps: data.gaps ?? null,
+        interview: data.interview ?? null,
+        readiness: data.readiness ?? null,
+        roadmap: data.roadmap ?? null,
+        lastEvaluation: data.interview?.evaluations?.length
+          ? data.interview.evaluations[data.interview.evaluations.length - 1]
+          : null,
         view: targetView || (data.readiness ? "readiness" : data.interview ? "interview" : data.match ? "match" : "candidate"),
       });
       syncHash(get().view, data.id);
@@ -374,8 +474,6 @@ export const useHireMind = create<StoreState>((set, get) => ({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Couldn't load comparison.");
       set({ comparison: data as Comparison, view: "compare" });
-      // Compare view doesn't need a session id in the URL — it operates on
-      // any two past sessions, so we clear the session param intentionally.
       syncHash("compare", null);
     } catch (err) {
       set({ error: (err as Error).message });

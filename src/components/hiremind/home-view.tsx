@@ -57,9 +57,14 @@ function CharProgressBar({ length, optimal }: { length: number; optimal: number 
 }
 
 export function HomeView() {
-  const { resumeText, jobTitle, jobText, setResumeText, setJobTitle, setJobText, analyze, loading, error, sessionId } = useHireMind();
+  const { resumeText, jobTitle, jobText, setResumeText, setJobTitle, setJobText, analyze, loading, error, sessionId, stats, fetchStats } = useHireMind();
 
-  const animatedCount = useAnimatedCount(1247, 1500);
+  React.useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  const realCount = stats?.totalSessions ?? 0;
+  const animatedCount = useAnimatedCount(realCount > 0 ? realCount : 0, 1000);
 
   const onDemo = () => {
     setResumeText(DEMO_RESUME);
@@ -134,13 +139,20 @@ export function HomeView() {
             Upload your resume and choose a target role. HireMind finds your strongest evidence, identifies your biggest gap, and tests it in an adaptive AI interview.
           </p>
           <div className="relative hm-shimmer-line mt-4 mx-auto max-w-xs" />
-          {/* Trust badge — live system indicator with pulsing green dot + animated counter */}
+          {/* Trust badge — live system indicator with pulsing green dot + real database counter */}
           <div className="relative mt-5 flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
             <span className="relative inline-flex h-1.5 w-1.5">
               <span className="absolute inset-0 rounded-full bg-success opacity-75 animate-ping" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
             </span>
-            <span><span className="text-foreground font-medium tabular-nums">{animatedCount.toLocaleString()}</span> candidates analyzed today</span>
+            {realCount > 0 ? (
+              <span>
+                <span className="text-foreground font-medium tabular-nums">{animatedCount.toLocaleString()}</span> real candidate{realCount === 1 ? "" : "s"} evaluated in database
+                {stats?.completedSessions ? ` · ${stats.completedSessions} completed interviews` : ""}
+              </span>
+            ) : (
+              <span>Production mode · Ready for your first real analysis</span>
+            )}
           </div>
         </motion.div>
 

@@ -15,8 +15,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { applyEvaluation, QUESTION_BANK } from "@/lib/engine";
 import { evaluateAnswer, generateQuestion } from "@/lib/ai";
-import { loadSession, persistSession } from "@/lib/session";
+import { loadSession, persistSession, isAuthorizedForSession } from "@/lib/session";
 import { DEMO_ANSWERS } from "@/lib/demo";
+import { getAuthenticatedUser } from "@/lib/auth";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import type { AnswerEvaluation, InterviewQuestion, InterviewState } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -28,6 +30,14 @@ function sanitize(s: string, max = 10_000): string {
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = getClientIp(req);
+    const rl = checkRateLimit(`interview-answer:${ip}`, { limit: 40, windowMs: 60_000 });
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many answer submissions. Please take a moment before submitting your next answer." },
+        { status: 429 }
+      );
+    }
     const body = await req.json().catch(() => ({}));
     const sessionId = String(body.sessionId ?? "");
     const questionId = String(body.questionId ?? "");
@@ -60,11 +70,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Please write a fuller answer (at least a sentence or two)." }, { status: 400 });
     }
 
+    // Verify authorization
+    const user = await getAuthenticatedUser(req);
+    if (!isAuthorizedForSession(payload, user)) {
+      return NextResponse.json({ error: "Unauthorized access to this session." }, { status: 403 });
+    }
+
     // 1. Build deterministic fallback evaluation first (always available)
     const fallbackEval: AnswerEvaluation = deterministicFallbackEvaluation(currentQ, answer);
 
     // 2. Ask AI to evaluate (with validation)
-    const { evaluation, usedFallback: evalFallback } = await evaluateAnswer(currentQ, answer, fallbackEval);
+    const { evaluation, usedFallback: evalFallback, source: evalSource } = await evaluateAnswer(currentQ, answer, fallbackEval);
 
     // 3. Record answer + evaluation, update competency state, decide next competency deterministically
     const stateWithAnswer: InterviewState = {
@@ -96,17 +112,14 @@ export async function POST(req: NextRequest) {
         lastAdded.reason,
         previousContext,
         fb,
-        3 // Generate 3 diverse questions for deeper interviews
+        1 // Generate 1 specific question for the current active turn
       );
-      // Use the first AI question now, store extras in the pool
-      const aiQ = aiQuestions[0];
       // Replace the last (deterministic) question with the AI-polished one
-      nextState.questions[nextState.questions.length - 1] = aiQ;
-      // Add extra questions to the pool (they won't be asked yet but available for future rounds)
-      for (let i = 1; i < aiQuestions.length; i++) {
-        if (!nextState.questions.find(q => q.id === aiQuestions[i].id)) {
-          nextState.questions.push(aiQuestions[i]);
-        }
+      if (aiQuestions[0]) {
+        nextState.questions[nextState.questions.length - 1] = {
+          ...aiQuestions[0],
+          id: lastAdded.id, // Preserve consistent ID
+        };
       }
       nextState.history.push({
         step: "question_source",
@@ -128,7 +141,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       evaluation,
       interview: nextState,
-      meta: { evalFallback },
+      meta: {
+        evalFallback,
+        evaluationSource: evalSource,
+      },
     });
   } catch (err) {
     console.error("[HIREMIND] /api/interview/answer error:", err);
@@ -149,15 +165,15 @@ function deterministicFallbackEvaluation(question: InterviewQuestion, answer: st
   const communication = Math.max(0.4, Math.min(0.95, 0.5 + len * 0.3 + hasStructure));
   const overall = Math.round((0.4 * technicalAccuracy + 0.25 * depth + 0.2 * relevance + 0.15 * communication) * 100) / 100;
 
-  // Heuristic detectedGap: if answer doesn't mention scalability/caching when on System Design, suggest it
+  // Heuristic detectedGap: if answer doesn't mention scalability/caching when on System Design / Microservices / Backend, suggest it
   let detectedGap: string | null = null;
-  if (question.competency === "System Design") {
-    if (!/scalab|cach|load balanc|shard|replica|queue/i.test(answer)) {
+  if (question.competency === "System Design" || question.competency === "Microservices" || question.competency === "REST APIs") {
+    if (!/scalab|cach|load balanc|shard|replica|queue|kafka|circuit breaker|async|event/i.test(answer)) {
       detectedGap = "Scalability";
     }
   } else if (question.competency === "Databases") {
     if (!/index|shard|replica|normaliz|transaction/i.test(answer)) detectedGap = "Scalability";
-  } else if (question.competency === "Machine Learning") {
+  } else if (question.competency === "Machine Learning" || question.competency === "Deep Learning") {
     if (!/metric|baseline|overfit|cross|valid|feature/i.test(answer)) detectedGap = "Feature Engineering";
   }
 

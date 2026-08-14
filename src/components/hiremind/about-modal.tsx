@@ -32,38 +32,39 @@ const TECH_STACK = [
   "Framer Motion",
 ] as const;
 
-/* ─── Animation variants ─── */
-const overlayVariants = {
+import type { Variants } from "framer-motion";
+
+const overlayVariants: Variants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1 },
   exit: { opacity: 0 },
 };
 
-const cardVariants = {
+const cardVariants: Variants = {
   hidden: { opacity: 0, scale: 0.95, y: 10 },
   visible: {
     opacity: 1,
     scale: 1,
     y: 0,
-    transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
   },
   exit: { opacity: 0, scale: 0.97, y: 6, transition: { duration: 0.15 } },
 };
 
-const flowDotVariants = {
+const flowDotVariants: Variants = {
   hidden: { opacity: 0, scale: 0 },
   visible: (i: number) => ({
     opacity: 1,
     scale: 1,
-    transition: { delay: 0.3 + i * 0.06, duration: 0.35, ease: [0.22, 1, 0.36, 1] },
+    transition: { delay: 0.3 + i * 0.06, duration: 0.35, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
   }),
 };
 
-const flowLineVariants = {
+const flowLineVariants: Variants = {
   hidden: { scaleX: 0 },
   visible: (i: number) => ({
     scaleX: 1,
-    transition: { delay: 0.35 + i * 0.06, duration: 0.25, ease: [0.22, 1, 0.36, 1] },
+    transition: { delay: 0.35 + i * 0.06, duration: 0.25, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
   }),
 };
 

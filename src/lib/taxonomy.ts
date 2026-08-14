@@ -62,7 +62,9 @@ export const TAXONOMY: TaxonomyNode[] = [
   { competency: "Docker", category: "devops", aliases: ["docker", "containers", "containerization"] },
   { competency: "Kubernetes", category: "devops", aliases: ["kubernetes", "k8s", "orchestration"] },
   { competency: "CI/CD", category: "devops", aliases: ["ci/cd", "cicd", "continuous integration", "continuous deployment", "github actions", "jenkins"] },
-  { competency: "Monitoring", category: "devops", aliases: ["monitoring", "observability", "logging", "prometheus", "grafana"] },
+  { competency: "Infrastructure as Code", category: "devops", aliases: ["terraform", "iac", "infrastructure as code", "ansible", "cloudformation"] },
+  { competency: "Monitoring", category: "devops", aliases: ["monitoring", "observability", "logging", "prometheus", "grafana", "opentelemetry"] },
+  { competency: "Testing", category: "devops", aliases: ["testing", "unit test", "integration test", "e2e", "jest", "playwright", "cypress"] },
 
   // --- Languages ---
   { competency: "Python", category: "languages", aliases: ["python", "py", "python3"] },

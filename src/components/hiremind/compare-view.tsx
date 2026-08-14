@@ -80,6 +80,8 @@ const METRICS: MetricSpec[] = [
   },
 ];
 
+import { formatDeterministicDate } from "@/lib/utils";
+
 function relativeTime(iso: string): string {
   const now = Date.now();
   const then = new Date(iso).getTime();
@@ -91,23 +93,11 @@ function relativeTime(iso: string): string {
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
   if (days < 7) return `${days}d ago`;
-  return new Date(iso).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  return formatDeterministicDate(iso);
 }
 
 function shortDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  } catch {
-    return iso;
-  }
+  return formatDeterministicDate(iso);
 }
 
 function valueForMetric(session: ComparisonSession, key: MetricKey): number | null {

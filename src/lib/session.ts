@@ -1,5 +1,5 @@
 /**
- * HIREMIND AI — Session helpers (DB persistence + payload assembly).
+ * HIREMIND AI — Session helpers (DB persistence + payload assembly + authorization).
  */
 
 import { db } from "@/lib/db";
@@ -13,10 +13,12 @@ import type {
   Roadmap,
   SessionPayload,
 } from "@/lib/types";
+import type { AuthUser } from "@/lib/auth";
 
 export async function persistSession(
   id: string,
   patch: Partial<{
+    userId: string | null;
     resumeText: string;
     jobTitle: string;
     jobText: string;
@@ -40,8 +42,23 @@ export async function loadSession(id: string): Promise<SessionPayload | null> {
   return rowToPayload(row);
 }
 
+/**
+ * Verifies that a user is authorized to read or mutate a session.
+ * - Demo sessions (isDemo === true) are public.
+ * - Anonymous sessions (userId === null) are accessible by anyone with the ID.
+ * - Authenticated sessions (userId !== null) are accessible only by the owner or an admin.
+ */
+export function isAuthorizedForSession(session: { isDemo: boolean; userId?: string | null }, user: AuthUser | null): boolean {
+  if (session.isDemo) return true;
+  if (!session.userId) return true;
+  if (!user) return false;
+  if (user.role === "admin") return true;
+  return user.id === session.userId;
+}
+
 export function rowToPayload(row: {
   id: string;
+  userId?: string | null;
   isDemo: boolean;
   status: string;
   createdAt: Date;
@@ -66,18 +83,19 @@ export function rowToPayload(row: {
 
   return {
     id: row.id,
+    userId: row.userId ?? null,
     isDemo: row.isDemo,
     status: row.status,
     createdAt: row.createdAt.toISOString(),
     resume: {
-      name: candidate.name,
-      summary: candidate.summary,
-      lines: candidate.raw.lines,
+      name: candidate?.name ?? null,
+      summary: candidate?.summary ?? "",
+      lines: candidate?.raw?.lines ?? 0,
     },
     job: {
-      title: jobProfile.title,
-      summary: jobProfile.summary,
-      lines: jobProfile.raw.lines,
+      title: jobProfile?.title ?? "",
+      summary: jobProfile?.summary ?? "",
+      lines: jobProfile?.raw?.lines ?? 0,
     },
     candidate,
     jobProfile,
@@ -90,6 +108,7 @@ export function rowToPayload(row: {
 }
 
 export async function createSessionRecord(opts: {
+  userId?: string | null;
   resumeText: string;
   jobTitle: string;
   jobText: string;
@@ -99,6 +118,7 @@ export async function createSessionRecord(opts: {
 }): Promise<string> {
   const row = await db.session.create({
     data: {
+      userId: opts.userId ?? null,
       resumeText: opts.resumeText,
       jobTitle: opts.jobTitle,
       jobText: opts.jobText,
@@ -118,19 +138,14 @@ export async function createSessionRecord(opts: {
  * - The 10 most recent sessions are ALWAYS preserved (regardless of age).
  * - The 5 most recent demo sessions are ALWAYS preserved (regardless of age),
  *   so the "Load demo candidate" CTA on the home page always has fresh seed data.
- *
- * Returns the count of deleted rows, the remaining row count, and the ISO8601
- * cutoff timestamp that was used. Safe to call fire-and-forget from the session
- * list endpoint — every home page load triggers a background sweep.
+ * - Sessions owned by registered users are never automatically purged unless
+ *   explicitly requested.
  */
 export async function cleanupOldSessions(
   maxAgeHours = 24
 ): Promise<{ deleted: number; remaining: number; cutoff: string }> {
   const cutoff = new Date(Date.now() - maxAgeHours * 60 * 60 * 1000);
 
-  // Preserve the 10 most recent sessions (any kind) and the 5 most recent demo
-  // sessions. Run both lookups in parallel — they hit different sort orders but
-  // both touch the same index so this is cheap.
   const [recentSessions, recentDemoSessions] = await Promise.all([
     db.session.findMany({
       orderBy: { createdAt: "desc" },
@@ -154,6 +169,7 @@ export async function cleanupOldSessions(
     where: {
       createdAt: { lt: cutoff },
       id: { notIn: preserveIds },
+      userId: null, // Don't purge registered user sessions
     },
   });
 
@@ -165,3 +181,4 @@ export async function cleanupOldSessions(
     cutoff: cutoff.toISOString(),
   };
 }
+

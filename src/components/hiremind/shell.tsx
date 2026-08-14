@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
-import { Sun, Moon, BrainCircuit, RotateCcw, Monitor, HelpCircle, GitCompare, Search, Trophy } from "lucide-react";
+import { Sun, Moon, BrainCircuit, RotateCcw, Monitor, HelpCircle, GitCompare, Search, Trophy, Sliders, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHireMind, type View } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -30,7 +30,7 @@ const NAV_REQUIRES_SESSION: View[] = ["candidate", "match", "gaps", "interview",
 /** Compare is gated separately — it needs at least 2 sessions in the DB. */
 
 export function SiteHeader() {
-  const { view, setView, sessionId, isDemo, reset, presentationMode, togglePresentationMode } = useHireMind();
+  const { view, setView, sessionId, isDemo, reset, presentationMode, togglePresentationMode, systemConfig, currentUser } = useHireMind();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
@@ -56,6 +56,8 @@ export function SiteHeader() {
     refreshCount();
   }, [refreshCount, sessionId, view]);
 
+  const brandName = systemConfig?.brandName || "HireMind AI";
+
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-background/70 border-b border-border/60 pt-safe">
       <div className="mx-auto max-w-7xl px-5 sm:px-8 h-14 flex items-center justify-between gap-4">
@@ -68,7 +70,7 @@ export function SiteHeader() {
             <BrainCircuit className="h-4 w-4" strokeWidth={2.2} />
           </span>
           <span className="text-[15px] font-semibold tracking-tight">
-            HireMind<span className="text-muted-foreground"> AI</span>
+            {brandName}
           </span>
           {isDemo && (
             <span className="ml-1 rounded-full bg-warning/15 text-warning-foreground px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider">
@@ -172,6 +174,28 @@ export function SiteHeader() {
             <HelpCircle className="h-4 w-4" />
             {/* Subtle pulse dot to hint at discoverability */}
             <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-accent-blue opacity-60 group-hover:opacity-0 transition-opacity" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Control Center"
+            title="Open Control Center (Admin)"
+            onClick={() => document.dispatchEvent(new CustomEvent("hm-open-control-center"))}
+            className="h-8 w-8 relative group"
+          >
+            <Sliders className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={currentUser ? "secondary" : "ghost"}
+            size="sm"
+            aria-label="User account"
+            onClick={() => document.dispatchEvent(new CustomEvent("hm-open-auth"))}
+            className="h-8 gap-1.5 px-2.5 text-xs text-muted-foreground hover:text-foreground"
+          >
+            <UserIcon className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline font-medium">
+              {currentUser ? (currentUser.name || currentUser.email.split("@")[0]) : "Sign In"}
+            </span>
           </Button>
           <Button
             variant="ghost"

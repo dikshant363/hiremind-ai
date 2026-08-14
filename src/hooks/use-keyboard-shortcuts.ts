@@ -50,7 +50,7 @@ export function useKeyboardShortcuts() {
         el instanceof HTMLInputElement ||
         el instanceof HTMLTextAreaElement ||
         el instanceof HTMLSelectElement ||
-        el?.isContentEditable
+        (el as HTMLElement)?.isContentEditable
       ) {
         return;
       }

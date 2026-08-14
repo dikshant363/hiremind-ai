@@ -12,11 +12,28 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// User accounts for real authentication & server-side authorization
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String?
+  role         String    @default("user") // user | admin
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  sessions     Session[]
+}
+
 // A single end-to-end analysis session (one resume + one target job + interview + readiness + roadmap).
 model Session {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Optional owner user for authenticated sessions
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   // Snapshot of inputs
   resumeText String
@@ -50,15 +67,32 @@ model Session {
   status String @default("created") // created | analyzed | interviewed | completed
 }
 
+// Live Dynamic System Configuration for the Control Center (singleton record).
+model SystemConfig {
+  id                   String   @id @default("singleton")
+  brandName            String   @default("HireMind AI")
+  brandTagline         String   @default("Evidence-based job readiness · AI-assisted assessment")
+  accentColor          String   @default("blue") // blue | indigo | violet | emerald | amber | rose
+  defaultDifficulty    String   @default("auto") // auto | easy | medium | hard
+  scoringWeightsJson   String?
+  readinessWeightsJson String?
+  featureFlagsJson     String?
+  customTaxonomyJson   String?
+  customRolesJson      String?
+  updatedAt            DateTime @updatedAt
+}
+
 // Audit events for observability (no PII, no API keys, no full resume text).
 model AuditEvent {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
 
+  userId    String?
   sessionId String?
-  category  String // ai | db | security | system
+  category  String // auth | ai | db | security | system | config
   action    String
   level     String // info | warn | error
   message   String
   metaJson  String?
 }
+

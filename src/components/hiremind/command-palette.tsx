@@ -34,6 +34,7 @@ import {
   Monitor,
   Laptop,
   Keyboard,
+  Sliders,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useCommandPalette } from "@/hooks/use-command-palette";
@@ -184,6 +185,30 @@ export function CommandPalette() {
         shortcut: ["P"],
         action: () => {
           togglePresentationMode();
+          close();
+        },
+      },
+      {
+        id: "act-control-center",
+        title: "Admin Control Center",
+        description: "Configure branding, weights, taxonomy, and system health",
+        icon: Sliders,
+        section: "Actions",
+        shortcut: ["C"],
+        action: () => {
+          document.dispatchEvent(new CustomEvent("hm-open-control-center"));
+          close();
+        },
+      },
+      {
+        id: "act-auth",
+        title: "User Account & Security",
+        description: "Sign in, register, or manage authenticated session",
+        icon: User,
+        section: "Actions",
+        shortcut: ["U"],
+        action: () => {
+          document.dispatchEvent(new CustomEvent("hm-open-auth"));
           close();
         },
       },

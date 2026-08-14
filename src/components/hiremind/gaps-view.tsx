@@ -461,7 +461,7 @@ export function GapsView() {
               whileTap={{ scale: 0.97 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
             >
-              <Button onClick={startInterview} size="lg" className="h-12 px-6 gap-2" disabled={loading}>
+              <Button onClick={() => startInterview()} size="lg" className="h-12 px-6 gap-2" disabled={loading}>
                 {loading ? (
                   <>
                     <Sparkles className="h-4 w-4 hm-thinking" /> {loadingStep || "Working…"}
@@ -502,7 +502,7 @@ export function GapsView() {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {others.map((g, i) => (
-              <OtherGapCard key={g.competency} g={g} index={i} onOpenDeepDive={setDeepDiveGap} />
+              <OtherGapCard key={`${g.competency}-${i}`} g={g} index={i} onOpenDeepDive={setDeepDiveGap} />
             ))}
           </div>
         </motion.div>

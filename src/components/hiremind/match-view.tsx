@@ -145,7 +145,7 @@ export function MatchView() {
           <span className="text-[11px] text-muted-foreground">{match.rows.length} competencies</span>
         </div>
         <div className="hm-stagger-fade grid gap-x-4 sm:gap-x-8 gap-y-3 sm:gap-y-4 md:grid-cols-2">
-          {match.rows.map((row) => {
+          {match.rows.map((row, i) => {
             const score =
               row.candidateLevel === "strong"
                 ? 1
@@ -157,7 +157,7 @@ export function MatchView() {
                 ? 0.2
                 : 0.05;
             return (
-              <div key={row.competency} className="space-y-1.5">
+              <div key={`${row.competency}-${i}`} className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold line-clamp-1">{row.competency}</span>

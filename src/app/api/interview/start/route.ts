@@ -9,7 +9,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { initInterview } from "@/lib/engine";
-import { loadSession, persistSession } from "@/lib/session";
+import { loadSession, persistSession, isAuthorizedForSession } from "@/lib/session";
+import { getAuthenticatedUser } from "@/lib/auth";
 import type { InterviewDifficulty } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -28,6 +29,12 @@ export async function POST(req: NextRequest) {
 
     const payload = await loadSession(sessionId);
     if (!payload) return NextResponse.json({ error: "Session not found." }, { status: 404 });
+
+    const user = await getAuthenticatedUser(req);
+    if (!isAuthorizedForSession(payload, user)) {
+      return NextResponse.json({ error: "Unauthorized access to this session." }, { status: 403 });
+    }
+
     if (!payload.match || !payload.gaps) {
       return NextResponse.json({ error: "Run analysis first." }, { status: 400 });
     }

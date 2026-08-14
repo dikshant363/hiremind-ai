@@ -100,7 +100,7 @@ function derivePerQuestionSeconds(
     .map((h) => ({ at: new Date(h.at).getTime() }));
 
   const startTs = interview.history.find((h) => h.step === "interview_start");
-  const startAt = startTs ? new Date(startTs.at).getTime() : Date.now();
+  const startAt = startTs ? new Date(startTs.at).getTime() : (evalTs[0]?.at ?? 0);
 
   const result: number[] = [];
   let prevAt = startAt;

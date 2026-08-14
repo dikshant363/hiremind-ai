@@ -15,6 +15,8 @@ interface SessionSummary {
   matchIndex: number | null;
 }
 
+import { formatDeterministicDate } from "@/lib/utils";
+
 function relativeTime(iso: string): string {
   const now = Date.now();
   const then = new Date(iso).getTime();
@@ -26,7 +28,7 @@ function relativeTime(iso: string): string {
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
   if (days < 7) return `${days}d ago`;
-  return new Date(iso).toLocaleDateString();
+  return formatDeterministicDate(iso);
 }
 
 export function SessionHistory() {

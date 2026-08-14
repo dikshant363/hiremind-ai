@@ -1,31 +1,21 @@
 "use client";
 
+import * as React from "react";
+
 /**
- * GradientMesh — fixed-position animated gradient mesh background.
+ * GradientMesh — lightweight static gradient background.
  *
- * Renders 4 large blurred color "blobs" that slowly drift around the screen
- * using CSS animations (defined in globals.css). The mesh sits behind all
- * content (z-0, pointer-events-none) and is GPU-friendly — only transform +
- * opacity are animated.
- *
- * Design intent:
- *  - VERY subtle atmosphere — opacity 0.04 in light mode, 0.06 in dark mode.
- *  - Slow drift (20–30s, ease-in-out, infinite alternate) so motion never
- *    distracts from foreground content.
- *  - Respects prefers-reduced-motion (animations disabled via CSS media query).
- *  - Contained to viewport (fixed inset-0 overflow-hidden) so blobs never cause
- *    horizontal scroll even when their transforms push them off-screen.
- *
- * Colors use the HIREMIND semantic tokens so theme changes propagate
- * automatically: accent-blue, success, warning, chart-5.
+ * Provides a subtle, calm, Apple-like atmosphere using static radial gradients.
+ * Eliminates continuous full-screen transform calculations and blur repaints,
+ * ensuring silky-smooth typing and scrolling performance.
  */
 export function GradientMesh() {
   return (
     <div
       aria-hidden="true"
-      className="hm-mesh fixed inset-0 z-0 overflow-hidden pointer-events-none"
+      className="hm-mesh fixed inset-0 z-0 overflow-hidden pointer-events-none select-none"
     >
-      {/* Blob 1 — accent-blue, top-left quadrant */}
+      {/* Blob 1 — accent-blue, top-left */}
       <div
         className="hm-mesh-blob hm-mesh-blob-1"
         style={
@@ -33,11 +23,11 @@ export function GradientMesh() {
             top: "-10%",
             left: "-5%",
             background:
-              "radial-gradient(circle at 50% 50%, var(--accent-blue), transparent 70%)",
+              "radial-gradient(circle at 50% 50%, color-mix(in oklch, var(--accent-blue) 75%, transparent), transparent 70%)",
           } as React.CSSProperties
         }
       />
-      {/* Blob 2 — success, top-right quadrant */}
+      {/* Blob 2 — success, top-right */}
       <div
         className="hm-mesh-blob hm-mesh-blob-2"
         style={
@@ -45,11 +35,11 @@ export function GradientMesh() {
             top: "-8%",
             right: "-8%",
             background:
-              "radial-gradient(circle at 50% 50%, var(--success), transparent 70%)",
+              "radial-gradient(circle at 50% 50%, color-mix(in oklch, var(--success) 65%, transparent), transparent 70%)",
           } as React.CSSProperties
         }
       />
-      {/* Blob 3 — warning, bottom-left quadrant */}
+      {/* Blob 3 — warning, bottom-left */}
       <div
         className="hm-mesh-blob hm-mesh-blob-3"
         style={
@@ -57,11 +47,11 @@ export function GradientMesh() {
             bottom: "-12%",
             left: "8%",
             background:
-              "radial-gradient(circle at 50% 50%, var(--warning), transparent 70%)",
+              "radial-gradient(circle at 50% 50%, color-mix(in oklch, var(--warning) 60%, transparent), transparent 70%)",
           } as React.CSSProperties
         }
       />
-      {/* Blob 4 — chart-5 (violet), bottom-right quadrant */}
+      {/* Blob 4 — chart-5 (violet), bottom-right */}
       <div
         className="hm-mesh-blob hm-mesh-blob-4"
         style={
@@ -69,7 +59,7 @@ export function GradientMesh() {
             bottom: "-10%",
             right: "5%",
             background:
-              "radial-gradient(circle at 50% 50%, var(--chart-5), transparent 70%)",
+              "radial-gradient(circle at 50% 50%, color-mix(in oklch, var(--chart-5) 60%, transparent), transparent 70%)",
           } as React.CSSProperties
         }
       />

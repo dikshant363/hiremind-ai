@@ -191,6 +191,7 @@ export interface Roadmap {
 /** Full session payload returned to the client. */
 export interface SessionPayload {
   id: string;
+  userId?: string | null;
   isDemo: boolean;
   status: string;
   createdAt: string;
@@ -204,3 +205,4 @@ export interface SessionPayload {
   readiness: ReadinessResult | null;
   roadmap: Roadmap | null;
 }
+

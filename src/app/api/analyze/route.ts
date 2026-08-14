@@ -10,6 +10,9 @@ import { extractResume, extractJob } from "@/lib/ai";
 import { computeMatch, computeGaps } from "@/lib/engine";
 import { createSessionRecord, persistSession } from "@/lib/session";
 import { DEMO_RESUME, DEMO_JOB, DEMO_JOB_TITLE } from "@/lib/demo";
+import { getAuthenticatedUser } from "@/lib/auth";
+import { getSystemConfig } from "@/lib/config";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -22,6 +25,14 @@ function sanitize(s: string, max = MAX_TEXT): string {
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = getClientIp(req);
+    const rl = checkRateLimit(`analyze:${ip}`, { limit: 30, windowMs: 60_000 });
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many analysis requests. Please wait a moment before trying again." },
+        { status: 429 }
+      );
+    }
     const body = await req.json().catch(() => ({}));
     let resumeText = sanitize(String(body.resumeText ?? ""));
     let jobTitle = sanitize(String(body.jobTitle ?? "")).slice(0, 200);
@@ -42,15 +53,19 @@ export async function POST(req: NextRequest) {
     }
     if (!jobTitle) jobTitle = "Target Role";
 
-    const [{ profile: candidate, usedFallback: rFallback }, { profile: job, usedFallback: jFallback }] = await Promise.all([
+    const [config, { profile: candidate, usedFallback: rFallback, source: rSource }, { profile: job, usedFallback: jFallback, source: jSource }] = await Promise.all([
+      getSystemConfig(),
       extractResume(resumeText),
       extractJob(jobTitle, jobText),
     ]);
 
-    const match = computeMatch(candidate, job);
+    const match = computeMatch(candidate, job, config.scoringWeights);
     const gaps = computeGaps(match, candidate, job);
 
+    const user = await getAuthenticatedUser(req);
+
     const id = await createSessionRecord({
+      userId: user?.id ?? null,
       resumeText,
       jobTitle,
       jobText,
@@ -64,6 +79,8 @@ export async function POST(req: NextRequest) {
       gapsJson: JSON.stringify(gaps),
     });
 
+    const analysisSource = (!rFallback && !jFallback && (rSource === "live-ai" || jSource === "live-ai")) ? "live-ai" : "deterministic-fallback";
+
     return NextResponse.json({
       id,
       isDemo,
@@ -71,7 +88,13 @@ export async function POST(req: NextRequest) {
       job,
       match,
       gaps,
-      meta: { resumeFallback: rFallback, jobFallback: jFallback },
+      meta: {
+        analysisSource,
+        resumeFallback: rFallback,
+        jobFallback: jFallback,
+        resumeSource: rSource,
+        jobSource: jSource,
+      },
     });
   } catch (err) {
     console.error("[HIREMIND] /api/analyze error:", err);

@@ -27,6 +27,7 @@ import type {
   Roadmap,
   RoadmapStep,
 } from "./types";
+import type { ScoringWeights, ReadinessWeights } from "./config";
 import { bestSemanticMatch, evidenceStrength } from "./text";
 import { normalizeSkill } from "./taxonomy";
 
@@ -77,7 +78,11 @@ export function indexCandidateSkills(profile: CandidateProfile): {
 
 // ---------- semantic match engine ----------
 
-export function computeMatch(candidate: CandidateProfile, job: JobProfile): MatchResult {
+export function computeMatch(
+  candidate: CandidateProfile,
+  job: JobProfile,
+  customWeights?: ScoringWeights
+): MatchResult {
   const { byCompetency } = indexCandidateSkills(candidate);
 
   const rows: CompetencyMatchRow[] = job.requirements.map((req) => {
@@ -150,28 +155,33 @@ export function computeMatch(candidate: CandidateProfile, job: JobProfile): Matc
     .reduce((s, r) => s + (r.contribution / Math.max(0.001, IMPORTANCE_WEIGHT[r.importance])), 0) /
     Math.max(1, rows.filter((r) => r.evidence).length);
 
+  const wRequired = typeof customWeights?.requiredSkillAlignment === "number" ? customWeights.requiredSkillAlignment : 0.4;
+  const wEvidence = typeof customWeights?.evidenceStrength === "number" ? customWeights.evidenceStrength : 0.3;
+  const wSemantic = typeof customWeights?.semanticRelevance === "number" ? customWeights.semanticRelevance : 0.2;
+  const wBreadth = typeof customWeights?.coverageBreadth === "number" ? customWeights.coverageBreadth : 0.1;
+
   const components = [
     {
       label: "Required-skill alignment",
-      weight: 0.4,
+      weight: wRequired,
       score: Math.round(requiredCoverage * 100) / 100,
       detail: `${requiredRows.filter((r) => r.status === "matched").length} of ${requiredRows.length} required skills demonstrated with evidence.`,
     },
     {
       label: "Evidence strength",
-      weight: 0.3,
+      weight: wEvidence,
       score: Math.round(Math.min(1, evidenceStrengthAvg) * 100) / 100,
       detail: "Average contribution weight of evidenced skills across the role.",
     },
     {
       label: "Semantic relevance",
-      weight: 0.2,
+      weight: wSemantic,
       score: Math.round((rows.reduce((s, r) => s + r.semanticScore, 0) / Math.max(1, rows.length)) * 100) / 100,
       detail: "How closely your stated skills relate to the job's required competencies.",
     },
     {
       label: "Coverage breadth",
-      weight: 0.1,
+      weight: wBreadth,
       score: Math.round((matched / Math.max(1, rows.length)) * 100) / 100,
       detail: `${matched} matched, ${weak} weak, ${gap} gap across ${rows.length} competency rows.`,
     },
@@ -366,10 +376,14 @@ export function initInterview(
     targetCompetencies.push(g.competency);
     seenCategories.add(g.category);
   }
-  // Fallback: if no gaps found, pick a couple of weak/matched competencies to probe.
+  // Fallback: if no gaps found, pick candidate/matched competencies to probe.
   if (targetCompetencies.length === 0) {
-    const weakRows = match.rows.filter((r) => r.status === "weak").slice(0, 3);
-    for (const r of weakRows) targetCompetencies.push(r.competency);
+    const candidateRows = match.rows.filter((r) => r.status === "weak");
+    const fallbackRows = candidateRows.length > 0 ? candidateRows : match.rows;
+    for (const r of fallbackRows.slice(0, 3)) targetCompetencies.push(r.competency);
+  }
+  if (targetCompetencies.length === 0) {
+    targetCompetencies.push("System Design");
   }
 
   const totalQuestions = Math.min(7, Math.max(3, targetCompetencies.length + 2));
@@ -479,7 +493,10 @@ function pickQuestionForCompetency(
 }
 
 function cryptoId(): string {
-  return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return "q_" + crypto.randomUUID().replace(/-/g, "").slice(0, 14);
+  }
+  return "q_" + Date.now().toString(36);
 }
 
 /**
@@ -593,7 +610,8 @@ function combineLevels(a: SkillLevel, b: SkillLevel): SkillLevel {
 export function computeReadiness(
   match: MatchResult,
   gaps: SkillGap[],
-  interview: InterviewState | null
+  interview: InterviewState | null,
+  customWeights?: ReadinessWeights
 ): ReadinessResult {
   // Dimensions:
   //   - job alignment (from match index)
@@ -629,7 +647,13 @@ export function computeReadiness(
   ];
 
   // Weighted aggregate
-  const weights = [0.3, 0.25, 0.2, 0.15, 0.1];
+  const weights = [
+    typeof customWeights?.jobAlignment === "number" ? customWeights.jobAlignment : 0.3,
+    typeof customWeights?.requiredCoverage === "number" ? customWeights.requiredCoverage : 0.25,
+    typeof customWeights?.interviewEvidence === "number" ? customWeights.interviewEvidence : 0.2,
+    typeof customWeights?.technicalReadiness === "number" ? customWeights.technicalReadiness : 0.15,
+    typeof customWeights?.communication === "number" ? customWeights.communication : 0.1,
+  ];
   const index = Math.round(
     dimensions.reduce((s, d, i) => s + d.score * weights[i], 0) * 100
   );

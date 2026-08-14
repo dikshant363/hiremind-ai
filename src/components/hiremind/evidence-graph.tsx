@@ -226,7 +226,7 @@ export function EvidenceGraph() {
               <div>
                 {topRows.map((row, i) => (
                   <EvidenceRow
-                    key={row.competency}
+                    key={`${row.competency}-${i}`}
                     competency={row.competency}
                     jobReq={jobReqByComp.get(row.competency)}
                     resumeEv={resumeByComp.get(row.competency)}

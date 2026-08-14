@@ -357,7 +357,7 @@ export function RoadmapView() {
             const PhaseIcon = meta.icon;
             return (
               <motion.div
-                key={i}
+                key={`step-${step.competency}-${step.phase}-${i}`}
                 initial={{ opacity: 0, x: -14, rotate: -1.5 }}
                 animate={{ opacity: 1, x: 0, rotate: 0 }}
                 transition={{
@@ -421,7 +421,7 @@ export function RoadmapView() {
                         const isChecked = checked.has(key);
                         return (
                           <li
-                            key={j}
+                            key={`practice-${step.competency}-${j}`}
                             className="flex gap-2 cursor-pointer group"
                             onClick={() => toggleChecked(key)}
                           >
