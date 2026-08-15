@@ -1,7 +1,7 @@
 /**
  * HIREMIND AI — Dynamic System Configuration & Live Customization
  *
- * Real runtime configuration persisted in SQLite via Prisma.
+ * Real runtime configuration persisted in PostgreSQL via Prisma.
  * Modifies brand name, styling accent colors, scoring formulas, interview defaults,
  * skill taxonomy, custom job templates, and feature flags without rebuilding.
  */
