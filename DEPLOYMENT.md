@@ -32,7 +32,7 @@ flowchart TD
 1. Create a new private or public repository on GitHub.
 2. Initialize and push your repository:
    ```bash
-   git remote add origin https://github.com/YOUR_ORG/hiremind-ai.git
+   git remote add origin https://github.com/dikshant363/hiremind-ai.git
    git branch -M main
    git push -u origin main
    ```

@@ -44,11 +44,31 @@ jobs:
       - name: ESLint Check
         run: npm run lint
 
-      - name: Run Deterministic Engine Tests
-        run: |
-          node tests/all-parameters-qa.mjs
-          node tests/multi-candidate-qa.mjs
-
       - name: Run Production Next.js Build
         run: npm run build
+
+      - name: Start Server & Run Deterministic QA Tests
+        run: |
+          node .next/standalone/server.js &
+          SERVER_PID=$!
+          echo "Server started with PID: $SERVER_PID"
+          
+          # Wait for server health endpoint
+          echo "Waiting for server to become healthy..."
+          for i in {1..30}; do
+            if curl -s -f http://127.0.0.1:3000/api/health > /dev/null; then
+              echo "Server is healthy on attempt $i"
+              break
+            fi
+            sleep 1
+          done
+          
+          # Run verification test suites
+          node tests/all-parameters-qa.mjs
+          node tests/multi-candidate-qa.mjs
+          node tests/auth-and-config-qa.mjs
+          
+          # Cleanly terminate background server
+          kill $SERVER_PID || true
+
 

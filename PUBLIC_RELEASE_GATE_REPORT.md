@@ -133,7 +133,7 @@
 
 1. **GitHub Remote Setup:** Create your public repository on GitHub and push the codebase:
    ```bash
-   git remote set-url origin https://github.com/YOUR_ORG/hiremind-ai.git
+   git remote set-url origin https://github.com/dikshant363/hiremind-ai.git
    git add .
    git commit -m "chore: prepare v0.4.0 open-source release"
    git push -u origin main

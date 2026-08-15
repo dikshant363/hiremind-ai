@@ -28,7 +28,7 @@ Before contributing code, please understand our foundational rule:
 ### 2. Local Setup
 ```bash
 # 1. Clone your fork
-git clone https://github.com/YOUR_USERNAME/hiremind-ai.git
+git clone https://github.com/dikshant363/hiremind-ai.git
 cd hiremind-ai
 
 # 2. Install dependencies

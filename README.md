@@ -3,7 +3,7 @@
 > **Evidence-Based Recruitment Intelligence & Adaptive Interview-Readiness Platform**  
 > *Transforming resumes and job descriptions into transparent match scores, dynamic mock interviews, and actionable career roadmaps.*
 
-[![CI](https://github.com/YOUR_ORG/hiremind-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_ORG/hiremind-ai/actions/workflows/ci.yml)
+[![CI](https://github.com/dikshant363/hiremind-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/dikshant363/hiremind-ai/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-16.3-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)](https://www.typescriptlang.org/)
@@ -56,7 +56,7 @@ flowchart LR
 ### 2. Clone & Install
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_ORG/hiremind-ai.git
+git clone https://github.com/dikshant363/hiremind-ai.git
 cd hiremind-ai
 
 # Install dependencies

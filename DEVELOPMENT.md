@@ -17,7 +17,7 @@ This guide walks you through setting up, developing, testing, and debugging **Hi
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/YOUR_ORG/hiremind-ai.git
+git clone https://github.com/dikshant363/hiremind-ai.git
 cd hiremind-ai
 
 # 2. Install dependencies

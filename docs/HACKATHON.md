@@ -1,7 +1,7 @@
 # HireMind AI — Hackathon Submission Brief
 
 **Problem Statement:** PS 02 — Automated Smart Resume Parser & Mock Interviewer  
-**Repository:** [HireMind AI](https://github.com/YOUR_ORG/hiremind-ai)  
+**Repository:** [HireMind AI](https://github.com/dikshant363/hiremind-ai)  
 **Architecture Paradigm:** Hybrid Qualitative AI Interpretation + Transparent Deterministic Scoring Engine
 
 ---
