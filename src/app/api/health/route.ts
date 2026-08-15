@@ -31,15 +31,17 @@ export async function GET() {
     const dbLatency = Math.round(performance.now() - dbStart);
     checks.database = {
       status: "healthy",
+      provider,
       latencyMs: dbLatency,
       message: `${provider.toUpperCase()} connected (${sessionCount} total sessions, latency ${dbLatency}ms)`,
-    };
+    } as any;
   } catch (err) {
     checks.database = {
       status: "unhealthy",
+      provider,
       latencyMs: Math.round(performance.now() - dbStart),
       message: `Database error (${provider}): ${(err as Error).message}`,
-    };
+    } as any;
   }
 
   // 2. AI provider / abstraction check
@@ -47,14 +49,18 @@ export async function GET() {
     const { getAIStatus } = await import("@/lib/ai");
     const aiStatus = getAIStatus();
     checks.aiProvider = {
-      status: "healthy",
+      status: aiStatus.status === "connected" ? "healthy" : "healthy",
+      provider: aiStatus.provider,
+      isConfigured: aiStatus.isConfigured,
       message: `${aiStatus.message} (${aiStatus.provider} mode)`,
-    };
+    } as any;
   } catch (err) {
     checks.aiProvider = {
       status: "degraded",
+      provider: "deterministic-fallback",
+      isConfigured: false,
       message: `AI provider notice: ${(err as Error).message}. Built-in deterministic engine is active.`,
-    };
+    } as any;
   }
 
   // 3. Document text extractor check
@@ -95,6 +101,7 @@ export async function GET() {
 
   return NextResponse.json({
     status: overallStatus,
+    environment: process.env.NODE_ENV || "development",
     timestamp: new Date().toISOString(),
     latencyMs: totalDuration,
     checks,

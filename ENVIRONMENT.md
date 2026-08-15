@@ -31,8 +31,8 @@ This document provides a comprehensive reference of all environment variables us
 
 ### Local Development (`.env`)
 ```env
-DATABASE_URL="postgresql://neondb_owner:password@ep-dark-wind-ayo7zc7q-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require"
-DIRECT_URL="postgresql://neondb_owner:password@ep-dark-wind-ayo7zc7q.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require"
+DATABASE_URL="postgresql://neondb_owner:[PASSWORD]@ep-project-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require"
+DIRECT_URL="postgresql://neondb_owner:[PASSWORD]@ep-project.us-east-2.aws.neon.tech/neondb?sslmode=require"
 AUTH_SECRET="your-development-auth-secret-here-at-least-32-chars"
 PORT=3000
 NODE_ENV=development
@@ -42,8 +42,8 @@ GEMINI_API_KEY=""
 
 ### Production on Vercel + Neon (`Vercel Project Settings`)
 ```env
-DATABASE_URL="postgresql://neondb_owner:password@ep-dark-wind-ayo7zc7q-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require"
-DIRECT_URL="postgresql://neondb_owner:password@ep-dark-wind-ayo7zc7q.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require"
+DATABASE_URL="postgresql://neondb_owner:[PASSWORD]@ep-project-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require"
+DIRECT_URL="postgresql://neondb_owner:[PASSWORD]@ep-project.us-east-2.aws.neon.tech/neondb?sslmode=require"
 AUTH_SECRET="your-production-64-character-hex-secret"
 NODE_ENV=production
 AI_PROVIDER="gemini"

@@ -65,9 +65,9 @@ Configure these in **Vercel Project Settings → Environment Variables** (`Produ
 
 | Variable Name | Required | Example Value | Description |
 | :--- | :---: | :--- | :--- |
-| `DATABASE_URL` | **YES** | `postgresql://neondb_owner:npg_jLm3nNCUi2eS@ep-dark-wind-ayo7zc7q-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require` | Pooled PostgreSQL connection string for Serverless Lambdas |
-| `DIRECT_URL` | **YES** | `postgresql://neondb_owner:npg_jLm3nNCUi2eS@ep-dark-wind-ayo7zc7q.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require` | Direct non-pooled PostgreSQL connection string for migrations |
-| `AUTH_SECRET` | **YES** | `hiremind-production-auth-secret-key-2026-secure` | 64-character secret for signing cryptographic session cookies |
+| `DATABASE_URL` | **YES** | `postgresql://neondb_owner:[PASSWORD]@[ENDPOINT]-pooler.neon.tech/neondb?sslmode=require` | Pooled PostgreSQL connection string for Serverless Lambdas |
+| `DIRECT_URL` | **YES** | `postgresql://neondb_owner:[PASSWORD]@[ENDPOINT].neon.tech/neondb?sslmode=require` | Direct non-pooled PostgreSQL connection string for migrations |
+| `AUTH_SECRET` | **YES** | `[64-character-random-hex-string]` | 64-character secret for signing cryptographic session cookies |
 | `NODE_ENV` | **YES** | `production` | Enables production security & PostgreSQL enforcement |
 | `AI_PROVIDER` | Optional | `gemini` | Declares AI provider preference |
 | `GEMINI_API_KEY` | Optional | `AIzaSy...` | Google AI Studio key for live LLM extraction (optional) |
@@ -127,9 +127,9 @@ All automated test suites were executed directly against the live PostgreSQL dat
 1. Go to your [Vercel Dashboard](https://vercel.com/dashboard) → Select `hiremind-ai` (or `hiremind-ai-five-psi`).
 2. Go to **Settings → Environment Variables**.
 3. Add or update the following variables for **Production** and **Preview**:
-   - `DATABASE_URL`: `postgresql://neondb_owner:npg_jLm3nNCUi2eS@ep-dark-wind-ayo7zc7q-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require`
-   - `DIRECT_URL`: `postgresql://neondb_owner:npg_jLm3nNCUi2eS@ep-dark-wind-ayo7zc7q.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require`
-   - `AUTH_SECRET`: `hiremind-production-auth-secret-key-2026-secure`
+   - `DATABASE_URL`: `[Your Neon Pooled Connection String]`
+   - `DIRECT_URL`: `[Your Neon Direct Connection String]`
+   - `AUTH_SECRET`: `[Your 64-character secret]`
    - `AI_PROVIDER`: `gemini`
    - `NODE_ENV`: `production`
 4. Trigger a **Redeploy** on Vercel (or push this commit to `main`).

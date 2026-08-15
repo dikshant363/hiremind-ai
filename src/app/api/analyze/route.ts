@@ -97,9 +97,9 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err) {
-    console.error("[HIREMIND] /api/analyze error:", err);
+    console.error("[HIREMIND] /api/analyze error:", (err as Error)?.message || err);
     return NextResponse.json(
-      { error: "We couldn't analyze that resume and job. Please try again or load the demo candidate." },
+      { error: "Analysis is temporarily unavailable. The service could not reach its production data service. Please try again." },
       { status: 500 }
     );
   }
