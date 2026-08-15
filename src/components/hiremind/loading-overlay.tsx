@@ -34,31 +34,31 @@ export function LoadingOverlay() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          transition={{ duration: 0.15, ease: [0.2, 0, 0, 1] }}
           className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md"
         >
           <div className="text-center max-w-md px-6">
-            <div className="relative inline-flex h-16 w-16 items-center justify-center">
-              <span className="absolute inset-0 rounded-full bg-accent-blue/10 animate-ping" />
-              <span className="relative inline-flex h-12 w-12 items-center justify-center rounded-full bg-accent-blue/15 text-accent-blue-foreground">
-                <Sparkles className="h-6 w-6 hm-thinking" />
+            <div className="relative inline-flex h-14 w-14 items-center justify-center">
+              <span className="relative inline-flex h-12 w-12 items-center justify-center rounded-full bg-accent-blue/15 text-accent-blue">
+                <Sparkles className="h-5 w-5 hm-thinking" />
               </span>
             </div>
-            <h2 className="mt-6 text-lg font-semibold tracking-tight">
+            <h2 className="mt-5 text-base font-semibold tracking-tight">
               {loadingStep || "Working…"}
             </h2>
-            <p className="mt-1.5 text-xs text-muted-foreground">
+            <p className="mt-1 text-xs text-muted-foreground">
               {isInterviewStep
                 ? "Evaluating your response and adapting the next question."
                 : "HireMind is processing — this usually takes a few seconds."}
             </p>
-            <div className="mt-6 space-y-2.5">
+            <div className="mt-5 space-y-2">
               {steps.map((s, i) => (
                 <div
                   key={s.label}
                   className="flex items-center gap-2.5 text-xs text-muted-foreground"
-                  style={{ animation: `hm-fade 0.4s ease ${i * 0.1}s both` }}
+                  style={{ animation: `hm-fade 0.15s ease ${i * 0.04}s both` }}
                 >
-                  <s.icon className="h-3.5 w-3.5 hm-thinking" style={{ animationDelay: `${i * 0.2}s` }} />
+                  <s.icon className="h-3.5 w-3.5 hm-thinking" style={{ animationDelay: `${i * 0.1}s` }} />
                   <span>{s.label}</span>
                 </div>
               ))}

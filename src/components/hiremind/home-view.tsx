@@ -16,30 +16,6 @@ import { PipelineProgress } from "./pipeline-progress";
 import { AchievementStrip } from "./achievements";
 import { JobTemplatePicker } from "./job-template-picker";
 
-/** Animated count-up hook — animates from 0 to `target` over `durationMs` with ease-out. */
-function useAnimatedCount(target: number, durationMs = 1500) {
-  const [count, setCount] = React.useState(0);
-  const rafRef = React.useRef<number>(0);
-
-  React.useEffect(() => {
-    const start = performance.now();
-    const step = (now: number) => {
-      const elapsed = now - start;
-      const progress = Math.min(elapsed / durationMs, 1);
-      // ease-out cubic: 1 - (1 - t)^3
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.round(eased * target));
-      if (progress < 1) {
-        rafRef.current = requestAnimationFrame(step);
-      }
-    };
-    rafRef.current = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [target, durationMs]);
-
-  return count;
-}
-
 /** Character count progress bar — thin 2px bar that fills based on text length vs optimal length. */
 function CharProgressBar({ length, optimal }: { length: number; optimal: number }) {
   const pct = Math.min((length / optimal) * 100, 100);
@@ -47,7 +23,7 @@ function CharProgressBar({ length, optimal }: { length: number; optimal: number 
   return (
     <div className="mt-1.5 h-[2px] w-full rounded-full bg-border/40 overflow-hidden">
       <div
-        className={`h-full rounded-full transition-all duration-500 ease-out ${
+        className={`h-full rounded-full transition-all duration-200 ease-out ${
           isOptimal ? "bg-success/60" : "bg-accent-blue/40"
         }`}
         style={{ width: `${pct}%` }}
@@ -64,7 +40,6 @@ export function HomeView() {
   }, [fetchStats]);
 
   const realCount = stats?.totalSessions ?? 0;
-  const animatedCount = useAnimatedCount(realCount > 0 ? realCount : 0, 1000);
 
   const onDemo = () => {
     setResumeText(DEMO_RESUME);
@@ -99,24 +74,14 @@ export function HomeView() {
   const JOB_OPTIMAL = 600;
 
   return (
-    <div className="hm-ambient hm-particles hm-textured-bg">
+    <div className="hm-ambient">
       <section className="mx-auto max-w-5xl px-4 sm:px-8 pt-12 sm:pt-24 pb-10 sm:pb-12">
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.2, ease: [0.2, 0, 0, 1] }}
           className="relative text-center"
         >
-          {/* Subtle animated gradient orb behind hero — atmospheric depth */}
-          <div
-            aria-hidden
-            className="hm-hero-orb absolute -top-12 left-1/2 w-[520px] h-[360px] pointer-events-none"
-          />
-          {/* Grid texture overlay — premium dotted background that fades at edges */}
-          <div
-            aria-hidden
-            className="hm-grid-fade absolute inset-0 -z-[1] pointer-events-none opacity-60"
-          />
           {/* Floating help icon — top-right of hero, opens keyboard shortcuts / how-it-works panel */}
           <button
             type="button"
@@ -126,7 +91,7 @@ export function HomeView() {
           >
             <HelpCircle className="h-4 w-4" />
           </button>
-          <div className="hm-shine-line hm-badge-premium hm-glass-panel relative inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium mb-6">
+          <div className="hm-badge-premium hm-glass-panel relative inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium mb-6">
             <Sparkles className="h-3 w-3" />
             <span>Evidence-based job readiness · AI-assisted assessment</span>
           </div>
@@ -138,16 +103,16 @@ export function HomeView() {
           <p className="relative mt-4 mx-auto max-w-xl text-sm sm:text-base text-foreground/70 leading-relaxed sm:leading-normal text-pretty">
             Upload your resume and choose a target role. HireMind finds your strongest evidence, identifies your biggest gap, and tests it in an adaptive AI interview.
           </p>
-          <div className="relative hm-shimmer-line mt-4 mx-auto max-w-xs" />
+          <div className="relative hm-divider-soft mt-4 mx-auto max-w-xs" />
           {/* Trust badge — live system indicator with pulsing green dot + real database counter */}
           <div className="relative mt-5 flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
             <span className="relative inline-flex h-1.5 w-1.5">
-              <span className="absolute inset-0 rounded-full bg-success opacity-75 animate-ping" />
+              <span className="absolute inset-0 rounded-full bg-success opacity-75" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
             </span>
             {realCount > 0 ? (
               <span>
-                <span className="text-foreground font-medium tabular-nums">{animatedCount.toLocaleString()}</span> real candidate{realCount === 1 ? "" : "s"} evaluated in database
+                <span className="text-foreground font-medium tabular-nums">{realCount.toLocaleString()}</span> real candidate{realCount === 1 ? "" : "s"} evaluated in database
                 {stats?.completedSessions ? ` · ${stats.completedSessions} completed interviews` : ""}
               </span>
             ) : (
@@ -163,13 +128,13 @@ export function HomeView() {
         <JobTemplatePicker onSelect={onTemplateSelect} />
 
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.22, delay: 0.05, ease: [0.2, 0, 0, 1] }}
           className="mt-6 sm:mt-8 grid gap-4 md:grid-cols-2 items-stretch"
         >
           {/* Resume input */}
-          <div data-hm="resume-input" className={`hm-card hm-card-depth p-4 sm:p-6 flex flex-col transition-[box-shadow] duration-300 ease-out ${resumeText.length > 0 ? "ring-2 ring-accent-blue/20" : ""}`}>
+          <div data-hm="resume-input" className={`hm-card p-4 sm:p-6 flex flex-col transition-shadow duration-150 ease-out ${resumeText.length > 0 ? "ring-1 ring-accent-blue/30" : ""}`}>
             <div className="flex items-center gap-2 mb-3">
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
                 <FileText className="h-3.5 w-3.5" />

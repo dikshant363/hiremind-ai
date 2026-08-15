@@ -306,7 +306,7 @@ export function SiteFooter() {
 /** Premium score ring — animated count-up with glow + shimmer. */
 export function ScoreRing({
   value,
-  size = 168,
+  size = 140,
   label,
   caption,
   tone = "neutral",
@@ -321,44 +321,12 @@ export function ScoreRing({
   delay?: number;
   labelExtra?: React.ReactNode;
 }) {
-  const [display, setDisplay] = React.useState(0);
-  const [shimmerActive, setShimmerActive] = React.useState(false);
-
-  React.useEffect(() => {
-    const start = performance.now();
-    const from = 0;
-    const to = Math.max(0, Math.min(100, value));
-    const dur = 1100; // slightly longer for smoother feel
-    let raf = 0;
-    const tick = (t: number) => {
-      const p = Math.min(1, (t - start) / dur);
-      // Overshoot easing: cubic with slight spring past target
-      const eased = p < 0.85
-        ? 1 - Math.pow(1 - p / 0.85, 3) * 1
-        : 1 + 0.02 * Math.sin(((p - 0.85) / 0.15) * Math.PI);
-      setDisplay(Math.round(from + (to - from) * Math.min(1.01, eased)));
-      if (p < 1) raf = requestAnimationFrame(tick);
-      else {
-        setDisplay(to);
-        // Trigger shimmer after animation completes
-        setTimeout(() => setShimmerActive(true), 200);
-      }
-    };
-    const timeout = setTimeout(() => {
-      raf = requestAnimationFrame(tick);
-    }, delay);
-    return () => {
-      clearTimeout(timeout);
-      cancelAnimationFrame(raf);
-    };
-  }, [value, delay]);
-
   const stroke = 7;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
-  const offset = c - (display / 100) * c;
+  const clamped = Math.max(0, Math.min(100, value));
+  const offset = c - (clamped / 100) * c;
 
-  // Use a stable, unique gradient id so multiple ScoreRings on a page don't clash
   const gradientId = React.useId().replace(/:/g, "");
 
   const toneColor =
@@ -373,28 +341,20 @@ export function ScoreRing({
   return (
     <div className="flex flex-col items-center" style={{ width: size }}>
       <div className="relative" style={{ width: size, height: size }}>
-        {/* Glow layer behind ring — plays a 1.4s entrance radiance, then
-            settles into a subtle 4s breathing pulse so the ring always
-            feels "alive" even when idle. Uses the .hm-ring-glow-breathe
-            utility class which chains both animations. */}
         <div
-          className="hm-ring-glow-breathe"
+          className="absolute inset-0 rounded-full pointer-events-none"
           style={{
-            background: `radial-gradient(circle, color-mix(in oklch, ${toneColor} 12%, transparent), transparent 70%)`,
+            background: `radial-gradient(circle, color-mix(in oklch, ${toneColor} 8%, transparent), transparent 70%)`,
           }}
         />
         <svg width={size} height={size} className="-rotate-90" style={{ overflow: "visible" }}>
           <defs>
-            {/* Gradient fade — full color at the arc start, fading to a softer
-                tone toward the arc end so the transition into the muted track
-                feels continuous (no hard "Pac-Man" gap). */}
             <linearGradient id={gradientId} x1="100%" y1="0%" x2="0%" y2="0%">
               <stop offset="0%" stopColor={toneColor} stopOpacity={1} />
               <stop offset="55%" stopColor={toneColor} stopOpacity={0.92} />
               <stop offset="100%" stopColor={toneColor} stopOpacity={0.4} />
             </linearGradient>
           </defs>
-          {/* Track — full closed circle, slightly muted */}
           <circle
             cx={size / 2}
             cy={size / 2}
@@ -404,7 +364,6 @@ export function ScoreRing({
             strokeWidth={stroke}
             opacity={0.55}
           />
-          {/* Progress arc — uses gradient stroke + rounded linecap for soft ends */}
           <circle
             cx={size / 2}
             cy={size / 2}
@@ -415,26 +374,12 @@ export function ScoreRing({
             strokeLinecap="round"
             strokeDasharray={c}
             strokeDashoffset={offset}
-            style={{ transition: "stroke-dashoffset 0.1s linear" }}
+            style={{ transition: "stroke-dashoffset var(--duration-normal) var(--ease-enter)" }}
           />
         </svg>
-        {/* Shimmer sweep overlay — first sweep fires ~200ms after the count-up
-            completes, then repeats on a 5s cycle using hm-shimmer-periodic
-            (1.6s sweep + 3.4s idle). Adds premium "alive" sheen. */}
-        {shimmerActive && (
-          <div className="absolute inset-0 overflow-hidden rounded-full pointer-events-none">
-            <div
-              className="absolute inset-0"
-              style={{
-                background: `linear-gradient(105deg, transparent 40%, color-mix(in oklch, ${toneColor} 10%, var(--card)) 50%, transparent 60%)`,
-                animation: "hm-shimmer-periodic 5s ease-in-out infinite",
-              }}
-            />
-          </div>
-        )}
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-0">
           <span className="text-5xl font-semibold tracking-tight tabular-nums hm-text-gradient leading-none">
-            {display}
+            {clamped}
           </span>
           <span className="text-xs text-muted-foreground leading-none mt-1">/ 100</span>
         </div>
@@ -452,13 +397,12 @@ export function ScoreRing({
   );
 }
 
-/** Premium horizontal competency bar with gradient fill + micro-shine. */
+/** Premium horizontal competency bar with clean, fast fill. */
 export function CompetencyBar({
   label,
   value,
   status,
   rightLabel,
-  index = 0,
 }: {
   label: string;
   value: number; // 0..1
@@ -466,12 +410,7 @@ export function CompetencyBar({
   rightLabel?: string;
   index?: number;
 }) {
-  const [w, setW] = React.useState(0);
-  React.useEffect(() => {
-    // Staggered entrance: each bar appears 50ms after the previous
-    const t = setTimeout(() => setW(Math.max(0.04, Math.min(1, value))), 60 + index * 50);
-    return () => clearTimeout(t);
-  }, [value, index]);
+  const w = Math.max(0.04, Math.min(1, value));
 
   const color =
     status === "matched"
@@ -484,7 +423,6 @@ export function CompetencyBar({
       ? "var(--accent-blue)"
       : "var(--muted-foreground)";
 
-  // Gradient fill for matched/weak/accent bars
   const background =
     status === "matched"
       ? "linear-gradient(90deg, color-mix(in oklch, var(--success) 85%, var(--accent-blue)), var(--success))"
@@ -502,9 +440,9 @@ export function CompetencyBar({
           {rightLabel && <span className="text-muted-foreground tabular-nums">{rightLabel}</span>}
         </div>
       )}
-      <div className="h-1.5 rounded-full bg-muted overflow-hidden hm-bar-shine">
+      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
         <div
-          className="h-full rounded-full transition-all duration-700 ease-out"
+          className="h-full rounded-full transition-all duration-200 ease-out"
           style={{ width: `${w * 100}%`, background, opacity: status === "unknown" ? 0.5 : 1 }}
         />
       </div>
@@ -528,51 +466,19 @@ export function StatusPill({ status }: { status: "matched" | "weak" | "unknown" 
 }
 
 /* ----------------------------------------------------------------------------
- * AnimatedCounter — spring count-up for numeric score displays.
- * Cubic ease-out with a subtle sine overshoot near the end. Delayed start so
- * multiple counters on the same view can stagger. Supports an optional suffix
- * (e.g. "%" or "/100") and an optional className for typography styling.
+ * AnimatedCounter — immediate, tabular presentation of numeric scores.
  * ------------------------------------------------------------------------- */
 export function AnimatedCounter({
   value,
-  delay = 0,
-  duration = 900,
   className,
 }: {
   value: number;
-  delay?: number; // seconds before animation starts
-  duration?: number; // milliseconds
+  delay?: number;
+  duration?: number;
   className?: string;
 }) {
-  const [display, setDisplay] = React.useState(0);
-  const [started, setStarted] = React.useState(false);
-
-  React.useEffect(() => {
-    const t = setTimeout(() => setStarted(true), delay * 1000);
-    return () => clearTimeout(t);
-  }, [delay]);
-
-  React.useEffect(() => {
-    if (!started) return;
-    let raf = 0;
-    const start = performance.now();
-    const to = Math.max(0, Math.min(1000, value));
-    const tick = (t: number) => {
-      const p = Math.min(1, (t - start) / duration);
-      // Cubic ease-out + tiny sine overshoot at the very end for a springy feel
-      const eased =
-        p < 0.92
-          ? 1 - Math.pow(1 - p / 0.92, 3)
-          : 1 + 0.012 * Math.sin(((p - 0.92) / 0.08) * Math.PI);
-      setDisplay(Math.round(to * Math.min(1.005, eased)));
-      if (p < 1) raf = requestAnimationFrame(tick);
-      else setDisplay(to);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [started, value, duration]);
-
-  return <span className={cn("font-semibold tabular-nums hm-num-tabular", className)}>{display}</span>;
+  const to = Math.max(0, Math.min(1000, value));
+  return <span className={cn("font-semibold tabular-nums hm-num-tabular", className)}>{to}</span>;
 }
 
 export function PriorityPill({ priority }: { priority: "critical" | "high" | "medium" | "low" }) {

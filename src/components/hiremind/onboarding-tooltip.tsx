@@ -138,16 +138,20 @@ export function OnboardingTooltip() {
     // Re-measure on resize / scroll
     const onResize = () => updateRect();
     const onScroll = () => updateRect();
-    window.addEventListener("resize", onResize);
-    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", onResize, { passive: true });
+    window.addEventListener("scroll", onScroll, { capture: true, passive: true });
 
-    // Also re-measure periodically for late layout shifts
-    const interval = setInterval(updateRect, 500);
+    let ro: ResizeObserver | null = null;
+    const targetEl = document.querySelector<HTMLElement>(currentStep.target);
+    if (typeof ResizeObserver !== "undefined" && targetEl) {
+      ro = new ResizeObserver(() => updateRect());
+      ro.observe(targetEl);
+    }
 
     return () => {
       window.removeEventListener("resize", onResize);
       window.removeEventListener("scroll", onScroll, true);
-      clearInterval(interval);
+      if (ro) ro.disconnect();
     };
   }, [step, currentStep]);
 
