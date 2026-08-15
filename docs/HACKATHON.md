@@ -1,7 +1,9 @@
 # HireMind AI — Hackathon Submission Brief
 
 **Problem Statement:** PS 02 — Automated Smart Resume Parser & Mock Interviewer  
+**Team ID:** CKPHACK065 • **Team Name:** CODE NEXUS  
 **Repository:** [HireMind AI](https://github.com/dikshant363/hiremind-ai)  
+**Slide Deck:** [TECHNOISM Project Presentation](PRESENTATION.md)  
 **Architecture Paradigm:** Hybrid Qualitative AI Interpretation + Transparent Deterministic Scoring Engine
 
 ---

@@ -14,7 +14,10 @@
 
 ## 🌟 Overview
 
-**HireMind AI** addresses Problem Statement **PS 02: Automated Smart Resume Parser & Mock Interviewer**. 
+**HireMind AI** addresses Problem Statement **PS 02: Automated Smart Resume Parser & Mock Interviewer** (TECHNOISM / SSIP — Team **CODE NEXUS** `CKPHACK065`). 
+
+- 📊 **[Official Project Presentation & Slide Deck](docs/PRESENTATION.md)**
+- 📝 **[Hackathon Submission Brief](docs/HACKATHON.md)**
 
 Unlike black-box screening systems that rely solely on unpredictable LLM prompts, HireMind AI utilizes a **Hybrid Decision Architecture**:
 1. **AI / NLP** interprets unstructured resume documents and job postings.
