@@ -1,4 +1,4 @@
-// HIREMIND AI — Prisma schema (SQLite)
+// HIREMIND AI — Prisma schema (PostgreSQL)
 // Entities support the core intelligence loop:
 //   Resume + Job -> Candidate Intelligence -> Match -> Gaps
 //   -> Adaptive Interview -> Evaluations -> Readiness -> Roadmap
@@ -8,8 +8,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // User accounts for real authentication & server-side authorization

@@ -26,7 +26,7 @@ npm install
 # 3. Setup environment configuration
 cp .env.example .env
 
-# 4. Generate Prisma client & initialize SQLite database
+# 4. Generate Prisma client & initialize database
 npx prisma generate
 npx prisma db push
 

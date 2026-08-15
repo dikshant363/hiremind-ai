@@ -15,7 +15,8 @@ This document provides a comprehensive reference of all environment variables us
 
 | Variable | Required | Default | Scope | Description |
 |---|---|---|---|---|
-| `DATABASE_URL` | **Yes** | `file:../db/custom.db` | Server | SQLite connection path (local) or PostgreSQL connection URI (cloud) |
+| `DATABASE_URL` | **Yes** | `postgresql://...` (prod) | Server | Managed PostgreSQL connection URI (pooled with PgBouncer in cloud) |
+| `DIRECT_URL` | Optional | `postgresql://...` (prod) | Server | Direct non-pooled PostgreSQL URI for Prisma migrations |
 | `AUTH_SECRET` | **Yes** | Auto-generated in dev | Server | Cryptographic secret used for HMAC-SHA256 session token signatures |
 | `PORT` | Optional | `3000` | Server | HTTP port for local Next.js server |
 | `NODE_ENV` | Optional | `development` | Server | Runtime mode (`development`, `test`, `production`) |
@@ -30,7 +31,8 @@ This document provides a comprehensive reference of all environment variables us
 
 ### Local Development (`.env`)
 ```env
-DATABASE_URL="file:../db/custom.db"
+DATABASE_URL="postgresql://neondb_owner:password@ep-dark-wind-ayo7zc7q-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require"
+DIRECT_URL="postgresql://neondb_owner:password@ep-dark-wind-ayo7zc7q.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require"
 AUTH_SECRET="your-development-auth-secret-here-at-least-32-chars"
 PORT=3000
 NODE_ENV=development
@@ -40,7 +42,8 @@ GEMINI_API_KEY=""
 
 ### Production on Vercel + Neon (`Vercel Project Settings`)
 ```env
-DATABASE_URL="postgresql://user:password@endpoint.neon.tech/hiremind?sslmode=require"
+DATABASE_URL="postgresql://neondb_owner:password@ep-dark-wind-ayo7zc7q-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require"
+DIRECT_URL="postgresql://neondb_owner:password@ep-dark-wind-ayo7zc7q.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require"
 AUTH_SECRET="your-production-64-character-hex-secret"
 NODE_ENV=production
 AI_PROVIDER="gemini"

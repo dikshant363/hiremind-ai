@@ -16,6 +16,7 @@ HireMind AI includes an extensive, multi-layered automated testing architecture 
 | **All Parameters QA** | `tests/all-parameters-qa.mjs` | Mathematical formula bounds & invariants | `node tests/all-parameters-qa.mjs` |
 | **10-Run Consecutive Demo QA** | `tests/ten-run-demo-qa.mjs` | Zero-regression stability across 10 full runs | `node tests/ten-run-demo-qa.mjs` |
 | **Independent Red-Team Harness** | `scratch/redteam-test.mjs` | Rate limiting, session isolation, file security | `node scratch/redteam-test.mjs` |
+| **Production Preflight QA** | `tests/production-preflight.mjs` | PostgreSQL connectivity, Prisma CRUD, AI engine | `node tests/production-preflight.mjs` |
 
 ---
 

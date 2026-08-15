@@ -21,19 +21,24 @@ export async function GET() {
 
   // 1. Database check
   const dbStart = performance.now();
+  const rawDbUrl = process.env.DATABASE_URL?.trim() || "";
+  const provider = (rawDbUrl.startsWith("postgresql:") || rawDbUrl.startsWith("postgres:"))
+    ? "postgresql"
+    : "sqlite";
+
   try {
     const sessionCount = await db.session.count();
     const dbLatency = Math.round(performance.now() - dbStart);
     checks.database = {
       status: "healthy",
       latencyMs: dbLatency,
-      message: `SQLite connected (${sessionCount} total sessions, latency ${dbLatency}ms)`,
+      message: `${provider.toUpperCase()} connected (${sessionCount} total sessions, latency ${dbLatency}ms)`,
     };
   } catch (err) {
     checks.database = {
       status: "unhealthy",
       latencyMs: Math.round(performance.now() - dbStart),
-      message: `Database error: ${(err as Error).message}`,
+      message: `Database error (${provider}): ${(err as Error).message}`,
     };
   }
 

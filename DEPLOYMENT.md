@@ -21,34 +21,38 @@ flowchart TD
 ## 🚀 Step-by-Step Deployment
 
 ### 1. Provision Free PostgreSQL on Neon
-1. Sign up at [neon.tech](https://neon.tech) (free tier includes 0.5 GiB storage and serverless auto-suspend).
+1. Sign up at [neon.tech](https://neon.tech) (free tier includes serverless connection pooling and auto-suspend).
 2. Create a new project: `hiremind-production`.
-3. Copy the pooled PostgreSQL connection string from the dashboard:
+3. Copy the **Pooled connection string** (for `DATABASE_URL`) and **Direct connection string** (for `DIRECT_URL`):
    ```text
+   # Pooled (DATABASE_URL):
+   postgresql://[user]:[password]@[endpoint]-pooler.neon.tech/neondb?sslmode=require
+
+   # Direct (DIRECT_URL):
    postgresql://[user]:[password]@[endpoint].neon.tech/neondb?sslmode=require
    ```
 
 ### 2. Push Code to GitHub
-1. Create a new private or public repository on GitHub.
-2. Initialize and push your repository:
+1. Commit all changes to your repository:
    ```bash
-   git remote add origin https://github.com/dikshant363/hiremind-ai.git
-   git branch -M main
-   git push -u origin main
+   git add .
+   git commit -m "feat(db): configure production PostgreSQL and migrations"
+   git push origin main
    ```
 
 ### 3. Deploy to Vercel
 1. Sign in to [vercel.com](https://vercel.com) and click **"Add New... → Project"**.
 2. Select your `hiremind-ai` GitHub repository.
-3. Configure the Build & Development Settings:
+3. Configure the Build Settings:
    - **Framework Preset:** `Next.js`
-   - **Build Command:** `npx prisma generate && npx prisma db push --accept-data-loss && next build`
+   - **Build Command:** `npm run build`
    - **Output Directory:** `.next`
-4. Add the **Environment Variables**:
-   - `DATABASE_URL`: `[Your Neon PostgreSQL Connection String]`
-   - `AUTH_SECRET`: `[Generate a 64-char random hex string via openssl rand -hex 32]`
+4. Configure the **Environment Variables** in Vercel Project Settings:
+   - `DATABASE_URL`: `postgresql://...-pooler.neon.tech/neondb?sslmode=require`
+   - `DIRECT_URL`: `postgresql://...@ep-...neon.tech/neondb?sslmode=require`
+   - `AUTH_SECRET`: `[64-character random hex string generated via openssl rand -hex 32]`
    - `AI_PROVIDER`: `gemini`
-   - `GEMINI_API_KEY`: `[Your Google AI Studio Key, or leave blank for deterministic fallback]`
+   - `GEMINI_API_KEY`: `[Your Google Gemini API Key from Google AI Studio, or leave blank for deterministic fallback]`
    - `NODE_ENV`: `production`
 5. Click **"Deploy"**.
 

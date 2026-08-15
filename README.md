@@ -84,7 +84,8 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 | Variable | Required | Description |
 |---|---|---|
-| `DATABASE_URL` | **Yes** | SQLite path (`file:../db/custom.db`) or PostgreSQL URI |
+| `DATABASE_URL` | **Yes** | Cloud PostgreSQL URI (e.g. Neon) for production persistence |
+| `DIRECT_URL` | Optional | Direct non-pooled PostgreSQL URI for Prisma migrations |
 | `AUTH_SECRET` | **Yes** | 64-character secret for HMAC session tokens |
 | `AI_PROVIDER` | Optional | `gemini` (default) or `deterministic-fallback` |
 | `GEMINI_API_KEY` | Optional | Google AI Studio API key for live LLM extraction |
