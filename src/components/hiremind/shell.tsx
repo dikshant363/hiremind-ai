@@ -135,7 +135,7 @@ export function SiteHeader() {
             size="icon"
             aria-label="Toggle presentation mode"
             onClick={togglePresentationMode}
-            className={cn("h-8 w-8", presentationMode && "bg-accent-blue/15 text-accent-blue-foreground")}
+            className={cn("h-8 w-8 hidden md:inline-flex", presentationMode && "bg-accent-blue/15 text-accent-blue-foreground")}
           >
             <Monitor className="h-4 w-4" />
           </Button>
@@ -144,7 +144,7 @@ export function SiteHeader() {
             size="sm"
             aria-label="Open command palette"
             onClick={() => document.dispatchEvent(new CustomEvent("hm-open-command-palette"))}
-            className="h-8 gap-2 border-border/60 px-2.5 text-muted-foreground hover:text-foreground"
+            className="h-8 gap-2 border-border/60 px-2.5 text-muted-foreground hover:text-foreground hidden sm:inline-flex"
             title="Search commands (Cmd+K)"
           >
             <Search className="h-3.5 w-3.5" />
@@ -158,10 +158,9 @@ export function SiteHeader() {
             size="icon"
             aria-label="Show achievements gallery"
             onClick={() => document.dispatchEvent(new CustomEvent("hm-show-achievements"))}
-            className="h-8 w-8 relative group"
+            className="h-8 w-8 relative group hidden sm:inline-flex"
           >
             <Trophy className="h-4 w-4" />
-            {/* Subtle pulse dot to hint at discoverability */}
             <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-amber-400 opacity-60 group-hover:opacity-0 transition-opacity" />
           </Button>
           <Button
@@ -169,10 +168,9 @@ export function SiteHeader() {
             size="icon"
             aria-label="Show keyboard shortcuts"
             onClick={() => document.dispatchEvent(new CustomEvent("hm-show-shortcuts"))}
-            className="h-8 w-8 relative group"
+            className="h-8 w-8 relative group hidden sm:inline-flex"
           >
             <HelpCircle className="h-4 w-4" />
-            {/* Subtle pulse dot to hint at discoverability */}
             <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-accent-blue opacity-60 group-hover:opacity-0 transition-opacity" />
           </Button>
           <Button
@@ -181,7 +179,7 @@ export function SiteHeader() {
             aria-label="Control Center"
             title="Open Control Center (Admin)"
             onClick={() => document.dispatchEvent(new CustomEvent("hm-open-control-center"))}
-            className="h-8 w-8 relative group"
+            className="h-8 w-8 relative group hidden sm:inline-flex"
           >
             <Sliders className="h-4 w-4" />
           </Button>
